@@ -2,6 +2,7 @@ import { sql } from "../db/client.js";
 import { clearUserCart, loadCartForOrder } from "./cartController.js";
 import { createOrder, createOrderItems, getOrdersForBuyer, getOrdersForSeller } from "../models/orderModel.js";
 import { createShipment } from "../services/shiprocketService.js";
+import { sendOrderNotification } from "../modules/whatsapp/whatsapp.service.js";
 
 function formatImpactDisplay(value, unit) {
   return `${value} ${unit} waste diverted`;
@@ -122,6 +123,17 @@ export async function placeOrder(req, res) {
           email: req.user.email,
         },
       });
+
+
+      try {
+        const testPhone = "9619200100"; 
+        const materialSummary = cartRows[0]?.title || cartRows[0]?.material_type || "Scrap Materials";  
+        console.log(`Attempting to send WhatsApp for: ${materialSummary}`);
+        await sendOrderNotification(testPhone, materialSummary);
+        
+      } catch (wsError) {
+        console.error("WhatsApp notification failed, but order was placed:", wsError);
+      }
 
       const achievement = buildCircularAchievement({
         order,
