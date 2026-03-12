@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { addToCart } from "../api";
+import { useState, useEffect } from "react";
+import { addToCart, getProductSuggestions } from "../api";
+import SuggestionCard from "../components/SuggestionCard";
 
 const FALLBACK_IMAGE =
     "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=900&q=80";
@@ -41,6 +42,23 @@ export default function MaterialDetailPage({ material, user, onBack, onEdit }) {
     const [quantity, setQuantity] = useState(1);
     const [message, setMessage] = useState("");
     const [adding, setAdding] = useState(false);
+
+    const [suggestions, setSuggestions] = useState([]);
+    const [fetchingSuggestions, setFetchingSuggestions] = useState(false);
+
+    const handleGetSuggestions = async () => {
+        if (!material.title) return;
+        setFetchingSuggestions(true);
+        try {
+            const data = await getProductSuggestions(material.title);
+            setSuggestions(data.suggestions || []);
+        } catch (err) {
+            console.error("Failed to fetch AI suggestions", err);
+            setMessage("Error fetching AI suggestions. Please check if backend is running.");
+        } finally {
+            setFetchingSuggestions(false);
+        }
+    };
 
     const handleAddToCart = async () => {
         setMessage("");
@@ -199,6 +217,73 @@ export default function MaterialDetailPage({ material, user, onBack, onEdit }) {
                     )}
                 </div>
             </div>
+
+            {/* --- AI SUGGESTIONS SECTION --- */}
+            <section className="ai-suggestions-section" style={{ 
+                marginTop: "3rem", 
+                borderTop: "1px solid rgba(255,255,255,0.1)", 
+                paddingTop: "2rem",
+                paddingBottom: "2rem"
+            }}>
+                <div style={{ 
+                    display: "flex", 
+                    flexWrap: "wrap",
+                    alignItems: "center", 
+                    gap: "20px",
+                    marginBottom: "2rem" 
+                }}>
+                    <h3 style={{ margin: 0, color: "#fff", display: "flex", alignItems: "center", gap: "12px", flex: 1, minWidth: "250px" }}>
+                        <span style={{ fontSize: "1.6rem" }}>✨</span> AI Upcycling Ideas for this item
+                    </h3>
+                    
+                    {suggestions.length === 0 && !fetchingSuggestions && (
+                        <button 
+                            className="hero-button" 
+                            onClick={handleGetSuggestions}
+                            style={{ 
+                                padding: "10px 24px", 
+                                borderRadius: "14px", 
+                                width: "fit-content",
+                                fontSize: "0.95rem",
+                                whiteSpace: "nowrap",
+                                flexShrink: 0
+                            }}
+                        >
+                            Get AI Suggestions
+                        </button>
+                    )}
+                    
+                    {suggestions.length > 0 && (
+                        <button 
+                            className="nav-button nav-button-secondary" 
+                            onClick={() => setSuggestions([])}
+                            style={{ padding: "8px 16px", fontSize: "0.85rem", width: "auto" }}
+                        >
+                            Clear Ideas
+                        </button>
+                    )}
+                </div>
+                
+                {fetchingSuggestions ? (
+                    <div className="loading-shell" style={{ margin: "2rem 0", background: "rgba(255,255,255,0.05)" }}>
+                        Generating creative ideas using AI...
+                    </div>
+                ) : suggestions.length > 0 ? (
+                    <div style={{ 
+                        display: "grid", 
+                        gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", 
+                        gap: "1.5rem" 
+                    }}>
+                        {suggestions.map((text, index) => (
+                            <SuggestionCard key={index} text={text} index={index} />
+                        ))}
+                    </div>
+                ) : (
+                    <div style={{ textAlign: "center", padding: "2rem", background: "rgba(255,255,255,0.02)", borderRadius: "16px" }}>
+                        <p style={{ color: "#9ca3af", marginBottom: "1rem" }}>Click the button above to get creative AI ideas for upcycling this material.</p>
+                    </div>
+                )}
+            </section>
         </div>
     );
 }

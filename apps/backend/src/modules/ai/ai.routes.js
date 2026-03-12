@@ -1,10 +1,11 @@
 import { Router } from "express";
-import { suggest, handleChat } from "./ai.controller.js"; // Added handleChat here
+import { suggest, handleChat, handleProductSuggestions } from "./ai.controller.js";
 import { authenticate } from "../../middleware/auth.js";
 
 const router = Router();
 
 router.post("/suggest", authenticate, suggest);
-router.post("/chat", handleChat); // No 'authenticate' here so it matches your chatbot flow
+router.post("/chat", handleChat);
+router.post("/product-ideas", handleProductSuggestions); // NEW ROUTE
 
 export default router;
