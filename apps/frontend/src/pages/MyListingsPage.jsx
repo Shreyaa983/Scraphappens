@@ -1,6 +1,18 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import {
+  Edit3,
+  Trash2,
+  Package,
+  MapPin,
+  Calendar,
+  ShoppingBag,
+  Plus,
+  Layout,
+  Info
+} from "lucide-react";
 import { getMyMaterials, deleteMaterialById } from "../api";
+import "../styles/my-listings.css";
 
 const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=80";
 
@@ -24,7 +36,7 @@ export default function MyListingsPage({ token }) {
     useEffect(() => { load(); }, []);
 
     const handleDelete = async (id) => {
-        if (!confirm("Delete this listing?")) return;
+        if (!confirm("Are you sure you want to delete this listing? This action cannot be undone.")) return;
         setDeletingId(id);
         try {
             await deleteMaterialById(id, token);
@@ -36,63 +48,93 @@ export default function MyListingsPage({ token }) {
         }
     };
 
-    if (loading) return <div className="loading-shell">Loading your listings…</div>;
+    if (loading) return (
+        <div className="loading-shell" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div className="spin">📦</div>
+            <p>Gathering your materials...</p>
+        </div>
+    );
 
     return (
-        <div className="my-listings-page">
-            <div className="my-listings-header">
-                <h3>My Listings <span className="count">({listings.length})</span></h3>
-                <p className="my-listings-sub">Only you can see, edit, or delete your listings here.</p>
-            </div>
+        <div className="my-listings-container">
+            <header className="my-listings-header">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                    <h2 className="my-listings-title">
+                        <Layout size={28} color="hsl(var(--primary))" />
+                        My Inventory
+                        <span className="count">{listings.length}</span>
+                    </h2>
+                    <Link to="/create-listing" className="btn-primary" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px' }}>
+                        <Plus size={18} /> List Material
+                    </Link>
+                </div>
+                <p className="my-listings-sub">Manage your posted materials and track their status in the ecosystem.</p>
+            </header>
 
             {listings.length === 0 ? (
-                <div className="empty-state">
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#4b5563" strokeWidth="1.5">
-                        <rect x="2" y="3" width="20" height="14" rx="2" /><path d="M8 21h8M12 17v4" />
-                    </svg>
-                    <p>No listings yet.</p>
-                    <span>Head to the <Link to="/" className="inline-link-button">Marketplace</Link> and click "List Material" to post one.</span>
+                <div className="empty-state" style={{ padding: '4rem 2rem' }}>
+                    <ShoppingBag size={48} color="#94a3b8" style={{ marginBottom: '1.5rem' }} />
+                    <p style={{ fontSize: '1.25rem' }}>Your inventory is empty</p>
+                    <span style={{ display: 'block', marginBottom: '2rem' }}>Ready to contribute to the circular economy? List your first material today.</span>
+                    <Link to="/create-listing" className="btn-primary" style={{ textDecoration: 'none', padding: '12px 30px' }}>
+                        Create First Listing
+                    </Link>
                 </div>
             ) : (
                 <div className="my-listings-grid">
                     {listings.map(item => (
                         <div key={item.id} className="my-listing-card">
-                            <div className="my-listing-img">
+                            <div className="my-listing-img-wrap">
                                 <img src={item.image_url || FALLBACK_IMAGE} alt={item.title} />
-                                {item.condition && <span className="condition-badge">{item.condition}</span>}
+                                {item.condition && <span className="my-listing-status">{item.condition}</span>}
                             </div>
+
                             <div className="my-listing-body">
-                                <div className="my-listing-meta-top">
-                                    {item.category && <span className="category-chip" style={{ position: "static", fontSize: "0.75rem" }}>{item.category}</span>}
+                                <div className="my-listing-meta-row">
+                                    <span className="my-listing-category">{item.category || "Uncategorized"}</span>
                                     <span className="my-listing-date">
-                                        {new Date(item.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                                        <Calendar size={12} style={{ marginRight: 4 }} />
+                                        {new Date(item.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
                                     </span>
                                 </div>
-                                <h4>{item.title}</h4>
-                                {item.description && <p className="card-desc">{item.description.slice(0, 80)}{item.description.length > 80 ? "…" : ""}</p>}
-                                <div className="card-footer-meta">
-                                    {item.quantity && <div className="meta-item"><span>📦 {item.quantity} {item.quantity_unit || "kg"}</span></div>}
-                                    {item.location && <div className="meta-item"><span>📍 {item.location}</span></div>}
+
+                                <h3 className="my-listing-title">{item.title}</h3>
+
+                                <div className="my-listing-chips">
+                                    {item.quantity && (
+                                        <span className="my-listing-chip">
+                                            <Package size={14} /> {item.quantity} {item.quantity_unit || "kg"}
+                                        </span>
+                                    )}
+                                    {item.location && (
+                                        <span className="my-listing-chip">
+                                            <MapPin size={14} /> {item.location}
+                                        </span>
+                                    )}
+                                    {item.is_free ? (
+                                        <span className="my-listing-chip" style={{ color: '#059669', background: '#d1fae5', borderColor: '#6ee7b7' }}>Free</span>
+                                    ) : (
+                                        <span className="my-listing-chip" style={{ color: 'hsl(var(--primary))' }}>₹{item.price}</span>
+                                    )}
                                 </div>
+
                                 <div className="my-listing-actions">
-                                    <button className="my-listing-edit-btn" onClick={() => navigate(`/edit-listing/${item.id}`, { state: { editItem: item } })}>
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                                        </svg>
-                                        Edit
+                                    <button
+                                        className="action-btn edit-btn"
+                                        onClick={() => navigate(`/edit-listing/${item.id}`, { state: { editItem: item } })}
+                                    >
+                                        <Edit3 size={16} /> Edit
                                     </button>
                                     <button
-                                        className="my-listing-delete-btn"
+                                        className="action-btn delete-btn"
                                         onClick={() => handleDelete(item.id)}
                                         disabled={deletingId === item.id}
                                     >
-                                        {deletingId === item.id ? "Deleting…" : (
+                                        {deletingId === item.id ? (
+                                            "..."
+                                        ) : (
                                             <>
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                    <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14H6L5 6" /><path d="M10 11v6M14 11v6" /><path d="M9 6V4h6v2" />
-                                                </svg>
-                                                Delete
+                                                <Trash2 size={16} /> Delete
                                             </>
                                         )}
                                     </button>

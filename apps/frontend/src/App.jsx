@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Routes, Route, Navigate, useNavigate, useParams } from "react-router-dom";
 import { getCurrentUser, login, register } from "./api";
 import AuthPanel from "./components/AuthPanel";
@@ -21,6 +21,7 @@ import DIYDetailPage from "./pages/DIYDetailPage";
 import { queuePendingGardenReward } from "./utils/gardenRewards";
 import { AgenticProvider } from "./contexts/Agentic/ChatContext";
 import GlobalAssistant from "./components/Agentic/GlobalAssistant";
+import LogisticsPickupsPage from "./pages/LogisticsPickupsPage";
 
 const roles = ["seller", "buyer", "volunteer"];
 
@@ -81,7 +82,7 @@ export default function App() {
   });
 
   const sidebarItems = useMemo(() => {
-    const items = ["Marketplace", "My Dashboard", "AI Assistant", "Garden", "Logistics Dashboard"];
+    const items = ["Marketplace", "My Dashboard", "AI Assistant", "Garden"];
 
     if (user && isSellerRole(user.role)) {
       items.push("My Listings", "Seller Orders");
@@ -270,7 +271,7 @@ export default function App() {
             filters={marketplaceFilters}
             onFilterChange={handleFilterChange}
             onSelectProduct={openProductDetail}
-            onCreateClick={() => {}}
+            onCreateClick={() => { }}
           />
         );
       }
@@ -298,7 +299,7 @@ export default function App() {
 
   function renderSectionContent() {
     if (activeSection === "AI Assistant") return <AIChatbot />;
-    if (activeSection === "Logistics Dashboard") return <LogisticsDashboardPage token={token} />;
+
     if (activeSection === "Cart") {
       return <CartPage token={token} user={user} onOrderPlaced={handleOrderPlaced} />;
     }
@@ -346,49 +347,49 @@ export default function App() {
           <section className="dashboard-main">
             <Routes>
               <Route
-              path="/"
-              element={
+                path="/"
+                element={
                   <MarketplacePage
                     user={user}
                     filters={marketplaceFilters}
                     onFilterChange={handleFilterChange}
                     onCreateClick={() => {
-                    if (!isSellerRole(user.role)) {
-                      setMessage("Only sellers can list materials.");
-                      return;
-                    }
-                    navigate("/create-listing");
-                  }}
-                />
+                      if (!isSellerRole(user.role)) {
+                        setMessage("Only sellers can list materials.");
+                        return;
+                      }
+                      navigate("/create-listing");
+                    }}
+                  />
                 }
-            />
+              />
               <Route
-              path="/material/:id"
-              element={<MaterialDetailPage user={user} onViewSupplier={(supplierId) => navigate(`/supplier/${supplierId}`)} />}
-            />
+                path="/material/:id"
+                element={<MaterialDetailPage user={user} onViewSupplier={(supplierId) => navigate(`/supplier/${supplierId}`)} />}
+              />
               <Route
-              path="/create-listing"
-              element={isSellerRole(user.role) ? <CreateListing user={user} token={token} /> : <Navigate to="/" replace />}
-            />
+                path="/create-listing"
+                element={isSellerRole(user.role) ? <CreateListing user={user} token={token} /> : <Navigate to="/" replace />}
+              />
               <Route
-              path="/edit-listing/:id"
-              element={isSellerRole(user.role) ? <CreateListing user={user} token={token} /> : <Navigate to="/" replace />}
-            />
+                path="/edit-listing/:id"
+                element={isSellerRole(user.role) ? <CreateListing user={user} token={token} /> : <Navigate to="/" replace />}
+              />
               <Route path="/ai-assistant" element={<AIChatbot />} />
               <Route
-              path="/garden"
-              element={
+                path="/garden"
+                element={
                   <GardenPage
                     user={user}
                     pendingAchievement={pendingGardenAchievement}
                     onPendingAchievementHandled={() => setPendingGardenAchievement(null)}
                   />
                 }
-            />
-              <Route path="/logistics-dashboard" element={<LogisticsDashboardPage token={token} />} />
+              />
+
               <Route path="/pickup-scheduling" element={<LogisticsPickupsPage token={token} />} />
-                <Route path="/my-dashboard" element={<UserDashboard token={token} user={user} />} />
-            <Route path="/supplier/:supplierId" element={<SupplierProfile token={token} onBack={() => navigate(-1)} />} />
+              <Route path="/my-dashboard" element={<UserDashboard token={token} user={user} />} />
+              <Route path="/supplier/:supplierId" element={<SupplierProfile token={token} onBack={() => navigate(-1)} />} />
 
               {isSellerRole(user.role) && (
                 <>
@@ -397,12 +398,31 @@ export default function App() {
                 </>
               )}
 
-            {isBuyerRole(user.role) && (
-              <>
-                <Route path="/cart" element={<CartPage token={token} user={user} onOrderPlaced={handleOrderPlaced} />} />
-                <Route path="/my-orders" element={<BuyerOrdersPage token={token} />} />
-              </>
-            )}
+              {isBuyerRole(user.role) && (
+                <>
+                  <Route path="/cart" element={<CartPage token={token} user={user} onOrderPlaced={handleOrderPlaced} />} />
+                  <Route path="/my-orders" element={<BuyerOrdersPage token={token} />} />
+                  <Route
+                    path="/diy"
+                    element={
+                      <DIYFeedPage
+                        token={token}
+                        onOpenProject={(post) => navigate(`/diy/${post.id}`)}
+                      />
+                    }
+                  />
+                  <Route
+                    path="/diy/:id"
+                    element={
+                      <DIYDetailRoute
+                        token={token}
+                        onOpenMaterial={openMaterialFromDiy}
+                        onSearchMaterial={searchMaterialFromDiy}
+                      />
+                    }
+                  />
+                </>
+              )}
 
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

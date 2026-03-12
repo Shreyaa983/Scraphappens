@@ -71,11 +71,4 @@ export async function getPickupSchedule(token, options = {}) {
   return parseLogisticsResponse(response, "Failed to fetch pickup schedule");
 }
 
-export async function getLogisticsDashboard(token) {
-  const response = await fetch(`${API_BASE_URL}/api/logistics/dashboard`, {
-    method: "GET",
-    headers: authHeaders(token),
-  });
 
-  return parseLogisticsResponse(response, "Failed to fetch logistics dashboard");
-}

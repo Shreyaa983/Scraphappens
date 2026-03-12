@@ -1,11 +1,25 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { 
+  Package, 
+  MapPin, 
+  Calendar, 
+  ShoppingBag, 
+  Clock, 
+  Map, 
+  ChevronRight,
+  ExternalLink,
+  ShieldCheck,
+  User,
+  Hash
+} from "lucide-react";
 import { getMyOrdersApi, getSellerOrdersApi } from "../api";
 import ReviewForm from "../components/Marketplace/ReviewForm";
 import TrackingMap from "../components/Logistics/TrackingMap";
 import { buildTrackingRoute, getDefaultFallbackRoute } from "../services/geocodeService";
 import { trackShipment } from "../services/logisticsApi";
 import truckIconUrl from "../asessts/images/truck.png";
+import "../styles/my-listings.css";
 
 const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=80";
@@ -349,53 +363,84 @@ export function SellerOrdersPage({ token }) {
     load();
   }, [token]);
 
-  if (loading) return <div className="loading-shell">Loading seller orders…</div>;
+  if (loading) return (
+    <div className="loading-shell">
+      <div className="spin">📦</div>
+      <p>Loading incoming orders...</p>
+    </div>
+  );
 
   return (
-    <div className="my-listings-page">
-      <div className="my-listings-header">
-        <h3>Seller Orders <span className="count">({items.length})</span></h3>
-        <p className="my-listings-sub">Orders that include your listed materials.</p>
-      </div>
+    <div className="my-listings-container">
+      <header className="my-listings-header">
+        <h2 className="my-listings-title">
+          <ShieldCheck size={28} color="hsl(var(--primary))" />
+          Seller Orders
+          <span className="count">{items.length}</span>
+        </h2>
+        <p className="my-listings-sub">Incoming orders for your listed materials. Manage fulfillment and tracking here.</p>
+      </header>
 
       {items.length === 0 ? (
         <div className="empty-state">
-          <p>No seller orders yet.</p>
-          <span>Once buyers place orders on your <Link to="/my-listings" className="inline-link-button">listings</Link>, they will appear here.</span>
+          <ShoppingBag size={48} color="#94a3b8" style={{ marginBottom: '1.5rem' }} />
+          <p>No sales orders yet.</p>
+          <span>Items you sell in the <Link to="/marketplace" className="inline-link-button">Marketplace</Link> will appear here once purchased.</span>
         </div>
       ) : (
         <div className="my-listings-grid">
           {items.map((item) => (
             <div key={item.id} className="my-listing-card">
-              <div className="my-listing-img">
+              <div className="my-listing-img-wrap">
                 <img src={item.material.image_url || FALLBACK_IMAGE} alt={item.material.title} />
+                <span className="my-listing-status" style={{ 
+                  background: item.status?.toLowerCase().includes('complete') ? '#d1fae5' : '#fff3e0',
+                  color: item.status?.toLowerCase().includes('complete') ? '#059669' : '#e65100',
+                  borderColor: item.status?.toLowerCase().includes('complete') ? '#6ee7b7' : '#ffb74d'
+                }}>
+                  {item.status}
+                </span>
               </div>
+              
               <div className="my-listing-body">
-                <div className="my-listing-meta-top">
-                  <span className="category-chip" style={{ position: "static", fontSize: "0.75rem" }}>
+                <div className="my-listing-meta-row">
+                  <span className="my-listing-category">
+                    <Hash size={12} style={{ marginRight: 2 }} />
                     Order #{item.order_id.slice(0, 8)}
                   </span>
                   <span className="my-listing-date">
+                    <Calendar size={12} style={{ marginRight: 4 }} />
                     {new Date(item.created_at).toLocaleDateString("en-IN", {
                       day: "numeric",
-                      month: "short",
-                      year: "numeric",
+                      month: "short"
                     })}
                   </span>
                 </div>
+
                 <Link to={`/material/${item.material.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                  <h4>{item.material.title}</h4>
+                  <h3 className="my-listing-title">{item.material.title}</h3>
                 </Link>
-                <p className="card-desc">
-                  Buyer: {item.buyer.name} ({item.buyer.email})
-                </p>
-                <div className="card-footer-meta">
-                  <div className="meta-item">
-                    <span>Qty: {item.quantity}</span>
-                  </div>
-                  <div className="meta-item">
-                    <span>Status: {item.status}</span>
-                  </div>
+                
+                <div className="my-listing-chips">
+                  <span className="my-listing-chip">
+                    <User size={14} /> {item.buyer.name}
+                  </span>
+                  <span className="my-listing-chip">
+                    <Package size={14} /> Qty: {item.quantity}
+                  </span>
+                  <span className="my-listing-chip" style={{ color: 'hsl(var(--primary))' }}>
+                    Total: ₹{item.price * item.quantity}
+                  </span>
+                </div>
+
+                <div className="my-listing-actions" style={{ gridTemplateColumns: '1fr' }}>
+                  <Link 
+                    to={`/logistics/shipments`} 
+                    className="action-btn edit-btn"
+                    style={{ textDecoration: 'none' }}
+                  >
+                    <ChevronRight size={16} /> Fulfillment Details
+                  </Link>
                 </div>
               </div>
             </div>

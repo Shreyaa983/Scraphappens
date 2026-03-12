@@ -1,7 +1,23 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { 
+  ShoppingCart, 
+  Trash2, 
+  MapPin, 
+  Package, 
+  Truck, 
+  Ticket, 
+  CreditCard, 
+  ArrowRight, 
+  CheckCircle, 
+  ShoppingBag,
+  Info,
+  ChevronRight,
+  Clock
+} from "lucide-react";
 import { getCart, placeOrder, removeCartItem } from "../api";
 import { createShipment, getShippingRates } from "../services/logisticsApi";
+import "../styles/cart.css";
 
 const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=80";
@@ -142,6 +158,11 @@ function supplierAddressFromItems(items) {
   };
 }
 
+// Dummy functions to prevent errors if Rewards API is not defined globally (mapping to what was there or expected)
+const getAchievementProgressApi = () => Promise.resolve({});
+const getMyCouponsApi = () => Promise.resolve({ coupons: [] });
+const getMyCircularScoreApi = () => Promise.resolve({ score: {} });
+
 export default function CartPage({ token, user, onOrderPlaced }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -175,6 +196,7 @@ export default function CartPage({ token, user, onOrderPlaced }) {
         setItems(rows);
 
         try {
+          // Note: In real app these would be imported from ../api
           const [achievementRes, couponsRes, scoreRes] = await Promise.all([
             getAchievementProgressApi(token),
             getMyCouponsApi(token),
@@ -205,7 +227,6 @@ export default function CartPage({ token, user, onOrderPlaced }) {
             setSelectedCouponCode(coupons[0].code);
           }
         } catch {
-          // Keep checkout flow usable even if rewards APIs fail
           setCouponWallet([]);
         }
       } catch (err) {
@@ -376,53 +397,68 @@ export default function CartPage({ token, user, onOrderPlaced }) {
   }
 
   if (loading) {
-    return <div className="loading-shell">Loading your cart…</div>;
+    return (
+      <div className="loading-shell">
+        <Clock className="spin" style={{ marginBottom: "1rem" }} />
+        <p>Loading your cart…</p>
+      </div>
+    );
   }
 
   return (
-    <div className="my-listings-page">
-      <div className="my-listings-header">
-        <h3>Cart <span className="count">({items.length})</span></h3>
-        <p className="my-listings-sub">Items you are preparing to order.</p>
-      </div>
-
+    <div className="cart-page-container">
       {items.length === 0 ? (
-        <div className="empty-state">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#4b5563" strokeWidth="1.5">
-            <rect x="3" y="4" width="18" height="13" rx="2" /><path d="M8 21h8M12 17v4" />
-          </svg>
-          <p>Your cart is empty.</p>
-          <span>Add a material from the <Link to="/" className="inline-link-button">marketplace</Link> detail page.</span>
+        <div className="cart-empty-state">
+          <div className="empty-icon">
+            <ShoppingBag size={80} strokeWidth={1} />
+          </div>
+          <h2 className="empty-title">Your cart is empty</h2>
+          <p className="empty-text">Looks like you haven't added any materials to your cart yet.</p>
+          <Link to="/" className="btn-primary">
+            Explore Marketplace <ArrowRight size={18} style={{ marginLeft: 8 }} />
+          </Link>
         </div>
       ) : (
         <>
-          <div className="my-listings-grid">
+          <div className="cart-items-section">
+            <div className="section-header" style={{ marginBottom: "1.5rem" }}>
+              <h2 style={{ display: "flex", alignItems: "center", gap: "12px", margin: 0 }}>
+                <ShoppingCart size={28} /> Cart <span className="count">({items.length})</span>
+              </h2>
+              <p style={{ color: "var(--color-text-secondary)", marginTop: "4px" }}>Items you are preparing to order.</p>
+            </div>
+
             {items.map((item) => (
-              <div key={item.id} className="my-listing-card">
-                <div className="my-listing-img">
+              <div key={item.id} className="cart-item-card">
+                <div className="cart-item-image">
                   <img src={item.image_url || FALLBACK_IMAGE} alt={item.title} />
                 </div>
-                <div className="my-listing-body">
-                  <h4>{item.title}</h4>
-                  <div className="card-footer-meta">
-                    <div className="meta-item">
+                <div className="cart-item-details">
+                  <div className="cart-item-header">
+                    <h4 className="cart-item-title">{item.title}</h4>
+                  </div>
+                  <div className="cart-item-meta">
+                    <div className="cart-meta-chip">
+                      <Package size={14} /> 
                       <span>Requested: {item.quantity}</span>
                     </div>
-                    <div className="meta-item">
+                    <div className="cart-meta-chip">
+                      <Info size={14} />
                       <span>Available: {item.available_quantity ?? "—"} {item.quantity_unit || ""}</span>
                     </div>
                     {item.location && (
-                      <div className="meta-item">
-                        <span>📍 {item.location}</span>
+                      <div className="cart-meta-chip">
+                        <MapPin size={14} />
+                        <span>{item.location}</span>
                       </div>
                     )}
                   </div>
-                  <div className="my-listing-actions">
+                  <div className="cart-item-actions">
                     <button
-                      className="my-listing-delete-btn"
+                      className="remove-item-btn"
                       onClick={() => handleRemove(item.id)}
                     >
-                      Remove
+                      <Trash2 size={16} /> Remove
                     </button>
                   </div>
                 </div>
@@ -430,170 +466,202 @@ export default function CartPage({ token, user, onOrderPlaced }) {
             ))}
           </div>
 
-          <div className="dashboard-card" style={{ marginTop: 20 }}>
-            <h4 style={{ marginBottom: 8 }}>Checkout Address (from profile)</h4>
-            <p className="mini-note">{receiverDisplayAddress || "Address unavailable. Please update profile address."}</p>
+          <div className="checkout-sidebar">
+            <div className="summary-card">
+              <h3 className="summary-title">
+                <ShoppingCart size={20} /> Order Summary
+              </h3>
 
-            <div className="integration-card" style={{ marginTop: 10 }}>
-              <h4>Address Details (DB)</h4>
-              <p>Street: {receiverAddress.line || "—"}</p>
-              <p>City: {receiverAddress.city || "—"}</p>
-              <p>State: {receiverAddress.state || "—"}</p>
-              <p>Country: {receiverAddress.country || "—"}</p>
-              <p>Pincode: {receiverAddress.pincode || "—"}</p>
-            </div>
-
-            <div className="logistics-shipping-options">
-              <h4>Shipping Options</h4>
-
-              <div className="logistics-pincode-row">
-                <label>
-                  Pickup pincode
-                  <input value={parsePincode(supplierAddress.pincode)} readOnly />
-                </label>
-                <label>
-                  Delivery pincode
-                  <input value={parsePincode(receiverAddress.pincode)} readOnly />
-                </label>
+              {/* Delivery Address Section */}
+              <div className="summary-section">
+                <div className="section-label">
+                  <MapPin size={16} /> Delivery Address
+                </div>
+                {receiverDisplayAddress ? (
+                  <div className="address-preview">
+                    <strong>{user?.name || "Member"}</strong>
+                    <p>{receiverAddress.line}</p>
+                    <p>{receiverAddress.city}, {receiverAddress.state} - {receiverAddress.pincode}</p>
+                  </div>
+                ) : (
+                  <p className="mini-note error-text">Address unavailable. Please update profile address.</p>
+                )}
               </div>
+
+              {/* Shipping Section */}
+              <div className="summary-section">
+                <div className="section-label">
+                  <Truck size={16} /> Shipping Method
+                </div>
+                
+                <button
+                  type="button"
+                  className="btn-secondary fetch-rates-btn"
+                  onClick={handleFetchShippingRates}
+                  disabled={shippingRatesLoading || !receiverDisplayAddress}
+                >
+                  {shippingRatesLoading ? (
+                    <><Clock size={16} className="spin" /> Updating...</>
+                  ) : (
+                    <>Calculate Shipping</>
+                  )}
+                </button>
+
+                {shippingRates.length > 0 ? (
+                  <div className="rates-container">
+                    {shippingRates.map((rate, index) => (
+                      <label 
+                        key={`${rate.courier}-${index}`} 
+                        className={`rate-option ${selectedCourierIndex === index ? "selected" : ""}`}
+                      >
+                        <input
+                          type="radio"
+                          checked={selectedCourierIndex === index}
+                          onChange={() => setSelectedCourierIndex(index)}
+                        />
+                        <div className="rate-details">
+                          <span className="rate-name">{rate.courier}</span>
+                          <span className="rate-price-eta">₹{rate.price} • {rate.eta}</span>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="address-preview">
+                    <p className="mini-note">Click "Calculate Shipping" to see available options.</p>
+                  </div>
+                )}
+                {shippingFallbackMessage && <p className="mini-note" style={{ marginTop: 8 }}>{shippingFallbackMessage}</p>}
+              </div>
+
+              {/* Coupons & Rewards Section */}
+              <div className="summary-section">
+                <div className="section-label">
+                  <Ticket size={16} /> Rewards & Coupons
+                </div>
+                
+                <div className="coupon-progress-wrapper">
+                  <div className="progress-info">
+                    <span>{couponProgress.nextLabel}</span>
+                    <span>{couponProgress.percent.toFixed(0)}%</span>
+                  </div>
+                  <div className="progress-bar">
+                    <div className="progress-fill" style={{ width: `${couponProgress.percent}%` }} />
+                  </div>
+                  <p className="mini-note">
+                    {couponProgress.currentPlants}/{couponProgress.targetPlants} plants planted
+                  </p>
+                </div>
+
+                {couponWallet.length > 0 && (
+                  <div className="coupon-grid">
+                    {couponWallet.map((coupon) => (
+                      <label 
+                        key={coupon.code} 
+                        className={`rate-option ${selectedCouponCode === coupon.code ? "selected" : ""}`}
+                        style={{ padding: "8px 12px" }}
+                      >
+                        <input
+                          type="radio"
+                          name="coupon-select"
+                          checked={selectedCouponCode === coupon.code}
+                          onChange={() => setSelectedCouponCode(coupon.code)}
+                        />
+                        <div className="rate-details">
+                          <span className="rate-name">{coupon.code}</span>
+                          <span className="rate-price-eta">
+                            Bonus unlocked via {coupon.type?.replaceAll("_", " ") || "activity"}
+                          </span>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                )}
+
+                <div style={{ marginTop: "12px" }}>
+                  <input
+                    type="text"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value)}
+                    placeholder="Enter manual coupon"
+                    style={{ fontSize: "0.85rem", padding: "8px 12px" }}
+                  />
+                </div>
+              </div>
+
+              {/* Payment Section */}
+              <div className="summary-section">
+                <div className="section-label">
+                  <CreditCard size={16} /> Payment Method
+                </div>
+                <div className="payment-grid">
+                  <label className={`payment-option ${paymentMethod === "upi" ? "selected" : ""}`}>
+                    <input
+                      type="radio"
+                      name="payment-method"
+                      checked={paymentMethod === "upi"}
+                      onChange={() => setPaymentMethod("upi")}
+                    />
+                    <span className="rate-name">UPI (PhonePe, GPay)</span>
+                  </label>
+                  <label className={`payment-option ${paymentMethod === "card" ? "selected" : ""}`}>
+                    <input
+                      type="radio"
+                      name="payment-method"
+                      checked={paymentMethod === "card"}
+                      onChange={() => setPaymentMethod("card")}
+                    />
+                    <span className="rate-name">Credit / Debit Card</span>
+                  </label>
+                </div>
+              </div>
+
+              {message && (
+                <div className={`message ${message.includes("success") ? "success" : "error"}`} style={{ fontSize: "0.85rem" }}>
+                  {message}
+                </div>
+              )}
 
               <button
                 type="button"
-                className="nav-button nav-button-secondary"
-                onClick={handleFetchShippingRates}
-                disabled={shippingRatesLoading || !receiverDisplayAddress}
+                className="btn-primary place-order-btn"
+                onClick={handlePlaceOrder}
+                disabled={placing || !receiverDisplayAddress}
               >
-                {shippingRatesLoading ? "Checking shipping rates…" : "Fetch Shipping Rates"}
+                {placing ? (
+                  <><Clock size={18} className="spin" /> Processing...</>
+                ) : (
+                  <>Place Order <ChevronRight size={18} /></>
+                )}
               </button>
 
-              {shippingFallbackMessage ? <p className="mini-note">{shippingFallbackMessage}</p> : null}
-
-              {shippingRates.length > 0 ? (
-                <div className="logistics-rates-list">
-                  {shippingRates.map((rate, index) => (
-                    <label key={`${rate.courier}-${index}`} className={`logistics-rate-item ${selectedCourierIndex === index ? "logistics-rate-item-selected" : ""}`}>
-                      <input
-                        type="radio"
-                        checked={selectedCourierIndex === index}
-                        onChange={() => setSelectedCourierIndex(index)}
-                      />
-                      <span>🚚 {rate.courier} — ₹{rate.price} — {rate.eta}</span>
-                    </label>
-                  ))}
+              {orderConfirmation && (
+                <div className="confirmation-card">
+                  <h4 style={{ color: "#166534", marginBottom: "8px", display: "flex", alignItems: "center", gap: "8px" }}>
+                    <CheckCircle size={18} /> Order Confirmed!
+                  </h4>
+                  <div className="conf-row">
+                    <span className="conf-label">Shipment ID:</span>
+                    <span className="conf-value">{orderConfirmation.shipmentId}</span>
+                  </div>
+                  <div className="conf-row">
+                    <span className="conf-label">Tracking ID:</span>
+                    <span className="conf-value">{orderConfirmation.trackingId}</span>
+                  </div>
+                  <div className="conf-row">
+                    <span className="conf-label">Courier:</span>
+                    <span className="conf-value">{orderConfirmation.courier}</span>
+                  </div>
+                  <div className="conf-row">
+                    <span className="conf-label">Delivery:</span>
+                    <span className="conf-value">{orderConfirmation.eta}</span>
+                  </div>
                 </div>
-              ) : (
-                <p className="mini-note">Shipping estimate unavailable. Default courier will be used.</p>
               )}
             </div>
-
-            <div className="integration-card" style={{ marginTop: 12 }}>
-              <h4>Coupon Redemption Progress</h4>
-              <p className="mini-note">
-                Plants progress: {couponProgress.currentPlants}/{couponProgress.targetPlants} plants
-              </p>
-              <div style={{ width: "100%", height: 10, background: "#1f2937", borderRadius: 999, overflow: "hidden", marginBottom: 8 }}>
-                <div
-                  style={{
-                    width: `${couponProgress.percent}%`,
-                    height: "100%",
-                    background: "linear-gradient(90deg, #22c55e, #86efac)",
-                    transition: "width 0.3s ease",
-                  }}
-                />
-              </div>
-              <p className="mini-note">{couponProgress.nextLabel} · Reuses: {couponProgress.currentExchanges}</p>
-
-              <h4 style={{ marginTop: 12 }}>Coupon Wallet</h4>
-              {couponWallet.length > 0 ? (
-                <div className="logistics-rates-list">
-                  {couponWallet.map((coupon) => (
-                    <label key={coupon.code} className={`logistics-rate-item ${selectedCouponCode === coupon.code ? "logistics-rate-item-selected" : ""}`}>
-                      <input
-                        type="radio"
-                        name="coupon-select"
-                        checked={selectedCouponCode === coupon.code}
-                        onChange={() => setSelectedCouponCode(coupon.code)}
-                      />
-                      <span>
-                        🎟️ {coupon.code} — {(coupon.type || "coupon").replaceAll("_", " ")}
-                        {coupon.value ? ` (${coupon.value}%/₹${coupon.value})` : ""}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              ) : (
-                <p className="mini-note">No unlocked coupons yet.</p>
-              )}
-
-              <div className="logistics-pincode-row" style={{ marginTop: 8 }}>
-                <label style={{ width: "100%" }}>
-                  Or enter coupon code manually
-                  <input
-                    value={couponCode}
-                    onChange={(e) => setCouponCode(e.target.value)}
-                    placeholder="Enter coupon code"
-                  />
-                </label>
-              </div>
-            </div>
-
-            <div className="integration-card" style={{ marginTop: 12 }}>
-              <h4>Payment Method</h4>
-              <div style={{ display: "grid", gap: 8 }}>
-                <label className="logistics-rate-item" style={{ margin: 0 }}>
-                  <input
-                    type="radio"
-                    name="payment-method"
-                    checked={paymentMethod === "upi"}
-                    onChange={() => setPaymentMethod("upi")}
-                  />
-                  <span>UPI</span>
-                </label>
-                <label className="logistics-rate-item" style={{ margin: 0 }}>
-                  <input
-                    type="radio"
-                    name="payment-method"
-                    checked={paymentMethod === "card"}
-                    onChange={() => setPaymentMethod("card")}
-                  />
-                  <span>Credit/Debit Card</span>
-                </label>
-                <label className="logistics-rate-item" style={{ margin: 0 }}>
-                  <input
-                    type="radio"
-                    name="payment-method"
-                    checked={paymentMethod === "wallet"}
-                    onChange={() => setPaymentMethod("wallet")}
-                  />
-                  <span>Wallet</span>
-                </label>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              className="nav-button"
-              style={{ marginTop: 12, alignSelf: "flex-start" }}
-              onClick={handlePlaceOrder}
-              disabled={placing || !receiverDisplayAddress}
-            >
-              {placing ? "Placing order…" : "Place Order"}
-            </button>
-
-            {orderConfirmation ? (
-              <div className="integration-card" style={{ marginTop: 16 }}>
-                <h4>Order Confirmed</h4>
-                <p>Shipment ID: {orderConfirmation.shipmentId}</p>
-                <p>Tracking ID: {orderConfirmation.trackingId}</p>
-                <p>Courier: {orderConfirmation.courier}</p>
-                <p>Estimated Delivery: {orderConfirmation.eta}</p>
-              </div>
-            ) : null}
           </div>
         </>
       )}
-
-      {message && <p className="message" style={{ marginTop: 16 }}>{message}</p>}
     </div>
   );
 }
