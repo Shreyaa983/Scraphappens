@@ -26,16 +26,16 @@ function makeTruckIcon(angleDeg = 0, iconUrl = null) {
     return L.divIcon({
       className: "truck-div-icon",
       html: `<div class=\"truck-wrap\" style=\"transform: rotate(${adjustedAngle}deg);\"><img src=\"${iconUrl}\" alt=\"truck\"/></div>`,
-      iconSize: [40, 40],
-      iconAnchor: [20, 20],
+      iconSize: [28, 28],
+      iconAnchor: [14, 14],
     });
   }
 
   return L.divIcon({
     className: "truck-div-icon",
-    html: `<div class=\"truck-wrap truck-emoji\" style=\"transform: rotate(${adjustedAngle}deg);\">🚚</div>`,
-    iconSize: [40, 40],
-    iconAnchor: [20, 20],
+    html: `<div class="truck-wrap truck-emoji" style="transform: rotate(${adjustedAngle}deg);">🚚</div>`,
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
   });
 }
 

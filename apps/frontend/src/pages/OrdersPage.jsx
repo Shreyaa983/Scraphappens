@@ -24,29 +24,34 @@ function loadShipmentMap() {
 function buildTimelineSteps(statusText) {
   const status = String(statusText || "").toLowerCase();
   const base = [
-    { key: "order_placed", label: "Order Placed", done: true },
-    { key: "pickup_scheduled", label: "Pickup Scheduled", done: false },
-    { key: "in_transit", label: "In Transit", done: false },
-    { key: "out_for_delivery", label: "Out for Delivery", done: false },
-    { key: "delivered", label: "Delivered", done: false },
+    { key: "order_placed", label: "Order Placed", done: true, current: false },
+    { key: "pickup_scheduled", label: "Pickup Scheduled", done: false, current: false },
+    { key: "in_transit", label: "In Transit", done: false, current: false },
+    { key: "out_for_delivery", label: "Out for Delivery", done: false, current: false },
+    { key: "delivered", label: "Delivered", done: false, current: false },
   ];
 
   if (status.includes("pickup")) {
+    base[0].done = true;
+    base[1].current = true;
+  } else if (status.includes("transit")) {
+    base[0].done = true;
     base[1].done = true;
-  }
-  if (status.includes("transit")) {
+    base[2].current = true;
+  } else if (status.includes("out")) {
+    base[0].done = true;
     base[1].done = true;
     base[2].done = true;
-  }
-  if (status.includes("out")) {
+    base[3].current = true;
+  } else if (status.includes("deliver")) {
+    base[0].done = true;
     base[1].done = true;
     base[2].done = true;
     base[3].done = true;
-  }
-  if (status.includes("deliver")) {
-    base.forEach((step) => {
-      step.done = true;
-    });
+    base[4].current = true;
+  } else {
+    // Default: Order placed
+    base[0].current = true;
   }
 
   return base;
@@ -277,7 +282,7 @@ export function BuyerOrdersPage({ token }) {
 
                             <div className="logistics-timeline">
                               {buildTimelineSteps(trackingByOrder[order.id].shipment_status).map((step) => (
-                                <div key={`${order.id}-${step.key}`} className={`logistics-timeline-step ${step.done ? "done" : ""}`}>
+                                <div key={`${order.id}-${step.key}`} className={`logistics-timeline-step ${step.done ? "done" : ""} ${step.current ? "current" : ""}`}>
                                   <span className="dot" />
                                   <span>{step.label}</span>
                                 </div>

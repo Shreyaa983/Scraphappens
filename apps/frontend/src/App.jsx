@@ -9,6 +9,7 @@ import UserDashboard from "./components/Marketplace/UserDashboard";
 import CreateListing from "./pages/CreateListing";
 import GardenPage from "./pages/GardenPage";
 import LogisticsDashboardPage from "./pages/LogisticsDashboardPage";
+import LogisticsPickupsPage from "./pages/LogisticsPickupsPage";
 import MaterialDetailPage from "./pages/MaterialDetailPage";
 import MarketplacePage from "./pages/MarketplacePage";
 import MyListingsPage from "./pages/MyListingsPage";
