@@ -9,7 +9,7 @@ export const getSystemContext = async (userId) => {
     if (userId) {
       const users = await sql`SELECT id, name, email, role FROM users WHERE id = ${userId}`;
       userData = users.length > 0 ? users[0] : null;
-      
+
       if (userData) {
         cartItems = await sql`
           SELECT c.id, m.title, c.quantity 

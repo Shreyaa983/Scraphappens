@@ -1,30 +1,54 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { getDiyPosts } from "../api";
+import { Coins, Activity, Trash2 } from "lucide-react";
+import "../styles/diy.css";
 
 const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1200&q=80";
 
 function DiyCard({ post, onOpen }) {
+  const isAI = post.is_ai_generated || false;
+
   return (
-    <article className="diy-feed-card" onClick={() => onOpen(post)}>
-      <div className="diy-feed-card-image-wrap">
-        <img src={post.main_image_url || FALLBACK_IMAGE} alt={post.title} className="diy-feed-card-image" />
-        {post.waste_saved ? <span className="diy-impact-chip">{post.waste_saved}</span> : null}
+    <article className="diy-card" onClick={() => onOpen(post)}>
+      <div className="diy-card-image-wrap">
+        <img 
+          src={post.main_image_url || FALLBACK_IMAGE} 
+          alt={post.title} 
+          className="diy-card-image" 
+        />
+        {isAI && <span className="diy-ai-label">AI Generated</span>}
       </div>
-      <div className="diy-feed-card-body">
-        <div className="diy-feed-card-top">
-          <span className="diy-mini-label">DIY idea</span>
-          <h3>{post.title}</h3>
-        </div>
-        <p>{post.description}</p>
-        <div className="diy-feed-card-meta">
-          <div>
-            <span>Estimated cost</span>
-            <strong>{post.estimated_cost || "₹0-₹500"}</strong>
+      <div className="diy-card-body">
+        <h3 className="diy-card-title">{post.title}</h3>
+        <p className="diy-card-desc">{post.description}</p>
+        
+        <div className="diy-card-meta">
+          <div className="diy-meta-item">
+            <span className="diy-meta-label">
+              <Coins size={12} style={{ marginRight: 4 }} />
+              Estimated Cost
+            </span>
+            <span className="diy-meta-value">{post.estimated_cost || "Rs. 0"}</span>
           </div>
-          <button type="button" className="diy-open-button">
-            View project
-          </button>
+          <div className="diy-meta-item">
+            <span className="diy-meta-label">
+              <Activity size={12} style={{ marginRight: 4 }} />
+              Difficulty
+            </span>
+            <span className="diy-meta-value">{post.difficulty || "Easy"}</span>
+          </div>
+          <div className="diy-meta-item">
+            <span className="diy-meta-label">
+              <Trash2 size={12} style={{ marginRight: 4 }} />
+              Waste Saved
+            </span>
+            <span className="diy-meta-value">{post.waste_saved || "N/A"}</span>
+          </div>
         </div>
+
+        <button type="button" className="diy-card-button">
+          View Project
+        </button>
       </div>
     </article>
   );
@@ -65,41 +89,32 @@ export default function DIYFeedPage({ token, onOpenProject }) {
 
   const totalProjects = posts.length;
   const zeroCostProjects = useMemo(
-    () => posts.filter((post) => String(post.estimated_cost || "").includes("₹0")).length,
+    () => posts.filter((post) => 
+      String(post.estimated_cost || "").includes("Rs. 0") || 
+      String(post.estimated_cost || "").includes("₹0")
+    ).length,
     [posts]
   );
 
   return (
     <div className="diy-feed-shell">
-      <section className="diy-hero-panel">
-        <div className="diy-hero-copy">
-          <span className="eyebrow">Buyer-only inspiration</span>
-          <h2>Explore ready-made DIY reuse ideas and build with materials from the marketplace.</h2>
-          <p>
-            These static inspiration posts are seeded into the database so buyers can browse projects, estimate spend in rupees,
-            open material links, and share completed builds under each idea.
-          </p>
-          <div className="diy-hero-actions">
-            <div className="diy-inline-note">
-              <strong>Seeded inspiration library</strong>
-              <span>Posts are preloaded on the backend so the DIY feature is testable without AI generation.</span>
-            </div>
-          </div>
-        </div>
+      <header className="diy-page-header">
+        <h1>DIY Inspiration</h1>
+        <p>Explore creative reuse projects built from marketplace materials. Build them yourself and share your results with the community.</p>
+      </header>
 
-        <div className="diy-stats-grid">
-          <div className="diy-stat-card">
-            <span>Total inspirations</span>
-            <strong>{totalProjects}</strong>
-          </div>
-          <div className="diy-stat-card">
-            <span>Zero-cost builds</span>
-            <strong>{zeroCostProjects}</strong>
-          </div>
-          <div className="diy-stat-card">
-            <span>Difficulty range</span>
-            <strong>Easy-Medium</strong>
-          </div>
+      <section className="diy-stats-container">
+        <div className="diy-stat-card">
+          <span className="diy-stat-label">Total Inspirations</span>
+          <span className="diy-stat-value">{totalProjects}</span>
+        </div>
+        <div className="diy-stat-card">
+          <span className="diy-stat-label">Zero-Cost Builds</span>
+          <span className="diy-stat-value">{zeroCostProjects}</span>
+        </div>
+        <div className="diy-stat-card">
+          <span className="diy-stat-label">Difficulty Range</span>
+          <span className="diy-stat-value">Easy – Medium</span>
         </div>
       </section>
 

@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Routes, Route, Navigate, useNavigate, useParams } from "react-router-dom";
 import { getCurrentUser, login, register } from "./api";
 import AuthPanel from "./components/AuthPanel";
@@ -8,7 +8,7 @@ import SupplierProfile from "./components/Marketplace/SupplierProfile";
 import UserDashboard from "./components/Marketplace/UserDashboard";
 import CreateListing from "./pages/CreateListing";
 import GardenPage from "./pages/GardenPage";
-import LogisticsDashboardPage from "./pages/LogisticsDashboardPage";
+
 import MaterialDetailPage from "./pages/MaterialDetailPage";
 import MarketplacePage from "./pages/MarketplacePage";
 import MyListingsPage from "./pages/MyListingsPage";
@@ -20,6 +20,7 @@ import DIYDetailPage from "./pages/DIYDetailPage";
 import { queuePendingGardenReward } from "./utils/gardenRewards";
 import { AgenticProvider } from "./contexts/Agentic/ChatContext";
 import GlobalAssistant from "./components/Agentic/GlobalAssistant";
+import LogisticsPickupsPage from "./pages/LogisticsPickupsPage";
 
 const roles = ["seller", "buyer", "volunteer"];
 
@@ -80,7 +81,7 @@ export default function App() {
   });
 
   const sidebarItems = useMemo(() => {
-    const items = ["Marketplace", "My Dashboard", "AI Assistant", "Garden", "Logistics Dashboard"];
+    const items = ["Marketplace", "My Dashboard", "AI Assistant", "Garden"];
 
     if (user && isSellerRole(user.role)) {
       items.push("My Listings", "Seller Orders");
@@ -297,7 +298,7 @@ export default function App() {
 
   function renderSectionContent() {
     if (activeSection === "AI Assistant") return <AIChatbot />;
-    if (activeSection === "Logistics Dashboard") return <LogisticsDashboardPage token={token} />;
+
     if (activeSection === "Cart") {
       return <CartPage token={token} user={user} onOrderPlaced={handleOrderPlaced} />;
     }
@@ -384,7 +385,7 @@ export default function App() {
                   />
                 }
             />
-              <Route path="/logistics-dashboard" element={<LogisticsDashboardPage token={token} />} />
+
               <Route path="/pickup-scheduling" element={<LogisticsPickupsPage token={token} />} />
                 <Route path="/my-dashboard" element={<UserDashboard token={token} user={user} />} />
             <Route path="/supplier/:supplierId" element={<SupplierProfile token={token} onBack={() => navigate(-1)} />} />
@@ -400,6 +401,25 @@ export default function App() {
               <>
                 <Route path="/cart" element={<CartPage token={token} user={user} onOrderPlaced={handleOrderPlaced} />} />
                 <Route path="/my-orders" element={<BuyerOrdersPage token={token} />} />
+                <Route
+                  path="/diy"
+                  element={
+                    <DIYFeedPage
+                      token={token}
+                      onOpenProject={(post) => navigate(`/diy/${post.id}`)}
+                    />
+                  }
+                />
+                <Route
+                  path="/diy/:id"
+                  element={
+                    <DIYDetailRoute
+                      token={token}
+                      onOpenMaterial={openMaterialFromDiy}
+                      onSearchMaterial={searchMaterialFromDiy}
+                    />
+                  }
+                />
               </>
             )}
 
