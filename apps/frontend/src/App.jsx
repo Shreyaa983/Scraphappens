@@ -23,6 +23,7 @@ const roles = ["seller", "buyer", "volunteer"];
 
 const isSellerRole = (role) => role === "seller" || role === "supplier";
 const isBuyerRole = (role) => role === "buyer";
+const isVolunteerRole = (role) => role === "volunteer";
 
 function RoleLockedPanel() {
   return (
@@ -158,6 +159,23 @@ export default function App() {
 
   function handleFilterChange(key, value) {
     setMarketplaceFilters((prev) => ({ ...prev, [key]: value }));
+  }
+
+  function openMaterialFromDiy(materialId) {
+    if (!materialId) {
+      return;
+    }
+    navigate(`/material/${materialId}`);
+  }
+
+  function searchMaterialFromDiy(materialName) {
+    setMarketplaceFilters((prev) => ({
+      ...prev,
+      search: materialName || "",
+      category: "All",
+      condition: "All",
+    }));
+    navigate("/");
   }
 
   function handleOrderPlaced(result) {
