@@ -7,7 +7,8 @@ export const env = {
   databaseUrl: process.env.NEON_DATABASE_URL,
   jwtSecret: process.env.JWT_SECRET,
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || "7d",
-  openAiApiKey: process.env.OPENAI_API_KEY || ""
+  openAiApiKey: process.env.OPENAI_API_KEY || "",
+  geminiApiKey: process.env.GEMINI_API_KEY || ""
 };
 
 export function validateEnv() {

@@ -1,18 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { getCurrentUser, login, register } from "./api";
 import AuthPanel from "./components/AuthPanel";
-import AIAssistantPage from "./pages/AIAssistantPage";
-import CheckoutPage from "./pages/CheckoutPage";
 import CreateListing from "./pages/CreateListing";
 import GardenPage from "./pages/GardenPage";
 import MaterialDetailPage from "./pages/MaterialDetailPage";
 import MarketplacePage from "./pages/MarketplacePage";
 import MyListingsPage from "./pages/MyListingsPage";
 import CartPage from "./pages/CartPage";
+import AIChatbot from "./pages/AIChatbot";
 import { BuyerOrdersPage, SellerOrdersPage } from "./pages/OrdersPage";
 
 const roles = ["supplier", "buyer", "volunteer"];
-const sidebarItems = ["Marketplace", "Cart", "My Orders", "Seller Orders", "My Listings", "AI Assistant", "Garden"];
 
 export default function App() {
   const [mode, setMode] = useState("register");
@@ -31,6 +29,14 @@ export default function App() {
     category: "All",
     condition: "All",
   });
+
+  const sidebarItems = useMemo(() => {
+    const base = ["Marketplace", "My Listings", "Cart", "My Orders", "AI Assistant", "Garden"];
+    if (user?.role === "supplier") {
+      base.push("Seller Orders");
+    }
+    return base;
+  }, [user]);
 
   useEffect(() => {
     async function restoreUser() {
@@ -159,8 +165,7 @@ export default function App() {
   }
 
   function renderSectionContent() {
-    if (activeSection === "AI Assistant") return <AIAssistantPage />;
-    if (activeSection === "Garden") return <GardenPage user={user} />;
+    if (activeSection === "AI Assistant") return <AIChatbot />;
     if (activeSection === "Cart") {
       return <CartPage token={token} onOrderPlaced={() => setActiveSection("My Orders")} />;
     }
@@ -170,6 +175,7 @@ export default function App() {
     if (activeSection === "Seller Orders") {
       return <SellerOrdersPage token={token} />;
     }
+    if (activeSection === "Garden") return <GardenPage user={user} />;
     if (activeSection === "My Listings") {
       if (marketplaceView === "edit" && editItem) {
         return <CreateListing user={user} token={token} editItem={editItem} onBack={() => { setMarketplaceView("browse"); setEditItem(null); }} />;
