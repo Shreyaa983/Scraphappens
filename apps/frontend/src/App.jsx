@@ -1,9 +1,15 @@
-import { useEffect, useMemo, useState } from "react";
-import { getCurrentUser, getMaterialById, login, register } from "./api";
+ï»¿import { useEffect, useMemo, useState } from "react";
+import { Routes, Route, Navigate, useNavigate, useParams } from "react-router-dom";
+import { getCurrentUser, login, register } from "./api";
 import AuthPanel from "./components/AuthPanel";
+import Sidebar from "./components/Sidebar";
 import OrderAchievementOverlay from "./components/Garden/OrderAchievementOverlay";
+import SupplierProfile from "./components/Marketplace/SupplierProfile";
+import UserDashboard from "./components/Marketplace/UserDashboard";
 import CreateListing from "./pages/CreateListing";
 import GardenPage from "./pages/GardenPage";
+import LogisticsDashboardPage from "./pages/LogisticsDashboardPage";
+import LogisticsPickupsPage from "./pages/LogisticsPickupsPage";
 import MaterialDetailPage from "./pages/MaterialDetailPage";
 import MarketplacePage from "./pages/MarketplacePage";
 import MyListingsPage from "./pages/MyListingsPage";
@@ -18,7 +24,6 @@ const roles = ["seller", "buyer", "volunteer"];
 
 const isSellerRole = (role) => role === "seller" || role === "supplier";
 const isBuyerRole = (role) => role === "buyer";
-const isVolunteerRole = (role) => role === "volunteer";
 
 function RoleLockedPanel() {
   return (
@@ -32,14 +37,25 @@ function RoleLockedPanel() {
   );
 }
 
+function DIYDetailRoute({ token, onOpenMaterial, onSearchMaterial }) {
+  const navigate = useNavigate();
+  const { id } = useParams();
+
+  return (
+    <DIYDetailPage
+      diyId={id}
+      token={token}
+      onBack={() => navigate("/diy")}
+      onOpenMaterial={onOpenMaterial}
+      onSearchMaterial={onSearchMaterial}
+    />
+  );
+}
+
 export default function App() {
+  const navigate = useNavigate();
   const [mode, setMode] = useState("register");
   const [showAuth, setShowAuth] = useState(false);
-  const [activeSection, setActiveSection] = useState("Marketplace");
-  const [marketplaceView, setMarketplaceView] = useState("browse");
-  const [editItem, setEditItem] = useState(null);
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [activeDiyId, setActiveDiyId] = useState(null);
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -62,24 +78,6 @@ export default function App() {
     category: "All",
     condition: "All",
   });
-
-  const sidebarItems = useMemo(() => {
-    const items = ["Marketplace", "AI Assistant", "Garden"];
-
-    if (user && isSellerRole(user.role)) {
-      items.push("My Listings", "Seller Orders");
-    }
-
-    if (user && isBuyerRole(user.role)) {
-      items.push("Cart", "My Orders", "DIY Inspiration");
-    }
-
-    if (user && isVolunteerRole(user.role)) {
-      // Shared experience only for now.
-    }
-
-    return items;
-  }, [user]);
 
   useEffect(() => {
     async function restoreUser() {
@@ -122,8 +120,7 @@ export default function App() {
       setUser(response.user);
       localStorage.setItem("token", response.token);
       setShowAuth(false);
-      setActiveSection("Marketplace");
-      setMarketplaceView("browse");
+      navigate("/");
     } catch (error) {
       setMessage(error.message);
     }
@@ -133,28 +130,14 @@ export default function App() {
     setToken("");
     setUser(null);
     localStorage.removeItem("token");
-    setActiveSection("Marketplace");
-    setMarketplaceView("browse");
-    setSelectedProduct(null);
-    setEditItem(null);
-    setActiveDiyId(null);
+    setMessage("");
+    navigate("/");
   }
 
   function openAuth(nextMode) {
     setMode(nextMode);
     setShowAuth(true);
     setMessage("");
-  }
-
-  function handleSidebarChange(section) {
-    setActiveSection(section);
-    setMarketplaceView("browse");
-    setSelectedProduct(null);
-    setEditItem(null);
-    setMessage("");
-    if (section !== "DIY Inspiration") {
-      setActiveDiyId(null);
-    }
   }
 
   function handleFilterChange(key, value) {
@@ -170,7 +153,6 @@ export default function App() {
     }
 
     setPendingGardenAchievement(achievement);
-
     setOrderAchievement(achievement || {
       name: "Circular Purchase Confirmed",
       description: "Your order has been recorded as a circular action.",
@@ -180,156 +162,22 @@ export default function App() {
 
     window.setTimeout(() => {
       setOrderAchievement(null);
-      setActiveSection("Garden");
-      setMarketplaceView("browse");
-      setSelectedProduct(null);
-      setEditItem(null);
+      navigate("/garden");
     }, 2200);
   }
 
-  function openProductDetail(product) {
-    setSelectedProduct(product);
-    setMarketplaceView("detail");
-  }
-
-  async function openMaterialFromDiy(materialId) {
+  function openMaterialFromDiy(materialId) {
     if (!materialId) return;
-    try {
-      const response = await getMaterialById(materialId);
-      setMarketplaceFilters((prev) => ({ ...prev, search: "", category: "All" }));
-      setActiveSection("Marketplace");
-      setSelectedProduct(response.material);
-      setMarketplaceView("detail");
-      setActiveDiyId(null);
-    } catch (error) {
-      setMessage(error.message || "Unable to open material listing.");
-    }
+    navigate(`/material/${materialId}`);
   }
 
   function searchMaterialFromDiy(materialName) {
-    setMarketplaceFilters((prev) => ({ ...prev, search: materialName || "", category: "All" }));
-    setActiveSection("Marketplace");
-    setMarketplaceView("browse");
-    setSelectedProduct(null);
-    setActiveDiyId(null);
-  }
-
-  function openEdit(item) {
-    setEditItem(item);
-    setMarketplaceView("edit");
-    setActiveSection("Marketplace");
-  }
-
-  function openEditFromMyListings(item) {
-    setEditItem(item);
-    setMarketplaceView("edit");
-    setActiveSection("My Listings");
-  }
-
-  function goBackFromForm() {
-    setMarketplaceView("browse");
-    setEditItem(null);
-    setSelectedProduct(null);
-  }
-
-  function renderMarketplaceContent() {
-    if (marketplaceView === "detail" && selectedProduct) {
-      return (
-        <MaterialDetailPage
-          material={selectedProduct}
-          user={user}
-          onBack={() => {
-            setMarketplaceView("browse");
-            setSelectedProduct(null);
-          }}
-          onEdit={openEdit}
-        />
-      );
-    }
-    if (marketplaceView === "create") {
-      if (!user || !isSellerRole(user.role)) {
-        return (
-          <MarketplacePage
-            user={user}
-            filters={marketplaceFilters}
-            onFilterChange={handleFilterChange}
-            onSelectProduct={openProductDetail}
-            onCreateClick={() => {}}
-          />
-        );
-      }
-      return <CreateListing user={user} token={token} onBack={goBackFromForm} />;
-    }
-    if (marketplaceView === "edit" && editItem) {
-      return <CreateListing user={user} token={token} editItem={editItem} onBack={goBackFromForm} />;
-    }
-    return (
-      <MarketplacePage
-        user={user}
-        filters={marketplaceFilters}
-        onFilterChange={handleFilterChange}
-        onSelectProduct={openProductDetail}
-        onCreateClick={() => {
-          if (!user || !isSellerRole(user.role)) {
-            setMessage("Only sellers can create material listings.");
-            return;
-          }
-          setMarketplaceView("create");
-        }}
-      />
-    );
-  }
-
-  function renderSectionContent() {
-    if (activeSection === "AI Assistant") return <AIChatbot />;
-    if (activeSection === "Cart") {
-      return <CartPage token={token} onOrderPlaced={handleOrderPlaced} />;
-    }
-    if (activeSection === "My Orders") {
-      return <BuyerOrdersPage token={token} />;
-    }
-    if (activeSection === "Seller Orders") {
-      return <SellerOrdersPage token={token} />;
-    }
-    if (activeSection === "DIY Inspiration") {
-      if (!user || !isBuyerRole(user.role)) {
-        return <RoleLockedPanel />;
-      }
-      if (activeDiyId) {
-        return (
-          <DIYDetailPage
-            diyId={activeDiyId}
-            token={token}
-            user={user}
-            onBack={() => setActiveDiyId(null)}
-            onOpenMaterial={openMaterialFromDiy}
-            onSearchMaterial={searchMaterialFromDiy}
-          />
-        );
-      }
-      return (
-        <DIYFeedPage
-          token={token}
-          onOpenProject={(post) => setActiveDiyId(post.id)}
-        />
-      );
-    }
-    if (activeSection === "Garden") {
-      return (
-        <GardenPage
-          user={user}
-          pendingAchievement={pendingGardenAchievement}
-          onPendingAchievementHandled={() => setPendingGardenAchievement(null)}
-        />
-      );
-    }
-    if (activeSection === "My Listings") {
-      if (marketplaceView === "edit" && editItem) {
-        return <CreateListing user={user} token={token} editItem={editItem} onBack={() => { setMarketplaceView("browse"); setEditItem(null); }} />;
-      }
-      return <MyListingsPage token={token} onEdit={openEditFromMyListings} />;
-    }
-    return renderMarketplaceContent();
+    setMarketplaceFilters((prev) => ({
+      ...prev,
+      search: materialName || "",
+      category: "All"
+    }));
+    navigate("/");
   }
 
   if (loadingUser) {
@@ -343,39 +191,89 @@ export default function App() {
   if (token && user) {
     return (
       <main className="dashboard-page">
-        <aside className="sidebar">
-          <div>
-            <div className="brand-block sidebar-brand">
-              <span className="brand-mark">S</span>
-              <div>
-                <h1>ScrapHappens</h1>
-                <p>{roleTitle}</p>
-              </div>
-            </div>
-
-            <nav className="sidebar-nav">
-              {sidebarItems.map((item) => (
-                <button
-                  key={item}
-                  type="button"
-                  className={`sidebar-link ${activeSection === item ? "sidebar-link-active" : ""}`}
-                  onClick={() => handleSidebarChange(item)}
-                >
-                  {item}
-                </button>
-              ))}
-            </nav>
-          </div>
-
-          <div className="sidebar-footer">
-            <p className="sidebar-user">{user.name}</p>
-            <p className="sidebar-role">{user.role}</p>
-            <button className="nav-button sidebar-logout" onClick={onLogout}>Logout</button>
-          </div>
-        </aside>
+        <Sidebar user={user} roleTitle={roleTitle} onLogout={onLogout} />
 
         <section className="dashboard-main">
-          {renderSectionContent()}
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <MarketplacePage
+                  user={user}
+                  filters={marketplaceFilters}
+                  onFilterChange={handleFilterChange}
+                  onCreateClick={() => {
+                    if (!isSellerRole(user.role)) {
+                      setMessage("Only sellers can list materials.");
+                      return;
+                    }
+                    navigate("/create-listing");
+                  }}
+                />
+              }
+            />
+            <Route
+              path="/material/:id"
+              element={<MaterialDetailPage user={user} onViewSupplier={(supplierId) => navigate(`/supplier/${supplierId}`)} />}
+            />
+            <Route
+              path="/create-listing"
+              element={isSellerRole(user.role) ? <CreateListing user={user} token={token} /> : <Navigate to="/" replace />}
+            />
+            <Route
+              path="/edit-listing/:id"
+              element={isSellerRole(user.role) ? <CreateListing user={user} token={token} /> : <Navigate to="/" replace />}
+            />
+            <Route path="/ai-assistant" element={<AIChatbot />} />
+            <Route
+              path="/garden"
+              element={
+                <GardenPage
+                  user={user}
+                  pendingAchievement={pendingGardenAchievement}
+                  onPendingAchievementHandled={() => setPendingGardenAchievement(null)}
+                />
+              }
+            />
+            <Route path="/logistics-dashboard" element={<LogisticsDashboardPage token={token} />} />
+            <Route path="/pickup-scheduling" element={<LogisticsPickupsPage token={token} />} />
+            <Route path="/my-dashboard" element={<UserDashboard token={token} user={user} />} />
+            <Route path="/supplier/:supplierId" element={<SupplierProfile token={token} onBack={() => navigate(-1)} />} />
+
+            {isSellerRole(user.role) && (
+              <>
+                <Route path="/my-listings" element={<MyListingsPage token={token} />} />
+                <Route path="/seller-orders" element={<SellerOrdersPage token={token} />} />
+              </>
+            )}
+
+            {isBuyerRole(user.role) && (
+              <>
+                <Route path="/cart" element={<CartPage token={token} user={user} onOrderPlaced={handleOrderPlaced} />} />
+                <Route path="/my-orders" element={<BuyerOrdersPage token={token} />} />
+                <Route path="/diy" element={<DIYFeedPage token={token} onOpenProject={(post) => navigate(`/diy/${post.id}`)} />} />
+                <Route
+                  path="/diy/:id"
+                  element={
+                    <DIYDetailRoute
+                      token={token}
+                      onOpenMaterial={openMaterialFromDiy}
+                      onSearchMaterial={searchMaterialFromDiy}
+                    />
+                  }
+                />
+              </>
+            )}
+
+            {!isBuyerRole(user.role) && (
+              <>
+                <Route path="/diy" element={<RoleLockedPanel />} />
+                <Route path="/diy/:id" element={<RoleLockedPanel />} />
+              </>
+            )}
+
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
           {message ? <p className="message dashboard-message">{message}</p> : null}
           <OrderAchievementOverlay achievement={orderAchievement} />
         </section>
@@ -394,14 +292,8 @@ export default function App() {
           </div>
         </div>
         <div className="nav-actions">
-          {!token ? (
-            <>
-              <button className="nav-button nav-button-secondary" onClick={() => openAuth("login")}>Login</button>
-              <button className="nav-button" onClick={() => openAuth("register")}>Register</button>
-            </>
-          ) : (
-            <button className="nav-button" onClick={onLogout}>Logout</button>
-          )}
+          <button className="nav-button nav-button-secondary" onClick={() => openAuth("login")}>Login</button>
+          <button className="nav-button" onClick={() => openAuth("register")}>Register</button>
         </div>
       </nav>
 
@@ -414,22 +306,15 @@ export default function App() {
             JWT authentication, and a live circular materials marketplace.
           </p>
 
-          {token && user ? (
-            <div className="status-card">
-              <p className="status-title">Signed in</p>
-              <p>{user.name} · {user.role}</p>
-            </div>
-          ) : (
-            <div className="hero-actions">
-              <button className="hero-button" onClick={() => openAuth("register")}>Get Started</button>
-              <button className="hero-button hero-button-muted" onClick={() => openAuth("login")}>I already have an account</button>
-            </div>
-          )}
+          <div className="hero-actions">
+            <button className="hero-button" onClick={() => openAuth("register")}>Get Started</button>
+            <button className="hero-button hero-button-muted" onClick={() => openAuth("login")}>I already have an account</button>
+          </div>
 
           {message ? <p className="message">{message}</p> : null}
         </div>
 
-        {showAuth && !token ? (
+        {showAuth ? (
           <AuthPanel
             mode={mode}
             form={form}

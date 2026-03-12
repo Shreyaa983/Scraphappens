@@ -1,10 +1,36 @@
+import React, { useState, useEffect } from "react";
+import SuggestionCard from "../components/SuggestionCard";
+
 function TrustBadge({ grade }) {
   return <span className={`trust-badge trust-badge-${grade.toLowerCase()}`}>Grade {grade}</span>;
 }
 
 export default function ProductDetailPage({ product, user, onBack, onCheckout }) {
+  const [suggestions, setSuggestions] = useState([]);
+  const [loading, setLoading] = useState(false);
   const isSeller = user && (user.role === "seller" || user.role === "supplier");
   const canEdit = isSeller && user.email === product.ownerEmail;
+
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch("/api/ai/product-ideas", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ productName: product.name })
+        });
+        const data = await response.json();
+        setSuggestions(data.suggestions || []);
+      } catch (err) {
+        console.error("Failed to fetch AI suggestions", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (product.name) fetchSuggestions();
+  }, [product.name]);
 
   return (
     <div className="page-stack">
@@ -31,45 +57,27 @@ export default function ProductDetailPage({ product, user, onBack, onCheckout })
             <TrustBadge grade={product.trustGrade} />
           </div>
 
-          <p className="detail-subtext">{product.category} · {product.condition} · {product.distanceKm} km away</p>
+          {/* ... Existing Product Info ... */}
+          <p className="detail-subtext">{product.category} · {product.condition}</p>
 
-          <div className="passport-box">
-            <h4>Digital Material Passport</h4>
-            <div className="passport-grid">
-              <div>
-                <span>Origin</span>
-                <strong>{product.origin}</strong>
-              </div>
-              <div>
-                <span>Age</span>
-                <strong>{product.age}</strong>
-              </div>
-              <div className="passport-report">
-                <span>AI Grading Report</span>
-                <strong>{product.aiReport}</strong>
-              </div>
-            </div>
+          <div className="cta-row">
+            <button className="submit-button" onClick={() => onCheckout(product)}>Buy Now</button>
           </div>
-
-          <div className="seller-box">
-            <h4>Seller Info</h4>
-            <p>{product.sellerName}</p>
-            <span>Reliability Score: {product.sellerReliability}</span>
-          </div>
-
-          {canEdit ? (
-            <button type="button" className="submit-button" onClick={onBack}>Edit Listing</button>
-          ) : (
-            <div className="cta-row">
-              <button type="button" className="submit-button" onClick={() => onCheckout(product)}>
-                {user.role === "buyer" ? "Buy Now" : "Request Material"}
-              </button>
-              <button type="button" className="nav-button nav-button-secondary" onClick={() => onCheckout(product)}>
-                Request Material
-              </button>
-            </div>
-          )}
         </div>
+      </section>
+
+      {/* --- NEW AI SUGGESTIONS SECTION --- */}
+      <section className="ai-suggestions-section" style={{ marginTop: "2rem" }}>
+        <h4 style={{ marginBottom: "1rem" }}>✨ AI Upcycling Ideas for this item</h4>
+        {loading ? (
+          <p>Generating creative ideas...</p>
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
+            {suggestions.map((text, index) => (
+              <SuggestionCard key={index} text={text} index={index} />
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );

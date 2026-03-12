@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { getMaterials } from "../api";
 import { categories, conditions } from "../data/mockData";
 
@@ -44,6 +45,7 @@ function ProductCard({ product, onSelect }) {
 }
 
 export default function MarketplacePage({ user, filters, onFilterChange, onSelectProduct, onCreateClick }) {
+  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeCondition, setActiveCondition] = useState("All");
@@ -115,12 +117,14 @@ export default function MarketplacePage({ user, filters, onFilterChange, onSelec
         </div>
 
         <div className="nav-actions-area">
-          <button className="create-listing-btn" onClick={onCreateClick}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
-            List Material
-          </button>
+          {user && (user.role === "seller" || user.role === "supplier") && (
+            <button className="create-listing-btn" onClick={() => onCreateClick ? onCreateClick() : navigate("/create-listing")}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              List Material
+            </button>
+          )}
         </div>
       </header>
 
@@ -143,7 +147,13 @@ export default function MarketplacePage({ user, filters, onFilterChange, onSelec
             </div>
           ) : (
             <div className="product-grid-v3">
-              {filteredProducts.map(p => <ProductCard key={p.id} product={p} onSelect={onSelectProduct} />)}
+              {filteredProducts.map(p => (
+                <ProductCard 
+                  key={p.id} 
+                  product={p} 
+                  onSelect={(product) => onSelectProduct ? onSelectProduct(product) : navigate(`/material/${product.id}`)} 
+                />
+              ))}
             </div>
           )}
         </div>
@@ -204,7 +214,13 @@ export default function MarketplacePage({ user, filters, onFilterChange, onSelec
                 </div>
               ) : (
                 <div className="product-grid-v3">
-                  {filteredProducts.map(p => <ProductCard key={p.id} product={p} onSelect={onSelectProduct} />)}
+                  {filteredProducts.map(p => (
+                    <ProductCard 
+                      key={p.id} 
+                      product={p} 
+                      onSelect={(product) => onSelectProduct ? onSelectProduct(product) : navigate(`/material/${product.id}`)} 
+                    />
+                  ))}
                 </div>
               )}
             </section>

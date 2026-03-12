@@ -2,6 +2,9 @@ import { sql } from "../db/client.js";
 import { clearUserCart, loadCartForOrder } from "./cartController.js";
 import { createOrder, createOrderItems, getOrdersForBuyer, getOrdersForSeller } from "../models/orderModel.js";
 import { createShipment } from "../services/shiprocketService.js";
+import * as couponService from "../modules/coupons/coupon.service.js";
+import * as reputationService from "../modules/reputation/reputation.service.js";
+import * as achievementService from "../modules/achievements/achievement.service.js";
 
 function formatImpactDisplay(value, unit) {
   return `${value} ${unit} waste diverted`;
@@ -47,10 +50,14 @@ function buildCircularAchievement({ order, cartRows, priorOrderCount }) {
 // POST /api/orders/place
 export async function placeOrder(req, res) {
   const buyerId = req.user.sub;
-  const { shipping_address } = req.body;
+  const { shipping_address, coupon_code, payment_method, delivery_option } = req.body;
 
   if (!shipping_address) {
     return res.status(400).json({ message: "shipping_address is required" });
+  }
+
+  if (!payment_method) {
+    return res.status(400).json({ message: "payment_method is required (upi, card, wallet)" });
   }
 
   try {
@@ -73,12 +80,57 @@ export async function placeOrder(req, res) {
       }
     }
 
-    // For now, pricing is not implemented; keep total as 0
-    const totalAmount = 0;
+    // Calculate total amount from material prices
+    let totalAmount = 0;
+    let totalWasteKg = 0;
+
+    for (const row of cartRows) {
+      const itemPrice = row.price ? Number(row.price) : 0;
+      totalAmount += itemPrice * row.quantity;
+      
+      // Estimate waste saved (in kg) - can be customized per material
+      const estimatedWaste = (row.quantity || 1) * 2; // Estimate 2kg per unit
+      totalWasteKg += estimatedWaste;
+    }
+
+    // Apply coupon discount if provided
+    let couponId = null;
+    let discountAmount = 0;
+
+    if (coupon_code) {
+      try {
+        // Get coupon details and verify it's available for the user
+        const coupon = await sql`
+          SELECT c.* FROM coupons c
+          JOIN coupon_wallet cw ON c.id = cw.coupon_id
+          WHERE cw.user_id = ${buyerId} AND c.code = ${coupon_code} AND cw.is_used = FALSE
+          LIMIT 1
+        `;
+
+        if (coupon.length > 0) {
+          const couponData = coupon[0];
+          couponId = couponData.id;
+          discountAmount = couponService.calculateDiscountAmount(couponData, totalAmount);
+        }
+      } catch (error) {
+        console.warn("Error validating coupon:", error);
+        // Continue without coupon if there's an error
+      }
+    }
+
+    // Final amount after discount
+    const finalAmount = Math.max(0, totalAmount - discountAmount);
 
     await sql`BEGIN`;
     try {
-      const order = await createOrder({ buyerId, totalAmount, shippingAddress: shipping_address });
+      const order = await createOrder({
+        buyerId,
+        totalAmount: finalAmount,
+        shippingAddress: shipping_address,
+        couponId,
+        paymentMethod: payment_method,
+        deliveryOption: delivery_option || "standard",
+      });
 
       // Decrement inventory with safety check
       for (const row of cartRows) {
@@ -100,15 +152,57 @@ export async function placeOrder(req, res) {
           material_id: row.material_id,
           seller_id: row.seller_id,
           quantity: row.quantity,
-          price: 0,
+          price: row.price || 0,
         })),
       );
+
+      // Update seller reputation after order
+      const uniqueSellers = [...new Set(cartRows.map((r) => r.seller_id))];
+      for (const sellerId of uniqueSellers) {
+        await reputationService.updateUserReputationAfterOrder(sellerId, {
+          waste_reused_kg: totalWasteKg / uniqueSellers.length,
+        });
+
+        // Check and award badges for seller
+        const userResult = await sql`
+          SELECT average_rating, total_exchanges FROM users WHERE id = ${sellerId}
+        `;
+
+        if (userResult.length > 0) {
+          const user = userResult[0];
+          const exchangeCount = (user.total_exchanges || 0) + 1;
+
+          // Check for seller badges
+          if (exchangeCount >= 10 && user.average_rating >= 4.0) {
+            // Badge eligible
+          }
+        }
+      }
+
+      // Increment buyer tree count
+      await reputationService.incrementBuyerTreeCount(buyerId);
+
+      // Check for buyer achievement unlocks
+      const unlockedAchievements = await achievementService.checkAndUnlockAchievements(buyerId);
 
       await clearUserCart(buyerId);
 
       await sql`COMMIT`;
 
-      const shipment = createShipment({
+      // Apply coupon to order after success
+      if (coupon_code) {
+        try {
+          await sql`
+            UPDATE coupon_wallet
+            SET is_used = TRUE, used_on_order_id = ${order.id}
+            WHERE user_id = ${buyerId} AND coupon_id = ${couponId}
+          `;
+        } catch (error) {
+          console.warn("Error marking coupon as used:", error);
+        }
+      }
+
+      const shipment = await createShipment({
         order,
         items: orderItems.map((oi) => ({
           material_id: oi.material_id,
@@ -123,13 +217,35 @@ export async function placeOrder(req, res) {
         },
       });
 
+
+      try {
+        const testPhone = "9619200100"; 
+        const materialSummary = cartRows[0]?.title || cartRows[0]?.material_type || "Scrap Materials";  
+        console.log(`Attempting to send WhatsApp for: ${materialSummary}`);
+        await sendOrderNotification(testPhone, materialSummary);
+        
+      } catch (wsError) {
+        console.error("WhatsApp notification failed, but order was placed:", wsError);
+      }
+
       const achievement = buildCircularAchievement({
         order,
         cartRows,
         priorOrderCount,
       });
 
-      return res.status(201).json({ order, order_items: orderItems, shipment, achievement });
+      return res.status(201).json({
+        order: {
+          ...order,
+          discount_applied: discountAmount,
+          final_amount: finalAmount,
+        },
+        order_items: orderItems,
+        shipment,
+        achievement,
+        newly_unlocked_achievements: unlockedAchievements,
+        tree_planted: true,
+      });
     } catch (error) {
       await sql`ROLLBACK`;
       console.error("Error placing order:", error);
@@ -154,6 +270,9 @@ export async function getMyOrders(req, res) {
           status: row.order_status,
           total_amount: row.total_amount,
           shipping_address: row.shipping_address,
+          payment_method: row.payment_method,
+          delivery_option: row.delivery_option,
+          coupon_id: row.coupon_id,
           created_at: row.created_at,
           items: [],
         });
@@ -191,6 +310,8 @@ export async function getSellerOrders(req, res) {
       quantity: row.quantity,
       price: row.price,
       status: row.order_status,
+      payment_method: row.payment_method,
+      delivery_option: row.delivery_option,
       created_at: row.created_at,
       material: {
         id: row.material_id,

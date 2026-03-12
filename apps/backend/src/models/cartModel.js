@@ -39,9 +39,19 @@ export async function getCartItemsForUser(userId) {
       m.image_url,
       m.quantity AS available_quantity,
       m.quantity_unit,
-      m.location
+      m.location,
+      m.listed_by AS seller_id,
+      seller.name AS seller_name,
+      seller.street_address AS seller_street_address,
+      seller.city AS seller_city,
+      seller.state AS seller_state,
+      seller.country AS seller_country,
+      seller.pincode AS seller_pincode,
+      seller.latitude AS seller_latitude,
+      seller.longitude AS seller_longitude
     FROM cart_items c
     JOIN materials m ON m.id = c.material_id
+    LEFT JOIN users seller ON seller.id = m.listed_by
     WHERE c.user_id = ${userId}
     ORDER BY c.created_at DESC
   `;

@@ -22,6 +22,7 @@ export async function registerUser({
   email,
   password,
   role,
+  phone_number,
   street_address,
   city,
   state,
@@ -55,6 +56,7 @@ export async function registerUser({
       email,
       password_hash,
       role,
+      phone_number,
       street_address,
       city,
       state,
@@ -68,6 +70,7 @@ export async function registerUser({
       ${email},
       ${passwordHash},
       ${role},
+      ${phone_number},
       ${street_address},
       ${city},
       ${state},
@@ -76,7 +79,7 @@ export async function registerUser({
       ${latitude},
       ${longitude}
     )
-    RETURNING id, name, email, role, created_at
+    RETURNING id, name, email, role, phone_number, created_at, street_address, city, state, country, pincode, latitude, longitude, average_rating, total_exchanges, total_waste_reused_kg, review_count, trees_planted
   `;
 
   const user = users[0];
@@ -90,7 +93,7 @@ export async function loginUser({ email, password }) {
   }
 
   const users = await sql`
-    SELECT id, name, email, role, password_hash, created_at
+    SELECT id, name, email, role, password_hash, created_at, phone_number, street_address, city, state, country, pincode, latitude, longitude, average_rating, total_exchanges, total_waste_reused_kg, review_count, trees_planted
     FROM users
     WHERE email = ${email}
     LIMIT 1
@@ -113,7 +116,7 @@ export async function loginUser({ email, password }) {
 
 export async function getUserById(userId) {
   const users = await sql`
-    SELECT id, name, email, role, created_at
+    SELECT id, name, email, role, created_at, phone_number, street_address, city, state, country, pincode, latitude, longitude, average_rating, total_exchanges, total_waste_reused_kg, review_count, trees_planted
     FROM users
     WHERE id = ${userId}
     LIMIT 1
