@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { getCurrentUser, login, register } from "./api";
+import { getCurrentUser, getMaterialById, login, register } from "./api";
 import AuthPanel from "./components/AuthPanel";
 import OrderAchievementOverlay from "./components/Garden/OrderAchievementOverlay";
 import CreateListing from "./pages/CreateListing";
@@ -10,6 +10,8 @@ import MyListingsPage from "./pages/MyListingsPage";
 import CartPage from "./pages/CartPage";
 import AIChatbot from "./pages/AIChatbot";
 import { BuyerOrdersPage, SellerOrdersPage } from "./pages/OrdersPage";
+import DIYFeedPage from "./pages/DIYFeedPage";
+import DIYDetailPage from "./pages/DIYDetailPage";
 import { queuePendingGardenReward } from "./utils/gardenRewards";
 
 const roles = ["seller", "buyer", "volunteer"];
@@ -18,13 +20,26 @@ const isSellerRole = (role) => role === "seller" || role === "supplier";
 const isBuyerRole = (role) => role === "buyer";
 const isVolunteerRole = (role) => role === "volunteer";
 
+function RoleLockedPanel() {
+  return (
+    <div className="role-locked-shell">
+      <div className="role-locked-card">
+        <span className="eyebrow">Buyer only</span>
+        <h3>DIY Inspiration is reserved for buyers.</h3>
+        <p>Only buyer accounts can browse AI-generated DIY ideas, open material links, and post finished builds.</p>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const [mode, setMode] = useState("register");
   const [showAuth, setShowAuth] = useState(false);
   const [activeSection, setActiveSection] = useState("Marketplace");
-  const [marketplaceView, setMarketplaceView] = useState("browse"); // browse | create | edit
+  const [marketplaceView, setMarketplaceView] = useState("browse");
   const [editItem, setEditItem] = useState(null);
-  const [selectedProduct, setSelectedProduct] = useState(null); // for modal
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [activeDiyId, setActiveDiyId] = useState(null);
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -56,12 +71,11 @@ export default function App() {
     }
 
     if (user && isBuyerRole(user.role)) {
-      items.push("Cart", "My Orders");
+      items.push("Cart", "My Orders", "DIY Inspiration");
     }
 
-    // Volunteers currently use shared sections (Marketplace, Garden, AI)
     if (user && isVolunteerRole(user.role)) {
-      // Placeholder for future volunteer-specific UI
+      // Shared experience only for now.
     }
 
     return items;
@@ -69,7 +83,10 @@ export default function App() {
 
   useEffect(() => {
     async function restoreUser() {
-      if (!token) { setLoadingUser(false); return; }
+      if (!token) {
+        setLoadingUser(false);
+        return;
+      }
       try {
         const response = await getCurrentUser(token);
         setUser(response.user);
@@ -120,6 +137,7 @@ export default function App() {
     setMarketplaceView("browse");
     setSelectedProduct(null);
     setEditItem(null);
+    setActiveDiyId(null);
   }
 
   function openAuth(nextMode) {
@@ -133,6 +151,10 @@ export default function App() {
     setMarketplaceView("browse");
     setSelectedProduct(null);
     setEditItem(null);
+    setMessage("");
+    if (section !== "DIY Inspiration") {
+      setActiveDiyId(null);
+    }
   }
 
   function handleFilterChange(key, value) {
@@ -152,7 +174,7 @@ export default function App() {
     setOrderAchievement(achievement || {
       name: "Circular Purchase Confirmed",
       description: "Your order has been recorded as a circular action.",
-      reward: { plantLabel: "Circular Sapling", icon: "🌱" },
+      reward: { plantLabel: "Circular Sapling", icon: "seedling" },
       impact: { display: "Circular impact recorded" }
     });
 
@@ -165,24 +187,43 @@ export default function App() {
     }, 2200);
   }
 
-  // Open full-page detail view
   function openProductDetail(product) {
     setSelectedProduct(product);
     setMarketplaceView("detail");
   }
 
-  // From detail page → edit
+  async function openMaterialFromDiy(materialId) {
+    if (!materialId) return;
+    try {
+      const response = await getMaterialById(materialId);
+      setMarketplaceFilters((prev) => ({ ...prev, search: "", category: "All" }));
+      setActiveSection("Marketplace");
+      setSelectedProduct(response.material);
+      setMarketplaceView("detail");
+      setActiveDiyId(null);
+    } catch (error) {
+      setMessage(error.message || "Unable to open material listing.");
+    }
+  }
+
+  function searchMaterialFromDiy(materialName) {
+    setMarketplaceFilters((prev) => ({ ...prev, search: materialName || "", category: "All" }));
+    setActiveSection("Marketplace");
+    setMarketplaceView("browse");
+    setSelectedProduct(null);
+    setActiveDiyId(null);
+  }
+
   function openEdit(item) {
     setEditItem(item);
     setMarketplaceView("edit");
     setActiveSection("Marketplace");
   }
 
-  // From My Listings → edit
   function openEditFromMyListings(item) {
     setEditItem(item);
     setMarketplaceView("edit");
-    setActiveSection("My Listings"); // stays on same section
+    setActiveSection("My Listings");
   }
 
   function goBackFromForm() {
@@ -197,7 +238,10 @@ export default function App() {
         <MaterialDetailPage
           material={selectedProduct}
           user={user}
-          onBack={() => { setMarketplaceView("browse"); setSelectedProduct(null); }}
+          onBack={() => {
+            setMarketplaceView("browse");
+            setSelectedProduct(null);
+          }}
           onEdit={openEdit}
         />
       );
@@ -246,6 +290,29 @@ export default function App() {
     }
     if (activeSection === "Seller Orders") {
       return <SellerOrdersPage token={token} />;
+    }
+    if (activeSection === "DIY Inspiration") {
+      if (!user || !isBuyerRole(user.role)) {
+        return <RoleLockedPanel />;
+      }
+      if (activeDiyId) {
+        return (
+          <DIYDetailPage
+            diyId={activeDiyId}
+            token={token}
+            user={user}
+            onBack={() => setActiveDiyId(null)}
+            onOpenMaterial={openMaterialFromDiy}
+            onSearchMaterial={searchMaterialFromDiy}
+          />
+        );
+      }
+      return (
+        <DIYFeedPage
+          token={token}
+          onOpenProject={(post) => setActiveDiyId(post.id)}
+        />
+      );
     }
     if (activeSection === "Garden") {
       return (
@@ -350,7 +417,7 @@ export default function App() {
           {token && user ? (
             <div className="status-card">
               <p className="status-title">Signed in</p>
-              <p>{user.name} · {user.role}</p>
+              <p>{user.name} � {user.role}</p>
             </div>
           ) : (
             <div className="hero-actions">

@@ -7,6 +7,7 @@ import materialRoutes from "./routes/materialRoutes.js";
 import cartRoutes from "./routes/cartRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import voiceRoutes from "./modules/voice/voice.routes.js";
+import diyRoutes from "./routes/diyRoutes.js";
 
 const app = express();
 
@@ -14,6 +15,8 @@ app.use(cors());
 app.use(express.json());
 
 app.use(express.urlencoded({ extended: true }));
+// Serve uploaded images
+app.use("/uploads", express.static("uploads"));
 app.use("/api/voice", voiceRoutes);
 
 app.get("/health", (_, res) => {
@@ -26,5 +29,6 @@ app.use("/api/ai", aiRoutes);
 app.use("/api/materials", materialRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
+app.use("/api", diyRoutes);
 
 export default app;
