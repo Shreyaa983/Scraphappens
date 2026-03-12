@@ -1,74 +1,234 @@
-import GardenCanvas from "../components/GardenCanvas";
-import { buyerGardenStats, sellerGardenStats, volunteerGardenStats } from "../data/mockData";
+import { useEffect, useState } from "react";
+import AchievementPopup from "../components/Garden/AchievementPopup";
+import GardenScene from "../components/Garden/GardenScene";
+import GardenStatsBar from "../components/Garden/GardenStatsBar";
+import InventoryPanel from "../components/Garden/InventoryPanel";
+import useSound from "../hooks/useSound";
+import plantSound from "../asessts/sounds/plant.mp3";
+import {
+  consumePendingGardenRewards,
+  createPlantFromAchievement,
+  createUniqueId,
+  loadLastUnlockedType,
+  loadStoredPlacedTrees,
+  loadStoredUnlockedPlants,
+  persistLastUnlockedType,
+  persistPlacedTrees,
+  persistUnlockedPlants,
+} from "../utils/gardenRewards";
 
-export default function GardenPage({ user }) {
-  const stats = user.role === "supplier"
-    ? sellerGardenStats
-    : user.role === "buyer"
-      ? buyerGardenStats
-      : volunteerGardenStats;
+export default function GardenPage({ user, pendingAchievement, onPendingAchievementHandled }) {
+  const userId = user?.id || user?.sub || "guest";
+  const [unlockedPlants, setUnlockedPlants] = useState(() => loadStoredUnlockedPlants(userId));
+  const [placedTrees, setPlacedTrees] = useState(() => loadStoredPlacedTrees(userId));
+  const [selectedPlantId, setSelectedPlantId] = useState(null);
+  const [activeAchievement, setActiveAchievement] = useState(null);
+  const [lastUnlockedType, setLastUnlockedType] = useState(() => loadLastUnlockedType(userId));
+  const [isGlobalView, setIsGlobalView] = useState(false);
+  const playPlantSound = useSound(plantSound);
+
+  function enqueueAchievementPlant(reward, currentStoredTrees, currentStoredPlants, currentLastType) {
+    if (!reward) {
+      return null;
+    }
+
+    const knownAchievementIds = new Set([
+      ...currentStoredTrees.map((tree) => tree.achievementId).filter(Boolean),
+      ...currentStoredPlants.map((plant) => plant.achievementId).filter(Boolean),
+      ...unlockedPlants.map((plant) => plant.achievementId).filter(Boolean),
+      ...placedTrees.map((tree) => tree.achievementId).filter(Boolean),
+    ]);
+
+    if (reward.id && knownAchievementIds.has(reward.id)) {
+      return null;
+    }
+
+    const plant = createPlantFromAchievement(reward, currentLastType);
+    setUnlockedPlants((prev) => [...prev, plant]);
+    setSelectedPlantId(plant.id);
+    setLastUnlockedType(plant.type);
+    setActiveAchievement({
+      name: reward.name,
+      reward: reward.reward?.plantLabel,
+      icon: reward.reward?.icon,
+      description: reward.description,
+    });
+
+    window.setTimeout(() => {
+      setUnlockedPlants((prev) => prev.map((item) => (item.id === plant.id ? { ...item, isNew: false } : item)));
+    }, 3500);
+
+    return plant;
+  }
+
+  useEffect(() => {
+    const storedTrees = loadStoredPlacedTrees(userId);
+    const storedPlants = loadStoredUnlockedPlants(userId);
+    let nextLastType = loadLastUnlockedType(userId);
+    let nextSelectedPlantId = null;
+    let newestAchievement = null;
+
+    const knownAchievementIds = new Set([
+      ...storedTrees.map((tree) => tree.achievementId).filter(Boolean),
+      ...storedPlants.map((plant) => plant.achievementId).filter(Boolean),
+    ]);
+
+    const pendingRewards = consumePendingGardenRewards(userId);
+    const incomingPlants = [];
+
+    pendingRewards.forEach((reward) => {
+      if (reward?.id && knownAchievementIds.has(reward.id)) {
+        return;
+      }
+
+      const plant = createPlantFromAchievement(reward, nextLastType);
+      nextLastType = plant.type;
+      nextSelectedPlantId = plant.id;
+      newestAchievement = reward;
+      knownAchievementIds.add(plant.achievementId);
+      incomingPlants.push(plant);
+    });
+
+    setPlacedTrees(storedTrees);
+    setUnlockedPlants([...storedPlants, ...incomingPlants]);
+    setLastUnlockedType(nextLastType);
+    setSelectedPlantId(nextSelectedPlantId);
+    setActiveAchievement(
+      newestAchievement
+        ? {
+            name: newestAchievement.name,
+            reward: newestAchievement.reward?.plantLabel,
+            icon: newestAchievement.reward?.icon,
+            description: newestAchievement.description,
+          }
+        : null
+    );
+  }, [userId]);
+
+  useEffect(() => {
+    if (!pendingAchievement) {
+      return;
+    }
+
+    enqueueAchievementPlant(
+      pendingAchievement,
+      loadStoredPlacedTrees(userId),
+      loadStoredUnlockedPlants(userId),
+      loadLastUnlockedType(userId)
+    );
+
+    onPendingAchievementHandled?.();
+  }, [pendingAchievement, onPendingAchievementHandled, userId]);
+
+  useEffect(() => {
+    persistPlacedTrees(userId, placedTrees);
+  }, [placedTrees, userId]);
+
+  useEffect(() => {
+    persistUnlockedPlants(userId, unlockedPlants);
+  }, [unlockedPlants, userId]);
+
+  useEffect(() => {
+    persistLastUnlockedType(userId, lastUnlockedType);
+  }, [lastUnlockedType, userId]);
+
+  useEffect(() => {
+    if (!activeAchievement) {
+      return undefined;
+    }
+
+    const hideTimer = setTimeout(() => {
+      setActiveAchievement(null);
+    }, 3500);
+
+    return () => clearTimeout(hideTimer);
+  }, [activeAchievement]);
+
+  function placeTree(x, z) {
+    if (!selectedPlantId) {
+      return;
+    }
+
+    const selectedPlant = unlockedPlants.find((plant) => plant.id === selectedPlantId);
+    if (!selectedPlant) {
+      return;
+    }
+
+    setPlacedTrees((prev) => [
+      ...prev,
+      {
+        id: createUniqueId(),
+        userId,
+        x,
+        z,
+        position: { x, z },
+        plantId: selectedPlantId,
+        achievementId: selectedPlant.achievementId,
+        achievement: selectedPlant.achievement,
+        achievementDetails: selectedPlant.achievementDetails || null,
+        treeType: selectedPlant.type,
+        treeLabel: selectedPlant.label,
+        icon: selectedPlant.icon,
+        sourceOrderId: selectedPlant.sourceOrderId || null,
+        placedAt: new Date().toISOString()
+      }
+    ]);
+
+    setUnlockedPlants((prev) => prev.filter((plant) => plant.id !== selectedPlantId));
+    setSelectedPlantId(null);
+
+    playPlantSound();
+  }
 
   return (
-    <div className="page-stack">
-      <section className="dashboard-card">
-        <div className="section-heading">
-          <div>
-            <span className="eyebrow">Garden Dashboard</span>
-            <h3>Growth from circular impact</h3>
+    <div className="garden-page">
+      <AchievementPopup achievement={activeAchievement} />
+
+      <div className="garden-layout">
+        <InventoryPanel
+          plants={unlockedPlants}
+          selectedPlantId={selectedPlantId}
+          onSelectPlant={setSelectedPlantId}
+        />
+
+        <section className="garden-scene-shell">
+          <div className="garden-scene-toolbar">
+            <div className={`garden-mode-pill${isGlobalView ? " garden-mode-pill-global" : ""}`}>
+              <span className="garden-mode-pill-icon">{isGlobalView ? "🌍" : "🌱"}</span>
+              <div className="garden-mode-pill-copy">
+                <strong>{isGlobalView ? "Global Forest" : "My Garden"}</strong>
+                <span>
+                  {isGlobalView
+                    ? "Explore platform-wide impact and connected gardens"
+                    : "Place unlocked plants and keep growing your impact"}
+                </span>
+              </div>
+            </div>
+
+            <button
+              className={`global-impact-btn${isGlobalView ? " global-impact-btn-active" : ""}`}
+              onClick={() => setIsGlobalView((prev) => !prev)}
+              title="Toggle between personal garden and global forest view"
+            >
+              <span className="global-impact-btn-icon">{isGlobalView ? "🌱" : "🌍"}</span>
+              <span className="global-impact-btn-copy">
+                <strong>{isGlobalView ? "Back to Garden" : "Open Global Forest"}</strong>
+                <small>{isGlobalView ? "Return to your personal space" : "See the bigger impact picture"}</small>
+              </span>
+            </button>
           </div>
-          <span className="section-tag">Canvas</span>
-        </div>
 
-        <GardenCanvas itemsReused={stats.itemsReused} wasteDivertedKg={stats.wasteDivertedKg} />
-      </section>
+          <GardenScene
+            placedTrees={placedTrees}
+            selectedPlantId={selectedPlantId}
+            onTilePlace={placeTree}
+            globalView={isGlobalView}
+          />
+        </section>
+      </div>
 
-      <section className="dashboard-grid garden-grid">
-        <article className="dashboard-card">
-          <div className="section-heading">
-            <h3>{user.role === "supplier" ? "Seller Dashboard" : user.role === "buyer" ? "Buyer Dashboard" : "Volunteer Dashboard"}</h3>
-          </div>
-
-          {user.role === "supplier" ? (
-            <>
-              <p className="session-copy">Total Carbon Offset: {stats.carbonOffsetKg} kg CO₂</p>
-              <ul className="quick-list">
-                {stats.listings.map((listing) => (
-                  <li key={listing}>{listing}</li>
-                ))}
-              </ul>
-            </>
-          ) : user.role === "buyer" ? (
-            <>
-              <p className="session-copy">Materials Saved: {stats.materialsSaved}</p>
-              <ul className="quick-list">
-                {stats.orderHistory.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            </>
-          ) : (
-            <>
-              <p className="session-copy">Community Hours: {stats.communityHours}</p>
-              <ul className="quick-list">
-                {stats.tasks.map((task) => (
-                  <li key={task}>{task}</li>
-                ))}
-              </ul>
-            </>
-          )}
-        </article>
-
-        <article className="dashboard-card">
-          <div className="section-heading">
-            <h3>Garden Logic</h3>
-          </div>
-          <ul className="quick-list">
-            <li>If items reused is above 5, a stronger flower bloom appears.</li>
-            <li>If waste diverted is above 50kg, a tree is rendered in the canvas.</li>
-            <li>More reuse activity can grow more plants in future releases.</li>
-          </ul>
-        </article>
-      </section>
+      {/* ── Stats bar below canvas ── */}
+      <GardenStatsBar globalView={isGlobalView} placedTrees={placedTrees} />
     </div>
   );
 }

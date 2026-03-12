@@ -1,40 +1,50 @@
 import { useEffect, useMemo, useState } from "react";
 import { getCurrentUser, login, register } from "./api";
 import AuthPanel from "./components/AuthPanel";
-import AIAssistantPage from "./pages/AIAssistantPage";
-import CheckoutPage from "./pages/CheckoutPage";
+import OrderAchievementOverlay from "./components/Garden/OrderAchievementOverlay";
+import CreateListing from "./pages/CreateListing";
 import GardenPage from "./pages/GardenPage";
+import MaterialDetailPage from "./pages/MaterialDetailPage";
 import MarketplacePage from "./pages/MarketplacePage";
+import MyListingsPage from "./pages/MyListingsPage";
+import CartPage from "./pages/CartPage";
 import AIChatbot from "./pages/AIChatbot";
+import { BuyerOrdersPage, SellerOrdersPage } from "./pages/OrdersPage";
+import { queuePendingGardenReward } from "./utils/gardenRewards";
 
 const roles = ["supplier", "buyer", "volunteer"];
-const sidebarItems = ["Marketplace", "AI Assistant", "AI Chatbot", "Garden"];
 
 export default function App() {
   const [mode, setMode] = useState("register");
   const [showAuth, setShowAuth] = useState(false);
   const [activeSection, setActiveSection] = useState("Marketplace");
-  const [marketplaceView, setMarketplaceView] = useState("browse");
-  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [marketplaceView, setMarketplaceView] = useState("browse"); // browse | create | edit
+  const [editItem, setEditItem] = useState(null);
+  const [selectedProduct, setSelectedProduct] = useState(null); // for modal
   const [form, setForm] = useState({ name: "", email: "", password: "", role: roles[0] });
   const [token, setToken] = useState(localStorage.getItem("token") || "");
   const [user, setUser] = useState(null);
   const [message, setMessage] = useState("");
   const [loadingUser, setLoadingUser] = useState(Boolean(localStorage.getItem("token")));
+  const [orderAchievement, setOrderAchievement] = useState(null);
+  const [pendingGardenAchievement, setPendingGardenAchievement] = useState(null);
   const [marketplaceFilters, setMarketplaceFilters] = useState({
     search: "",
     category: "All",
     condition: "All",
-    distance: 30
   });
+
+  const sidebarItems = useMemo(() => {
+    const base = ["Marketplace", "My Listings", "Cart", "My Orders", "AI Assistant", "Garden"];
+    if (user?.role === "supplier") {
+      base.push("Seller Orders");
+    }
+    return base;
+  }, [user]);
 
   useEffect(() => {
     async function restoreUser() {
-      if (!token) {
-        setLoadingUser(false);
-        return;
-      }
-
+      if (!token) { setLoadingUser(false); return; }
       try {
         const response = await getCurrentUser(token);
         setUser(response.user);
@@ -46,15 +56,14 @@ export default function App() {
         setLoadingUser(false);
       }
     }
-
     restoreUser();
   }, [token]);
 
   const roleTitle = useMemo(() => {
     if (!user) return "Marketplace";
-    if (user.role === "supplier") return "Seller Home";
-    if (user.role === "buyer") return "Buyer Home";
-    return "Volunteer Home";
+    if (user.role === "supplier") return "Seller Dashboard";
+    if (user.role === "buyer") return "Buyer Dashboard";
+    return "Volunteer Dashboard";
   }, [user]);
 
   function updateField(key, value) {
@@ -64,14 +73,12 @@ export default function App() {
   async function onSubmit(event) {
     event.preventDefault();
     setMessage("");
-
     try {
       const payload = mode === "register" ? form : { email: form.email, password: form.password };
       const response = mode === "register" ? await register(payload) : await login(payload);
       setToken(response.token);
       setUser(response.user);
       localStorage.setItem("token", response.token);
-      setMessage(`${mode} successful`);
       setShowAuth(false);
       setActiveSection("Marketplace");
       setMarketplaceView("browse");
@@ -84,10 +91,10 @@ export default function App() {
     setToken("");
     setUser(null);
     localStorage.removeItem("token");
-    setMessage("Logged out");
     setActiveSection("Marketplace");
     setMarketplaceView("browse");
     setSelectedProduct(null);
+    setEditItem(null);
   }
 
   function openAuth(nextMode) {
@@ -98,66 +105,121 @@ export default function App() {
 
   function handleSidebarChange(section) {
     setActiveSection(section);
-    if (section !== "Marketplace") {
-      setMarketplaceView("browse");
-    }
+    setMarketplaceView("browse");
+    setSelectedProduct(null);
+    setEditItem(null);
   }
 
   function handleFilterChange(key, value) {
     setMarketplaceFilters((prev) => ({ ...prev, [key]: value }));
   }
 
+  function handleOrderPlaced(result) {
+    const achievement = result?.achievement || null;
+    const userId = user?.id || user?.sub;
+
+    if (achievement && userId) {
+      queuePendingGardenReward(userId, achievement);
+    }
+
+    setPendingGardenAchievement(achievement);
+
+    setOrderAchievement(achievement || {
+      name: "Circular Purchase Confirmed",
+      description: "Your order has been recorded as a circular action.",
+      reward: { plantLabel: "Circular Sapling", icon: "🌱" },
+      impact: { display: "Circular impact recorded" }
+    });
+
+    window.setTimeout(() => {
+      setOrderAchievement(null);
+      setActiveSection("Garden");
+      setMarketplaceView("browse");
+      setSelectedProduct(null);
+      setEditItem(null);
+    }, 2200);
+  }
+
+  // Open full-page detail view
   function openProductDetail(product) {
     setSelectedProduct(product);
     setMarketplaceView("detail");
+  }
+
+  // From detail page → edit
+  function openEdit(item) {
+    setEditItem(item);
+    setMarketplaceView("edit");
     setActiveSection("Marketplace");
   }
 
-  function openCheckout(product) {
-    setSelectedProduct(product);
-    setMarketplaceView("checkout");
-    setActiveSection("Marketplace");
+  // From My Listings → edit
+  function openEditFromMyListings(item) {
+    setEditItem(item);
+    setMarketplaceView("edit");
+    setActiveSection("My Listings"); // stays on same section
+  }
+
+  function goBackFromForm() {
+    setMarketplaceView("browse");
+    setEditItem(null);
+    setSelectedProduct(null);
   }
 
   function renderMarketplaceContent() {
     if (marketplaceView === "detail" && selectedProduct) {
       return (
-        <ProductDetailPage
-          product={selectedProduct}
+        <MaterialDetailPage
+          material={selectedProduct}
           user={user}
-          onBack={() => setMarketplaceView("browse")}
-          onCheckout={openCheckout}
+          onBack={() => { setMarketplaceView("browse"); setSelectedProduct(null); }}
+          onEdit={openEdit}
         />
       );
     }
-
-    if (marketplaceView === "checkout" && selectedProduct) {
-      return <CheckoutPage product={selectedProduct} user={user} onBack={() => setMarketplaceView("detail")} />;
+    if (marketplaceView === "create") {
+      return <CreateListing user={user} token={token} onBack={goBackFromForm} />;
     }
-
+    if (marketplaceView === "edit" && editItem) {
+      return <CreateListing user={user} token={token} editItem={editItem} onBack={goBackFromForm} />;
+    }
     return (
       <MarketplacePage
         user={user}
         filters={marketplaceFilters}
         onFilterChange={handleFilterChange}
         onSelectProduct={openProductDetail}
+        onCreateClick={() => setMarketplaceView("create")}
       />
     );
   }
 
   function renderSectionContent() {
-    if (activeSection === "AI Assistant") {
-      return <AIAssistantPage />;
+    if (activeSection === "AI Assistant") return <AIChatbot />;
+    if (activeSection === "Cart") {
+      return <CartPage token={token} onOrderPlaced={handleOrderPlaced} />;
     }
-
-    if (activeSection === "AI Chatbot") {
-      return <AIChatbot />;
+    if (activeSection === "My Orders") {
+      return <BuyerOrdersPage token={token} />;
     }
-
+    if (activeSection === "Seller Orders") {
+      return <SellerOrdersPage token={token} />;
+    }
     if (activeSection === "Garden") {
-      return <GardenPage user={user} />;
+      return (
+        <GardenPage
+          user={user}
+          pendingAchievement={pendingGardenAchievement}
+          onPendingAchievementHandled={() => setPendingGardenAchievement(null)}
+        />
+      );
     }
-
+    if (activeSection === "My Listings") {
+      if (marketplaceView === "edit" && editItem) {
+        return <CreateListing user={user} token={token} editItem={editItem} onBack={() => { setMarketplaceView("browse"); setEditItem(null); }} />;
+      }
+      return <MyListingsPage token={token} onEdit={openEditFromMyListings} />;
+    }
     return renderMarketplaceContent();
   }
 
@@ -177,7 +239,7 @@ export default function App() {
             <div className="brand-block sidebar-brand">
               <span className="brand-mark">S</span>
               <div>
-                <h1>ScarfHappens</h1>
+                <h1>ScrapHappens</h1>
                 <p>{roleTitle}</p>
               </div>
             </div>
@@ -204,17 +266,9 @@ export default function App() {
         </aside>
 
         <section className="dashboard-main">
-          <header className="dashboard-header">
-            <div>
-              <span className="eyebrow">Unified Home</span>
-              <h2>{activeSection}</h2>
-              <p>Your central hub for Marketplace, AI Assistant, and Garden workflows.</p>
-            </div>
-          </header>
-
           {renderSectionContent()}
-
           {message ? <p className="message dashboard-message">{message}</p> : null}
+          <OrderAchievementOverlay achievement={orderAchievement} />
         </section>
       </main>
     );
@@ -226,11 +280,10 @@ export default function App() {
         <div className="brand-block">
           <span className="brand-mark">S</span>
           <div>
-            <h1>ScarfHappens</h1>
-            <p>Smart textile reuse marketplace</p>
+            <h1>ScrapHappens</h1>
+            <p>Smart circular material marketplace</p>
           </div>
         </div>
-
         <div className="nav-actions">
           {!token ? (
             <>
@@ -246,10 +299,10 @@ export default function App() {
       <section className="hero">
         <div className="hero-copy">
           <span className="eyebrow">Circular supply chain platform</span>
-          <h2>Turn leftover fabric into useful inventory, fast.</h2>
+          <h2>Turn leftover materials into useful inventory, fast.</h2>
           <p>
-            A clean starter platform for suppliers, buyers, and volunteers with role-based access,
-            JWT authentication, Neon Postgres, and AI-ready services.
+            A platform for suppliers, buyers, and volunteers with role-based access,
+            JWT authentication, and a live circular materials marketplace.
           </p>
 
           {token && user ? (
@@ -283,7 +336,7 @@ export default function App() {
             </article>
             <article className="feature-card">
               <h3>Buyer</h3>
-              <p>Discover available textile inventory and place requests quickly.</p>
+              <p>Discover available material inventory and place requests quickly.</p>
             </article>
             <article className="feature-card">
               <h3>Volunteer</h3>
