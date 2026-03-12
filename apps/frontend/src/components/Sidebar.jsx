@@ -9,6 +9,7 @@ export default function Sidebar({ user, roleTitle, onLogout }) {
   const sidebarItems = useMemo(() => {
     const items = [
       { name: "Marketplace", path: "/" },
+      { name: "My Dashboard", path: "/my-dashboard" },
       { name: "AI Assistant", path: "/ai-assistant" },
       { name: "Garden", path: "/garden" },
       { name: "Logistics Dashboard", path: "/logistics-dashboard" },

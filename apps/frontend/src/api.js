@@ -171,3 +171,11 @@ export async function submitReviewApi(payload, token) {
   return parseResponse(response, "Failed to submit review");
 }
 
+export async function getProductSuggestions(productName) {
+  const response = await fetch(`${API_BASE_URL}/api/ai/product-ideas`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ productName })
+  });
+  return parseResponse(response, "Failed to fetch AI suggestions");
+}

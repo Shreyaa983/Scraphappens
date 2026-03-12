@@ -3,7 +3,7 @@ import { useLocation, useParams, useNavigate, Link } from "react-router-dom";
 import { createMaterial, updateMaterial, getMaterialById } from "../api";
 import { categories, conditions } from "../data/mockData";
 
-export default function CreateListing({ user, token }) {
+export default function CreateListing({ user, token, editItem: propEditItem, onBack }) {
   const navigate = useNavigate();
   const { id } = useParams();
   const location = useLocation();
@@ -56,7 +56,7 @@ export default function CreateListing({ user, token }) {
       <header className="marketplace-top-nav">
         <button
           className="nav-button nav-button-secondary"
-          onClick={() => navigate(-1)}
+          onClick={() => { if (onBack) onBack(); else navigate(-1); }}
           style={{ whiteSpace: "nowrap" }}
         >
           ← Back

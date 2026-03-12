@@ -53,7 +53,6 @@ export default function MaterialDetailPage({ material: initialMaterial, user, on
 
     if (loading) return <div className="loading-shell">Loading material details...</div>;
     if (!material) return <div className="loading-shell">Material not found.</div>;
-export default function MaterialDetailPage({ material, user, onBack, onEdit, onViewSupplier }) {
     if (!material) return null;
 
     const isOwner = user && String(material.listed_by) === String(user.id);
@@ -348,4 +347,4 @@ export default function MaterialDetailPage({ material, user, onBack, onEdit, onV
         </div>
     );
 }
-}
+

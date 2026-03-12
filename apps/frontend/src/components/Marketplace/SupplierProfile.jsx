@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 
 const API_BASE = "http://localhost:4002/api";
 
@@ -15,7 +16,11 @@ function toNumber(value, fallback = 0) {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
-export default function SupplierProfile({ supplierId, token, onBack }) {
+export default function SupplierProfile({ supplierId: propSupplierId, token, onBack }) {
+  const { supplierId: paramSupplierId } = useParams();
+  const navigate = useNavigate();
+  const supplierId = propSupplierId || paramSupplierId;
+  const handleBack = onBack || (() => navigate(-1));
   const [supplier, setSupplier] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [circularScore, setCircularScore] = useState(null);
@@ -85,11 +90,9 @@ export default function SupplierProfile({ supplierId, token, onBack }) {
     <div className="my-listings-page">
       {/* Back + Header */}
       <div className="my-listings-header" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        {onBack && (
-          <button className="nav-button nav-button-secondary" onClick={onBack} style={{ flexShrink: 0 }}>
-            ← Back
-          </button>
-        )}
+        <button className="nav-button nav-button-secondary" onClick={handleBack} style={{ flexShrink: 0 }}>
+          ← Back
+        </button>
         <div>
           <h3 style={{ margin: 0 }}>{displayName}</h3>
           {supplier?.city && (

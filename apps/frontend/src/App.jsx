@@ -165,8 +165,7 @@ export default function App() {
 
   function openSupplierProfile(supplierId) {
     setSelectedSupplierId(supplierId);
-    setMarketplaceView("supplier");
-    setActiveSection("Marketplace");
+    navigate(`/supplier/${supplierId}`);
   }
 
   // From detail page → edit
@@ -305,11 +304,26 @@ export default function App() {
                 user={user}
                 filters={marketplaceFilters}
                 onFilterChange={handleFilterChange}
+                onCreateClick={() => {
+                  if (!user || !isSellerRole(user.role)) {
+                    setMessage("Only sellers can list materials.");
+                    return;
+                  }
+                  navigate("/create-listing");
+                }}
               />
             } />
-            <Route path="/material/:id" element={<MaterialDetailPage user={user} />} />
-            <Route path="/create-listing" element={<CreateListing user={user} token={token} />} />
-            <Route path="/edit-listing/:id" element={<CreateListing user={user} token={token} />} />
+            <Route path="/material/:id" element={<MaterialDetailPage user={user} onViewSupplier={openSupplierProfile} />} />
+            <Route path="/create-listing" element={
+              isSellerRole(user.role)
+                ? <CreateListing user={user} token={token} onBack={() => navigate(-1)} />
+                : <Navigate to="/" replace />
+            } />
+            <Route path="/edit-listing/:id" element={
+              isSellerRole(user.role)
+                ? <CreateListing user={user} token={token} onBack={() => navigate(-1)} />
+                : <Navigate to="/" replace />
+            } />
             <Route path="/ai-assistant" element={<AIChatbot />} />
             <Route path="/garden" element={
               <GardenPage
@@ -320,6 +334,8 @@ export default function App() {
             } />
             <Route path="/logistics-dashboard" element={<LogisticsDashboardPage token={token} />} />
             <Route path="/pickup-scheduling" element={<LogisticsPickupsPage token={token} />} />
+            <Route path="/my-dashboard" element={<UserDashboard token={token} user={user} />} />
+            <Route path="/supplier/:supplierId" element={<SupplierProfile token={token} onBack={() => navigate(-1)} />} />
             
             {isSellerRole(user.role) && (
               <>
