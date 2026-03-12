@@ -1,7 +1,23 @@
 import { useState, useEffect } from "react";
 import { useLocation, useParams, useNavigate, Link } from "react-router-dom";
+import { 
+  ArrowLeft, 
+  Package, 
+  Tag, 
+  Layers, 
+  MapPin, 
+  IndianRupee, 
+  Truck, 
+  Leaf, 
+  Image as ImageIcon, 
+  FileText, 
+  CheckCircle,
+  Clock,
+  Layout
+} from "lucide-react";
 import { createMaterial, updateMaterial, getMaterialById } from "../api";
 import { categories, conditions } from "../data/mockData";
+import "../styles/listing-form.css";
 
 export default function CreateListing({ user, token, editItem: propEditItem, onBack }) {
   const navigate = useNavigate();
@@ -44,7 +60,7 @@ export default function CreateListing({ user, token, editItem: propEditItem, onB
       } else {
         await createMaterial(form, token);
       }
-      navigate(-1);
+      if (onBack) onBack(); else navigate(-1);
     } catch (err) {
       setError(err.message || "Something went wrong");
       setLoading(false);
@@ -52,77 +68,119 @@ export default function CreateListing({ user, token, editItem: propEditItem, onB
   };
 
   return (
-    <div className="marketplace-modern-container">
-      <header className="marketplace-top-nav">
+    <div className="listing-form-container">
+      <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <button
           className="nav-button nav-button-secondary"
           onClick={() => { if (onBack) onBack(); else navigate(-1); }}
-          style={{ whiteSpace: "nowrap" }}
         >
-          ← Back
+          <ArrowLeft size={16} /> Back
         </button>
-        <h2 style={{ color: "white", margin: 0, fontSize: "1.3rem" }}>
-          {isEdit ? "Edit Listing" : "Create New Listing"}
-        </h2>
-        <Link to="/" className="nav-button nav-button-secondary" style={{ textDecoration: 'none' }}>Marketplace</Link>
-      </header>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <Link to="/marketplace" className="nav-button nav-button-secondary" style={{ textDecoration: 'none' }}>
+             Marketplace
+          </Link>
+        </div>
+      </div>
 
-      <div className="dashboard-card" style={{ maxWidth: 680, margin: "0 auto", width: "100%" }}>
-        {fetching && <div className="loading-shell">Loading listing details...</div>}
+      <div className="listing-form-card">
+        <header className="listing-form-header">
+          <h2 className="listing-form-title">
+            <Layout size={24} color="hsl(var(--primary))" />
+            {isEdit ? "Edit Your Listing" : "List New Material"}
+          </h2>
+          {isEdit && <span className="gsbar-status-chip">Editing ID: #{editItem?.id || id}</span>}
+        </header>
+
+        {fetching && (
+          <div className="loading-shell">
+            <Clock className="spin" style={{ marginBottom: '1rem' }} />
+            <p>Loading listing details...</p>
+          </div>
+        )}
+
         {error && (
-          <div style={{ color: "#ef4444", marginBottom: 16, padding: "12px 16px", background: "rgba(239,68,68,0.1)", borderRadius: 10 }}>
+          <div className="message error" style={{ marginBottom: '2rem' }}>
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} style={{ display: "grid", gap: 20 }}>
-          <label>
-            Title *
-            <input required name="title" value={form.title} onChange={handleChange} placeholder="e.g., Reclaimed Oak Planks" />
-          </label>
-
-          <label>
-            Material Type
-            <input name="material_type" value={form.material_type} onChange={handleChange} placeholder="e.g., Wood, Fabric, Steel" />
-          </label>
-
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-            <label>
-              Category
-              <select name="category" value={form.category} onChange={handleChange}>
-                {categories.filter(c => c !== "All").map(c => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Condition
-              <select name="condition" value={form.condition} onChange={handleChange}>
-                {conditions.filter(c => c !== "All").map(c => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-            </label>
+        <form onSubmit={handleSubmit} className="listing-form-grid">
+          {/* Title */}
+          <div className="field-group full-width">
+            <label className="field-label"><Tag size={16} /> Material Title *</label>
+            <input 
+              required 
+              name="title" 
+              className="listing-input"
+              value={form.title} 
+              onChange={handleChange} 
+              placeholder="e.g., Reclaimed Oak Planks, Industrial Steel Pipes" 
+            />
           </div>
 
-          {/* Quantity + unit selector */}
-          <label>
-            Quantity
-            <div style={{ display: "flex", gap: 10 }}>
+          {/* Material Type */}
+          <div className="field-group">
+            <label className="field-label"><Layers size={16} /> Material Type</label>
+            <input 
+              name="material_type" 
+              className="listing-input"
+              value={form.material_type} 
+              onChange={handleChange} 
+              placeholder="e.g., Wood, Fabric, Metal" 
+            />
+          </div>
+
+          {/* Location */}
+          <div className="field-group">
+            <label className="field-label"><MapPin size={16} /> Location / City</label>
+            <input 
+              name="location" 
+              className="listing-input"
+              value={form.location} 
+              onChange={handleChange} 
+              placeholder="e.g., Mumbai, Maharashtra" 
+            />
+          </div>
+
+          {/* Category */}
+          <div className="field-group">
+            <label className="field-label"><Package size={16} /> Category</label>
+            <select name="category" className="listing-select" value={form.category} onChange={handleChange}>
+              {categories.filter(c => c !== "All").map(c => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Condition */}
+          <div className="field-group">
+            <label className="field-label"><CheckCircle size={16} /> Condition</label>
+            <select name="condition" className="listing-select" value={form.condition} onChange={handleChange}>
+              {conditions.filter(c => c !== "All").map(c => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Quantity */}
+          <div className="field-group">
+            <label className="field-label"><Layers size={16} /> Available Quantity</label>
+            <div className="unit-input-group">
               <input
                 type="number"
                 name="quantity"
-                min="1"
+                className="listing-input"
+                min="0"
                 value={form.quantity}
                 onChange={handleChange}
-                placeholder="e.g., 200"
-                style={{ flex: 1 }}
+                placeholder="0.00"
               />
               <select
                 name="quantity_unit"
+                className="listing-select"
                 value={form.quantity_unit}
                 onChange={handleChange}
-                style={{ width: 90 }}
               >
                 <option value="kg">kg</option>
                 <option value="units">units</option>
@@ -131,79 +189,100 @@ export default function CreateListing({ user, token, editItem: propEditItem, onB
                 <option value="tons">tons</option>
               </select>
             </div>
-          </label>
-
-          <label>
-            Location / City
-            <input name="location" value={form.location} onChange={handleChange} placeholder="e.g., Mumbai" />
-          </label>
-
-          {/* Price + free toggle */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-            <label>
-              Price (₹)
-              <input
-                type="number"
-                name="price"
-                min="0"
-                value={form.price}
-                onChange={handleChange}
-                placeholder="e.g., 500"
-                disabled={form.is_free}
-                style={{ opacity: form.is_free ? 0.5 : 1 }}
-              />
-            </label>
-            <label style={{ justifyContent: "center" }}>
-              Free / Donate
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
-                <input
-                  type="checkbox"
-                  name="is_free"
-                  checked={form.is_free}
-                  onChange={handleChange}
-                  style={{ width: 18, height: 18, accentColor: "#22c55e", cursor: "pointer" }}
-                />
-                <span style={{ fontSize: "0.88rem", color: "#9ca3af" }}>Mark as free</span>
-              </div>
-            </label>
           </div>
 
-          <label>
-            Delivery Option
-            <select name="delivery_option" value={form.delivery_option} onChange={handleChange}>
+          {/* Delivery Option */}
+          <div className="field-group">
+            <label className="field-label"><Truck size={16} /> Delivery Option</label>
+            <select name="delivery_option" className="listing-select" value={form.delivery_option} onChange={handleChange}>
               <option value="pickup_only">Pickup Only</option>
               <option value="delivery_available">Delivery Available</option>
             </select>
-          </label>
+          </div>
 
-          <label>
-            Sustainability Impact
+          {/* Price */}
+          <div className="field-group">
+            <label className="field-label"><IndianRupee size={16} /> Expected Price (₹)</label>
+            <div className="field-input-wrapper">
+              <input
+                type="number"
+                name="price"
+                className="listing-input"
+                min="0"
+                value={form.price}
+                onChange={handleChange}
+                placeholder="0.00"
+                disabled={form.is_free}
+              />
+            </div>
+          </div>
+
+          {/* Free Toggle */}
+          <div className="field-group">
+            <label className="field-label">Pricing Type</label>
+            <label className="checkbox-field">
+              <input
+                type="checkbox"
+                name="is_free"
+                checked={form.is_free}
+                onChange={handleChange}
+              />
+              <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>Mark as Free / Donation</span>
+            </label>
+          </div>
+
+          {/* Sustainability Impact */}
+          <div className="field-group full-width">
+            <label className="field-label"><Leaf size={16} /> Sustainability Impact</label>
             <input
               name="sustainability_impact"
+              className="listing-input"
               value={form.sustainability_impact}
               onChange={handleChange}
               placeholder="e.g., Saves 8 kg of waste from landfill"
             />
-          </label>
+          </div>
 
-          <label>
-            Image URL
-            <input type="url" name="image_url" value={form.image_url} onChange={handleChange} placeholder="https://example.com/image.jpg" />
-          </label>
+          {/* Image URL */}
+          <div className="field-group full-width">
+            <label className="field-label"><ImageIcon size={16} /> Material Image URL</label>
+            <input 
+              type="url" 
+              name="image_url" 
+              className="listing-input"
+              value={form.image_url} 
+              onChange={handleChange} 
+              placeholder="https://images.unsplash.com/your-image-url" 
+            />
+          </div>
 
-          <label>
-            Description
-            <textarea name="description" value={form.description} onChange={handleChange} rows="4" placeholder="Describe the material, quality, usage…" />
-          </label>
+          {/* Description */}
+          <div className="field-group full-width">
+            <label className="field-label"><FileText size={16} /> Detailed Description</label>
+            <textarea 
+              name="description" 
+              className="listing-textarea"
+              value={form.description} 
+              onChange={handleChange} 
+              rows="5" 
+              placeholder="Describe the material source, exact dimensions, quality, and possible reuse ideas..." 
+            />
+          </div>
 
-          <button
-            type="submit"
-            className="create-listing-btn"
-            disabled={loading}
-            style={{ justifySelf: "start", padding: "13px 28px", fontSize: "1rem" }}
-          >
-            {loading ? (isEdit ? "Saving…" : "Publishing…") : (isEdit ? "Save Changes" : "Publish Listing")}
-          </button>
+          {/* Submit */}
+          <div className="form-actions full-width">
+            <button
+              type="submit"
+              className="btn-primary publish-btn"
+              disabled={loading}
+            >
+              {loading ? (
+                <><Clock size={18} className="spin" /> {isEdit ? "Saving..." : "Publishing..."}</>
+              ) : (
+                <>{isEdit ? "Update Listing" : "Publish Material"}</>
+              )}
+            </button>
+          </div>
         </form>
       </div>
     </div>
