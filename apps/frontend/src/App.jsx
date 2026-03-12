@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { getCurrentUser, login, register } from "./api";
 import AuthPanel from "./components/AuthPanel";
+import OrderAchievementOverlay from "./components/Garden/OrderAchievementOverlay";
 import CreateListing from "./pages/CreateListing";
 import GardenPage from "./pages/GardenPage";
 import MaterialDetailPage from "./pages/MaterialDetailPage";
@@ -9,6 +10,7 @@ import MyListingsPage from "./pages/MyListingsPage";
 import CartPage from "./pages/CartPage";
 import AIChatbot from "./pages/AIChatbot";
 import { BuyerOrdersPage, SellerOrdersPage } from "./pages/OrdersPage";
+import { queuePendingGardenReward } from "./utils/gardenRewards";
 
 const roles = ["supplier", "buyer", "volunteer"];
 
@@ -24,6 +26,8 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [message, setMessage] = useState("");
   const [loadingUser, setLoadingUser] = useState(Boolean(localStorage.getItem("token")));
+  const [orderAchievement, setOrderAchievement] = useState(null);
+  const [pendingGardenAchievement, setPendingGardenAchievement] = useState(null);
   const [marketplaceFilters, setMarketplaceFilters] = useState({
     search: "",
     category: "All",
@@ -110,6 +114,32 @@ export default function App() {
     setMarketplaceFilters((prev) => ({ ...prev, [key]: value }));
   }
 
+  function handleOrderPlaced(result) {
+    const achievement = result?.achievement || null;
+    const userId = user?.id || user?.sub;
+
+    if (achievement && userId) {
+      queuePendingGardenReward(userId, achievement);
+    }
+
+    setPendingGardenAchievement(achievement);
+
+    setOrderAchievement(achievement || {
+      name: "Circular Purchase Confirmed",
+      description: "Your order has been recorded as a circular action.",
+      reward: { plantLabel: "Circular Sapling", icon: "🌱" },
+      impact: { display: "Circular impact recorded" }
+    });
+
+    window.setTimeout(() => {
+      setOrderAchievement(null);
+      setActiveSection("Garden");
+      setMarketplaceView("browse");
+      setSelectedProduct(null);
+      setEditItem(null);
+    }, 2200);
+  }
+
   // Open full-page detail view
   function openProductDetail(product) {
     setSelectedProduct(product);
@@ -167,7 +197,7 @@ export default function App() {
   function renderSectionContent() {
     if (activeSection === "AI Assistant") return <AIChatbot />;
     if (activeSection === "Cart") {
-      return <CartPage token={token} onOrderPlaced={() => setActiveSection("My Orders")} />;
+      return <CartPage token={token} onOrderPlaced={handleOrderPlaced} />;
     }
     if (activeSection === "My Orders") {
       return <BuyerOrdersPage token={token} />;
@@ -175,7 +205,15 @@ export default function App() {
     if (activeSection === "Seller Orders") {
       return <SellerOrdersPage token={token} />;
     }
-    if (activeSection === "Garden") return <GardenPage user={user} />;
+    if (activeSection === "Garden") {
+      return (
+        <GardenPage
+          user={user}
+          pendingAchievement={pendingGardenAchievement}
+          onPendingAchievementHandled={() => setPendingGardenAchievement(null)}
+        />
+      );
+    }
     if (activeSection === "My Listings") {
       if (marketplaceView === "edit" && editItem) {
         return <CreateListing user={user} token={token} editItem={editItem} onBack={() => { setMarketplaceView("browse"); setEditItem(null); }} />;
@@ -230,6 +268,7 @@ export default function App() {
         <section className="dashboard-main">
           {renderSectionContent()}
           {message ? <p className="message dashboard-message">{message}</p> : null}
+          <OrderAchievementOverlay achievement={orderAchievement} />
         </section>
       </main>
     );

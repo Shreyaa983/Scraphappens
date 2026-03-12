@@ -64,7 +64,11 @@ export async function getRawCartItemsForUser(userId) {
       c.material_id,
       c.quantity,
       m.listed_by AS seller_id,
-      m.quantity AS available_quantity
+      m.quantity AS available_quantity,
+      m.title,
+      m.quantity_unit,
+      m.category,
+      m.material_type
     FROM cart_items c
     JOIN materials m ON m.id = c.material_id
     WHERE c.user_id = ${userId}

@@ -3,6 +3,47 @@ import { clearUserCart, loadCartForOrder } from "./cartController.js";
 import { createOrder, createOrderItems, getOrdersForBuyer, getOrdersForSeller } from "../models/orderModel.js";
 import { createShipment } from "../services/shiprocketService.js";
 
+function formatImpactDisplay(value, unit) {
+  return `${value} ${unit} waste diverted`;
+}
+
+function buildCircularAchievement({ order, cartRows, priorOrderCount }) {
+  const safeRows = Array.isArray(cartRows) ? cartRows : [];
+  const firstRow = safeRows[0] || {};
+  const numericQuantities = safeRows.map((row) => Number(row.quantity) || 0);
+  const totalQuantity = numericQuantities.reduce((sum, value) => sum + value, 0);
+  const quantityUnit = safeRows.every((row) => row.quantity_unit && row.quantity_unit === safeRows[0]?.quantity_unit)
+    ? safeRows[0]?.quantity_unit || "kg"
+    : "units";
+  const materialSummary = safeRows.length > 1
+    ? `${firstRow.title || firstRow.material_type || firstRow.category || "Reusable material"} + ${safeRows.length - 1} more`
+    : firstRow.title || firstRow.material_type || firstRow.category || "Reusable material";
+  const purchaseCount = priorOrderCount + 1;
+  const isFirstPurchase = priorOrderCount === 0;
+
+  return {
+    id: `circular_purchase_${order.id}`,
+    category: "order_success",
+    name: isFirstPurchase ? "♻ First Circular Purchase" : `♻ Circular Purchase #${purchaseCount}`,
+    description: "You prevented reusable material from becoming waste.",
+    materialSummary,
+    orderId: order.id,
+    createdAt: order.created_at,
+    reward: {
+      plantLabel: "Circular Sapling",
+      randomize: true,
+      icon: "🌱",
+      badgeText: "NEW"
+    },
+    impact: {
+      label: "Waste diverted",
+      value: totalQuantity,
+      unit: quantityUnit,
+      display: formatImpactDisplay(totalQuantity, quantityUnit)
+    }
+  };
+}
+
 // POST /api/orders/place
 export async function placeOrder(req, res) {
   const buyerId = req.user.sub;
@@ -14,6 +55,13 @@ export async function placeOrder(req, res) {
 
   try {
     const cartRows = await loadCartForOrder(buyerId);
+    const previousOrders = await sql`
+      SELECT COUNT(*)::int AS count
+      FROM orders
+      WHERE buyer_id = ${buyerId}
+    `;
+    const priorOrderCount = previousOrders[0]?.count || 0;
+
     if (!cartRows.length) {
       return res.status(400).json({ message: "Cart is empty" });
     }
@@ -75,7 +123,13 @@ export async function placeOrder(req, res) {
         },
       });
 
-      return res.status(201).json({ order, order_items: orderItems, shipment });
+      const achievement = buildCircularAchievement({
+        order,
+        cartRows,
+        priorOrderCount,
+      });
+
+      return res.status(201).json({ order, order_items: orderItems, shipment, achievement });
     } catch (error) {
       await sql`ROLLBACK`;
       console.error("Error placing order:", error);

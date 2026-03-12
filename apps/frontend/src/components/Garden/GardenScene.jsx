@@ -41,7 +41,7 @@ export default function GardenScene({ placedTrees, selectedPlantId, onTilePlace,
             <Tree
               key={tree.id}
               position={[tree.x * 2 - 6, 0, tree.z * 2 - 6]}
-              achievement={tree.achievement}
+              achievement={tree.achievementDetails || tree.achievement}
               treeType={tree.treeType}
               treeLabel={tree.treeLabel}
               animate

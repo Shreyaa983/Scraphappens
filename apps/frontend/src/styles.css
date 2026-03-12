@@ -637,6 +637,8 @@ select option {
 .garden-page {
   position: relative;
   min-height: 78vh;
+  display: grid;
+  gap: 18px;
 }
 
 .garden-layout {
@@ -675,6 +677,7 @@ select option {
   position: relative;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 10px;
   padding: 12px;
   border-radius: 14px;
@@ -692,13 +695,43 @@ select option {
   box-shadow: 0 0 14px rgba(60, 255, 107, 0.45);
 }
 
+.inventory-item-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
 .inventory-emoji {
   font-size: 1.45rem;
   filter: drop-shadow(0 0 8px rgba(60, 255, 107, 0.7));
 }
 
+.inventory-copy {
+  display: grid;
+  gap: 2px;
+}
+
 .inventory-label {
   font-weight: 600;
+}
+
+.inventory-subcopy {
+  color: #9dd6ae;
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.inventory-badge {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(74, 222, 128, 0.14);
+  color: #bbf7d0;
+  border: 1px solid rgba(74, 222, 128, 0.22);
+  font-size: 0.72rem;
+  font-weight: 700;
+  flex-shrink: 0;
 }
 
 .inventory-tooltip {
@@ -730,10 +763,122 @@ select option {
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.03);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
 }
 
 .garden-scene-canvas {
   height: 74vh;
+}
+
+.garden-scene-toolbar {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 6;
+  display: grid;
+  justify-items: end;
+  gap: 10px;
+  width: min(360px, calc(100% - 28px));
+}
+
+.garden-mode-pill {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: linear-gradient(135deg, rgba(8, 15, 24, 0.92), rgba(20, 33, 29, 0.82));
+  backdrop-filter: blur(16px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.24);
+}
+
+.garden-mode-pill-global {
+  background: linear-gradient(135deg, rgba(8, 17, 36, 0.94), rgba(16, 33, 40, 0.82));
+}
+
+.garden-mode-pill-icon {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.garden-mode-pill-copy {
+  display: grid;
+  gap: 2px;
+}
+
+.garden-mode-pill-copy strong {
+  color: #f8fafc;
+  font-size: 0.96rem;
+  line-height: 1.2;
+}
+
+.garden-mode-pill-copy span {
+  color: #cbd5e1;
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+.global-impact-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.22), rgba(14, 116, 144, 0.18));
+  color: #f8fafc;
+  text-align: left;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.28);
+  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+}
+
+.global-impact-btn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(74, 222, 128, 0.45);
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.28), rgba(14, 116, 144, 0.22));
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.32);
+}
+
+.global-impact-btn-active {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.28), rgba(16, 185, 129, 0.16));
+}
+
+.global-impact-btn-icon {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.1);
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.global-impact-btn-copy {
+  display: grid;
+  gap: 2px;
+}
+
+.global-impact-btn-copy strong {
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.global-impact-btn-copy small {
+  color: #dbeafe;
+  font-size: 0.79rem;
+  line-height: 1.35;
 }
 
 .unlock-achievement-button {
@@ -751,6 +896,126 @@ select option {
 
 .unlock-achievement-button:hover {
   background: rgba(16, 24, 38, 0.95);
+}
+
+.gsbar-root {
+  position: relative;
+  overflow: hidden;
+  padding: 22px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    radial-gradient(circle at top right, rgba(74, 222, 128, 0.14), transparent 28%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.03));
+  backdrop-filter: blur(12px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  animation: gsbar-in 260ms ease-out;
+}
+
+.gsbar-global {
+  background:
+    radial-gradient(circle at top right, rgba(96, 165, 250, 0.18), transparent 28%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.03));
+}
+
+.gsbar-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.gsbar-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  margin-bottom: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #d1d5db;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.gsbar-heading {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #f8fafc;
+  letter-spacing: -0.02em;
+}
+
+.gsbar-description {
+  margin: 8px 0 0;
+  max-width: 720px;
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+.gsbar-status-chip {
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(15, 23, 42, 0.55);
+  color: #e2e8f0;
+  white-space: nowrap;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.gsbar-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+  gap: 14px;
+}
+
+.gsbar-card {
+  --gsbar-accent: #86efac;
+  display: grid;
+  gap: 10px;
+  min-height: 144px;
+  padding: 16px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+
+.gsbar-card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--gsbar-accent) 50%, rgba(255, 255, 255, 0.12));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
+}
+
+.gsbar-icon-wrap {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--gsbar-accent) 16%, rgba(255, 255, 255, 0.06));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.gsbar-icon {
+  font-size: 1.35rem;
+}
+
+.gsbar-value {
+  color: var(--gsbar-accent);
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.gsbar-label {
+  color: #cbd5e1;
+  font-size: 0.9rem;
+  font-weight: 600;
 }
 
 .achievement-popup {
@@ -785,16 +1050,23 @@ select option {
   font-weight: 600;
 }
 
+.achievement-description {
+  margin: 8px 0 0;
+  color: #cbd5e1;
+  font-size: 0.88rem;
+}
+
 .tree-achievement-popup {
   display: grid;
   gap: 2px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  background: #1e1e1e;
+  min-width: 220px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(14, 22, 33, 0.96);
   color: #ffffff;
   font-size: 12px;
   white-space: nowrap;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.14);
 }
 
@@ -813,6 +1085,93 @@ select option {
   }
 }
 
+.order-achievement-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(4, 10, 16, 0.6);
+  backdrop-filter: blur(10px);
+}
+
+.order-achievement-card {
+  width: min(520px, 100%);
+  display: grid;
+  gap: 14px;
+  padding: 24px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background:
+    radial-gradient(circle at top right, rgba(74, 222, 128, 0.16), transparent 28%),
+    linear-gradient(180deg, rgba(9, 16, 24, 0.96), rgba(15, 23, 42, 0.94));
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.38);
+  animation: order-achievement-in 240ms ease-out;
+}
+
+.order-achievement-card h3,
+.order-achievement-card p {
+  margin: 0;
+}
+
+.order-achievement-badge {
+  justify-self: start;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: rgba(74, 222, 128, 0.12);
+  border: 1px solid rgba(74, 222, 128, 0.18);
+  color: #bbf7d0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.order-achievement-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.order-achievement-stat {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.order-achievement-stat span {
+  color: #94a3b8;
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.order-achievement-stat strong {
+  color: #f8fafc;
+  font-size: 0.95rem;
+  line-height: 1.35;
+}
+
+.order-achievement-footer {
+  color: #bbf7d0;
+  font-weight: 600;
+}
+
+@keyframes order-achievement-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 @media (max-width: 1100px) {
   .marketplace-layout,
   .detail-layout,
@@ -828,6 +1187,18 @@ select option {
     left: 0;
     top: calc(100% + 8px);
     transform: none;
+  }
+
+  .garden-scene-toolbar {
+    width: calc(100% - 28px);
+  }
+
+  .gsbar-head {
+    flex-direction: column;
+  }
+
+  .order-achievement-meta {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -870,6 +1241,53 @@ select option {
 
   .chat-bubble {
     max-width: 90%;
+  }
+
+  .garden-page {
+    gap: 14px;
+  }
+
+  .garden-scene-shell {
+    min-height: 560px;
+  }
+
+  .garden-scene-toolbar {
+    position: static;
+    width: 100%;
+    padding: 14px 14px 0;
+    justify-items: stretch;
+  }
+
+  .garden-mode-pill,
+  .global-impact-btn {
+    width: 100%;
+  }
+
+  .unlock-achievement-button {
+    top: 134px;
+  }
+
+  .gsbar-root {
+    padding: 18px;
+  }
+
+  .gsbar-heading {
+    font-size: 1.25rem;
+  }
+
+  .gsbar-cards {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  }
+}
+
+@keyframes gsbar-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 /* Marketplace V3 Styles - Dark Premium Circular Aesthetic */

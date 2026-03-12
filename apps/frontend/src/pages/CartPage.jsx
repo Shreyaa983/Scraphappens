@@ -48,11 +48,11 @@ export default function CartPage({ token, onOrderPlaced }) {
     try {
       setPlacing(true);
       setMessage("");
-      await placeOrder({ shipping_address: shippingAddress }, token);
+      const result = await placeOrder({ shipping_address: shippingAddress }, token);
       setItems([]);
       setShippingAddress("");
-      setMessage("Order placed successfully.");
-      if (onOrderPlaced) onOrderPlaced();
+      setMessage("Order placed successfully. Unlocking your garden reward...");
+      if (onOrderPlaced) onOrderPlaced(result);
     } catch (err) {
       setMessage(err.message || "Failed to place order");
     } finally {

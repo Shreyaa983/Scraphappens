@@ -26,12 +26,34 @@ export default function InventoryPanel({ plants, selectedPlantId, onSelectPlant 
                 }
               }}
             >
-              <span className="inventory-emoji">{plant.icon || "🌳"}</span>
-              <span className="inventory-label">{plant.label || "Tree"}</span>
+              <div className="inventory-item-main">
+                <span className="inventory-emoji">{plant.icon || "🌳"}</span>
+                <div className="inventory-copy">
+                  <span className="inventory-label">{plant.label || "Tree"}</span>
+                  {plant.isAchievementPlant ? (
+                    <span className="inventory-subcopy">New Achievement Plant</span>
+                  ) : null}
+                </div>
+              </div>
+
+              {plant.isNew ? <span className="inventory-badge">✨ {plant.badgeText || "NEW"}</span> : null}
+
               <div className="inventory-tooltip">
                 <strong>{plant.label || "Tree"}</strong>
                 <span>Unlocked by:</span>
                 <span>{plant.achievement}</span>
+                {plant.achievementDetails?.materialSummary ? (
+                  <>
+                    <span>Material reused:</span>
+                    <span>{plant.achievementDetails.materialSummary}</span>
+                  </>
+                ) : null}
+                {plant.achievementDetails?.impact?.display ? (
+                  <>
+                    <span>Impact:</span>
+                    <span>{plant.achievementDetails.impact.display}</span>
+                  </>
+                ) : null}
               </div>
             </div>
           ))
