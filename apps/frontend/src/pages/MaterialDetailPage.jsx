@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { addToCart, getProductSuggestions } from "../api";
+import { useParams, useNavigate } from "react-router-dom";
+import { addToCart, getProductSuggestions, getMaterialById } from "../api";
 import SuggestionCard from "../components/SuggestionCard";
 
 const FALLBACK_IMAGE =
@@ -16,8 +17,42 @@ function conditionToGrade(condition) {
     return map[condition] ?? condition?.charAt(0) ?? "—";
 }
 
-export default function MaterialDetailPage({ material, user, onBack, onEdit }) {
-    if (!material) return null;
+export default function MaterialDetailPage({ material: initialMaterial, user, onBack, onEdit }) {
+    const { id } = useParams();
+    const navigate = useNavigate();
+    const [material, setMaterial] = useState(initialMaterial);
+    const [loading, setLoading] = useState(!initialMaterial && !!id);
+    const [quantity, setQuantity] = useState(1);
+    const [message, setMessage] = useState("");
+    const [adding, setAdding] = useState(false);
+    const [suggestions, setSuggestions] = useState([]);
+    const [fetchingSuggestions, setFetchingSuggestions] = useState(false);
+
+    useEffect(() => {
+        if (!material && id) {
+            const fetchMaterial = async () => {
+                try {
+                    setLoading(true);
+                    const data = await getMaterialById(id);
+                    setMaterial(data.material);
+                } catch (err) {
+                    console.error("Failed to fetch material", err);
+                    setMessage("Failed to load material details.");
+                } finally {
+                    setLoading(false);
+                }
+            };
+            fetchMaterial();
+        }
+    }, [id, material]);
+
+    const handleBack = () => {
+        if (onBack) onBack();
+        else navigate(-1);
+    };
+
+    if (loading) return <div className="loading-shell">Loading material details...</div>;
+    if (!material) return <div className="loading-shell">Material not found.</div>;
 
     const isOwner = user && String(material.listed_by) === String(user.id);
     const heroImg = material.image_url || FALLBACK_IMAGE;
@@ -39,12 +74,6 @@ export default function MaterialDetailPage({ material, user, onBack, onEdit }) {
         "Reuse Ready",
     ];
 
-    const [quantity, setQuantity] = useState(1);
-    const [message, setMessage] = useState("");
-    const [adding, setAdding] = useState(false);
-
-    const [suggestions, setSuggestions] = useState([]);
-    const [fetchingSuggestions, setFetchingSuggestions] = useState(false);
 
     const handleGetSuggestions = async () => {
         if (!material.title) return;
@@ -89,7 +118,7 @@ export default function MaterialDetailPage({ material, user, onBack, onEdit }) {
     return (
         <div className="detail-page">
             {/* Back button */}
-            <button className="detail-back-btn" onClick={onBack}>
+            <button className="detail-back-btn" onClick={handleBack}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                     <path d="M19 12H5M12 19l-7-7 7-7" />
                 </svg>
@@ -181,7 +210,7 @@ export default function MaterialDetailPage({ material, user, onBack, onEdit }) {
                     {/* Actions */}
                     <div className="detail-actions">
                         {isOwner ? (
-                            <button className="detail-btn-primary" onClick={() => onEdit(material)}>
+                            <button className="detail-btn-primary" onClick={() => onEdit ? onEdit(material) : navigate(`/edit-listing/${material.id}`, { state: { editItem: material } })}>
                                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />

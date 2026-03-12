@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { getMyOrdersApi, getSellerOrdersApi } from "../api";
 import TrackingMap from "../components/Logistics/TrackingMap";
 import { buildTrackingRoute, getDefaultFallbackRoute } from "../services/geocodeService";
@@ -151,7 +152,7 @@ export function BuyerOrdersPage({ token }) {
       {orders.length === 0 ? (
         <div className="empty-state">
           <p>No orders yet.</p>
-          <span>Add items to your cart and place an order from the marketplace.</span>
+          <span>Add items to your <Link to="/cart" className="inline-link-button">cart</Link> and place an order from the <Link to="/" className="inline-link-button">marketplace</Link>.</span>
         </div>
       ) : (
         <div className="my-listings-grid">
@@ -258,10 +259,12 @@ export function BuyerOrdersPage({ token }) {
                           style={{ width: 52, height: 52, borderRadius: 12, objectFit: "cover" }}
                         />
                         <div>
+                        <Link to={`/material/${it.material_id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
                           <p style={{ margin: 0, fontWeight: 600 }}>{it.material_title}</p>
-                          <p style={{ margin: 0, fontSize: 12, color: "#9ca3af" }}>
-                            Qty: {it.quantity} · Seller: {it.seller.name}
-                          </p>
+                        </Link>
+                        <p style={{ margin: 0, fontSize: 12, color: "#9ca3af" }}>
+                          Qty: {it.quantity} · Seller: {it.seller.name}
+                        </p>
                         </div>
                       </div>
                     </div>
@@ -306,7 +309,7 @@ export function SellerOrdersPage({ token }) {
       {items.length === 0 ? (
         <div className="empty-state">
           <p>No seller orders yet.</p>
-          <span>Once buyers place orders on your listings, they will appear here.</span>
+          <span>Once buyers place orders on your <Link to="/my-listings" className="inline-link-button">listings</Link>, they will appear here.</span>
         </div>
       ) : (
         <div className="my-listings-grid">
@@ -328,7 +331,9 @@ export function SellerOrdersPage({ token }) {
                     })}
                   </span>
                 </div>
-                <h4>{item.material.title}</h4>
+                <Link to={`/material/${item.material.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                  <h4>{item.material.title}</h4>
+                </Link>
                 <p className="card-desc">
                   Buyer: {item.buyer.name} ({item.buyer.email})
                 </p>

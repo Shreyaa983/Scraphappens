@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { getCart, placeOrder, removeCartItem } from "../api";
 import { createShipment, getShippingRates } from "../services/logisticsApi";
 
@@ -338,7 +339,7 @@ export default function CartPage({ token, user, onOrderPlaced }) {
             <rect x="3" y="4" width="18" height="13" rx="2" /><path d="M8 21h8M12 17v4" />
           </svg>
           <p>Your cart is empty.</p>
-          <span>Add a material from the marketplace detail page.</span>
+          <span>Add a material from the <Link to="/" className="inline-link-button">marketplace</Link> detail page.</span>
         </div>
       ) : (
         <>
