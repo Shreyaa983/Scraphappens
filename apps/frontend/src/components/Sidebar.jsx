@@ -25,7 +25,8 @@ export default function Sidebar({ user, roleTitle, onLogout }) {
     if (user && isBuyerRole(user.role)) {
       items.push(
         { name: "Cart", path: "/cart" },
-        { name: "My Orders", path: "/my-orders" }
+        { name: "My Orders", path: "/my-orders" },
+        { name: "DIY Inspiration", path: "/diy" }
       );
     }
 

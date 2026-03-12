@@ -47,7 +47,7 @@ export async function getMaterials() {
 
 export async function getMaterialById(id) {
   const response = await fetch(`${API_BASE_URL}/api/materials/${id}`);
-  return parseResponse(response, "Failed to fetch material details");
+  return parseResponse(response, "Failed to fetch material");
 }
 
 export async function getMyMaterials(token) {
@@ -83,7 +83,6 @@ export async function deleteMaterialById(id, token) {
   return parseResponse(response, "Failed to delete material");
 }
 
-// Cart APIs
 export async function addToCart({ material_id, quantity }, token) {
   const response = await fetch(`${API_BASE_URL}/api/cart/add`, {
     method: "POST",
@@ -111,7 +110,6 @@ export async function removeCartItem(id, token) {
   return parseResponse(response, "Failed to remove cart item");
 }
 
-// Orders APIs
 export async function placeOrder(payload, token) {
   const response = await fetch(`${API_BASE_URL}/api/orders/place`, {
     method: "POST",
@@ -136,6 +134,50 @@ export async function getSellerOrdersApi(token) {
     headers: { Authorization: `Bearer ${token}` },
   });
   return parseResponse(response, "Failed to load seller orders");
+}
+
+export async function getDiyPosts(token) {
+  const response = await fetch(`${API_BASE_URL}/api/diy`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return parseResponse(response, "Failed to load DIY inspiration");
+}
+
+export async function generateDiyPost(token, materialName) {
+  const response = await fetch(`${API_BASE_URL}/api/diy/generate`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(materialName ? { material_name: materialName } : {}),
+  });
+  return parseResponse(response, "Failed to generate DIY inspiration");
+}
+
+export async function getDiyPostById(id, token) {
+  const response = await fetch(`${API_BASE_URL}/api/diy/${id}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return parseResponse(response, "Failed to load DIY project");
+}
+
+export async function getDiyPostResults(id, token) {
+  const response = await fetch(`${API_BASE_URL}/api/diy/${id}/results`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return parseResponse(response, "Failed to load DIY results");
+}
+
+export async function createDiyResultWithFile(id, formData, token) {
+  const response = await fetch(`${API_BASE_URL}/api/diy/${id}/result`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
+  return parseResponse(response, "Failed to post DIY result");
 }
 
 export async function getAchievementProgressApi(token) {
@@ -178,4 +220,53 @@ export async function getProductSuggestions(productName) {
     body: JSON.stringify({ productName })
   });
   return parseResponse(response, "Failed to fetch AI suggestions");
+}
+
+export async function createCommunityPost(payload, token) {
+  const response = await fetch(`${API_BASE_URL}/api/community/post`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  return parseResponse(response, "Failed to create community post");
+}
+
+export async function createCommunityPostWithFile(formData, token) {
+  const response = await fetch(`${API_BASE_URL}/api/community/post`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
+  return parseResponse(response, "Failed to create community post");
+}
+
+export async function getCommunityPosts(token) {
+  const response = await fetch(`${API_BASE_URL}/api/community`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return parseResponse(response, "Failed to load community feed");
+}
+
+export async function addResultComment(resultId, payload, token) {
+  const response = await fetch(`${API_BASE_URL}/api/results/${resultId}/comment`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  return parseResponse(response, "Failed to add comment");
+}
+
+export async function getResultComments(resultId, token) {
+  const response = await fetch(`${API_BASE_URL}/api/results/${resultId}/comments`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return parseResponse(response, "Failed to load comments");
 }

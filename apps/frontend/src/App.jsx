@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
+﻿import { useEffect, useMemo, useState } from "react";
+import { Routes, Route, Navigate, useNavigate, useParams } from "react-router-dom";
 import { getCurrentUser, login, register } from "./api";
 import AuthPanel from "./components/AuthPanel";
 import Sidebar from "./components/Sidebar";
@@ -15,27 +15,56 @@ import MyListingsPage from "./pages/MyListingsPage";
 import CartPage from "./pages/CartPage";
 import AIChatbot from "./pages/AIChatbot";
 import { BuyerOrdersPage, SellerOrdersPage } from "./pages/OrdersPage";
+import DIYFeedPage from "./pages/DIYFeedPage";
+import DIYDetailPage from "./pages/DIYDetailPage";
 import { queuePendingGardenReward } from "./utils/gardenRewards";
 
 const roles = ["seller", "buyer", "volunteer"];
 
 const isSellerRole = (role) => role === "seller" || role === "supplier";
 const isBuyerRole = (role) => role === "buyer";
-const isVolunteerRole = (role) => role === "volunteer";
+
+function RoleLockedPanel() {
+  return (
+    <div className="role-locked-shell">
+      <div className="role-locked-card">
+        <span className="eyebrow">Buyer only</span>
+        <h3>DIY Inspiration is reserved for buyers.</h3>
+        <p>Only buyer accounts can browse AI-generated DIY ideas, open material links, and post finished builds.</p>
+      </div>
+    </div>
+  );
+}
+
+function DIYDetailRoute({ token, onOpenMaterial, onSearchMaterial }) {
+  const navigate = useNavigate();
+  const { id } = useParams();
+
+  return (
+    <DIYDetailPage
+      diyId={id}
+      token={token}
+      onBack={() => navigate("/diy")}
+      onOpenMaterial={onOpenMaterial}
+      onSearchMaterial={onSearchMaterial}
+    />
+  );
+}
 
 export default function App() {
   const navigate = useNavigate();
-  const location = useLocation();
   const [mode, setMode] = useState("register");
   const [showAuth, setShowAuth] = useState(false);
-  const [activeSection, setActiveSection] = useState("Marketplace");
-  const [marketplaceView, setMarketplaceView] = useState("browse"); // browse | create | edit
-  const [editItem, setEditItem] = useState(null);
-  const [selectedProduct, setSelectedProduct] = useState(null); // for modal
-  const [selectedSupplierId, setSelectedSupplierId] = useState(null);
   const [form, setForm] = useState({
-    name: "", email: "", password: "", role: roles[0],
-    street_address: "", city: "", state: "", country: "", pincode: ""
+    name: "",
+    email: "",
+    password: "",
+    role: roles[0],
+    street_address: "",
+    city: "",
+    state: "",
+    country: "",
+    pincode: ""
   });
   const [token, setToken] = useState(localStorage.getItem("token") || "");
   const [user, setUser] = useState(null);
@@ -68,7 +97,10 @@ export default function App() {
 
   useEffect(() => {
     async function restoreUser() {
-      if (!token) { setLoadingUser(false); return; }
+      if (!token) {
+        setLoadingUser(false);
+        return;
+      }
       try {
         const response = await getCurrentUser(token);
         setUser(response.user);
@@ -114,25 +146,14 @@ export default function App() {
     setToken("");
     setUser(null);
     localStorage.removeItem("token");
-    setActiveSection("Marketplace");
-    setMarketplaceView("browse");
-    setSelectedProduct(null);
-    setEditItem(null);
-    setSelectedSupplierId(null);
+    setMessage("");
+    navigate("/");
   }
 
   function openAuth(nextMode) {
     setMode(nextMode);
     setShowAuth(true);
     setMessage("");
-  }
-
-  function handleSidebarChange(section) {
-    setActiveSection(section);
-    setMarketplaceView("browse");
-    setSelectedProduct(null);
-    setEditItem(null);
-    setSelectedSupplierId(null);
   }
 
   function handleFilterChange(key, value) {
@@ -142,14 +163,19 @@ export default function App() {
   function handleOrderPlaced(result) {
     const achievement = result?.achievement || null;
     const userId = user?.id || user?.sub;
-    if (achievement && userId) queuePendingGardenReward(userId, achievement);
+
+    if (achievement && userId) {
+      queuePendingGardenReward(userId, achievement);
+    }
+
     setPendingGardenAchievement(achievement);
     setOrderAchievement(achievement || {
       name: "Circular Purchase Confirmed",
       description: "Your order has been recorded as a circular action.",
-      reward: { plantLabel: "Circular Sapling", icon: "🌱" },
+      reward: { plantLabel: "Circular Sapling", icon: "seedling" },
       impact: { display: "Circular impact recorded" }
     });
+
     window.setTimeout(() => {
       setOrderAchievement(null);
       navigate("/garden");
@@ -297,43 +323,50 @@ export default function App() {
 
         <section className="dashboard-main">
           <Routes>
-            <Route path="/" element={
-              <MarketplacePage
-                user={user}
-                filters={marketplaceFilters}
-                onFilterChange={handleFilterChange}
-                onCreateClick={() => {
-                  if (!user || !isSellerRole(user.role)) {
-                    setMessage("Only sellers can list materials.");
-                    return;
-                  }
-                  navigate("/create-listing");
-                }}
-              />
-            } />
-            <Route path="/material/:id" element={<MaterialDetailPage user={user} onViewSupplier={openSupplierProfile} />} />
-            <Route path="/create-listing" element={
-              isSellerRole(user.role)
-                ? <CreateListing user={user} token={token} onBack={() => navigate(-1)} />
-                : <Navigate to="/" replace />
-            } />
-            <Route path="/edit-listing/:id" element={
-              isSellerRole(user.role)
-                ? <CreateListing user={user} token={token} onBack={() => navigate(-1)} />
-                : <Navigate to="/" replace />
-            } />
+            <Route
+              path="/"
+              element={
+                <MarketplacePage
+                  user={user}
+                  filters={marketplaceFilters}
+                  onFilterChange={handleFilterChange}
+                  onCreateClick={() => {
+                    if (!isSellerRole(user.role)) {
+                      setMessage("Only sellers can list materials.");
+                      return;
+                    }
+                    navigate("/create-listing");
+                  }}
+                />
+              }
+            />
+            <Route
+              path="/material/:id"
+              element={<MaterialDetailPage user={user} onViewSupplier={(supplierId) => navigate(`/supplier/${supplierId}`)} />}
+            />
+            <Route
+              path="/create-listing"
+              element={isSellerRole(user.role) ? <CreateListing user={user} token={token} /> : <Navigate to="/" replace />}
+            />
+            <Route
+              path="/edit-listing/:id"
+              element={isSellerRole(user.role) ? <CreateListing user={user} token={token} /> : <Navigate to="/" replace />}
+            />
             <Route path="/ai-assistant" element={<AIChatbot />} />
-            <Route path="/garden" element={
-              <GardenPage
-                user={user}
-                pendingAchievement={pendingGardenAchievement}
-                onPendingAchievementHandled={() => setPendingGardenAchievement(null)}
-              />
-            } />
+            <Route
+              path="/garden"
+              element={
+                <GardenPage
+                  user={user}
+                  pendingAchievement={pendingGardenAchievement}
+                  onPendingAchievementHandled={() => setPendingGardenAchievement(null)}
+                />
+              }
+            />
             <Route path="/logistics-dashboard" element={<LogisticsDashboardPage token={token} />} />
             <Route path="/my-dashboard" element={<UserDashboard token={token} user={user} />} />
             <Route path="/supplier/:supplierId" element={<SupplierProfile token={token} onBack={() => navigate(-1)} />} />
-            
+
             {isSellerRole(user.role) && (
               <>
                 <Route path="/my-listings" element={<MyListingsPage token={token} />} />
@@ -345,6 +378,24 @@ export default function App() {
               <>
                 <Route path="/cart" element={<CartPage token={token} user={user} onOrderPlaced={handleOrderPlaced} />} />
                 <Route path="/my-orders" element={<BuyerOrdersPage token={token} />} />
+                <Route path="/diy" element={<DIYFeedPage token={token} onOpenProject={(post) => navigate(`/diy/${post.id}`)} />} />
+                <Route
+                  path="/diy/:id"
+                  element={
+                    <DIYDetailRoute
+                      token={token}
+                      onOpenMaterial={openMaterialFromDiy}
+                      onSearchMaterial={searchMaterialFromDiy}
+                    />
+                  }
+                />
+              </>
+            )}
+
+            {!isBuyerRole(user.role) && (
+              <>
+                <Route path="/diy" element={<RoleLockedPanel />} />
+                <Route path="/diy/:id" element={<RoleLockedPanel />} />
               </>
             )}
 

@@ -10,7 +10,8 @@ export const env = {
   openAiApiKey: process.env.OPENAI_API_KEY || "",
   geminiApiKey: process.env.GEMINI_API_KEY || "",
   geocodingProvider: process.env.GEOCODING_PROVIDER || "opencage",
-  geocodingApiKey: process.env.GEOCODING_API_KEY || ""
+  geocodingApiKey: process.env.GEOCODING_API_KEY || "",
+  pexelsApiKey: process.env.PEXELS_API_KEY || ""
 };
 
 export function validateEnv() {
