@@ -1,6 +1,9 @@
+import { Server } from "socket.io";
+import { createServer } from "http";
 import app from "./app.js";
 import { env, validateEnv } from "./config/env.js";
 import { bootstrapDatabase } from "./db/bootstrap.js";
+import { setupAgenticSocket } from "./modules/agentic/agentic.socket.js";
 
 async function listenWithPortFallback(basePort, maxRetries = 10) {
   let currentPort = basePort;
@@ -8,7 +11,18 @@ async function listenWithPortFallback(basePort, maxRetries = 10) {
   for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
     try {
       await new Promise((resolve, reject) => {
-        const server = app.listen(currentPort, () => resolve(server));
+        const httpServer = createServer(app);
+        const io = new Server(httpServer, {
+          cors: {
+            origin: "*",
+            methods: ["GET", "POST"],
+          },
+        });
+
+        // Initialize Agentic Socket
+        setupAgenticSocket(io);
+
+        const server = httpServer.listen(currentPort, () => resolve(server));
         server.once("error", reject);
       });
 

@@ -18,6 +18,8 @@ import { BuyerOrdersPage, SellerOrdersPage } from "./pages/OrdersPage";
 import DIYFeedPage from "./pages/DIYFeedPage";
 import DIYDetailPage from "./pages/DIYDetailPage";
 import { queuePendingGardenReward } from "./utils/gardenRewards";
+import { AgenticProvider } from "./contexts/Agentic/ChatContext";
+import GlobalAssistant from "./components/Agentic/GlobalAssistant";
 
 const roles = ["seller", "buyer", "volunteer"];
 
@@ -336,19 +338,20 @@ export default function App() {
 
   if (token && user) {
     return (
-      <main className="dashboard-page">
-        <Sidebar user={user} roleTitle={roleTitle} onLogout={onLogout} />
+      <AgenticProvider user={user}>
+        <main className="dashboard-page">
+          <Sidebar user={user} roleTitle={roleTitle} onLogout={onLogout} />
 
-        <section className="dashboard-main">
-          <Routes>
-            <Route
+          <section className="dashboard-main">
+            <Routes>
+              <Route
               path="/"
               element={
-                <MarketplacePage
-                  user={user}
-                  filters={marketplaceFilters}
-                  onFilterChange={handleFilterChange}
-                  onCreateClick={() => {
+                  <MarketplacePage
+                    user={user}
+                    filters={marketplaceFilters}
+                    onFilterChange={handleFilterChange}
+                    onCreateClick={() => {
                     if (!isSellerRole(user.role)) {
                       setMessage("Only sellers can list materials.");
                       return;
@@ -356,134 +359,122 @@ export default function App() {
                     navigate("/create-listing");
                   }}
                 />
-              }
+                }
             />
-            <Route
+              <Route
               path="/material/:id"
               element={<MaterialDetailPage user={user} onViewSupplier={(supplierId) => navigate(`/supplier/${supplierId}`)} />}
             />
-            <Route
+              <Route
               path="/create-listing"
               element={isSellerRole(user.role) ? <CreateListing user={user} token={token} /> : <Navigate to="/" replace />}
             />
-            <Route
+              <Route
               path="/edit-listing/:id"
               element={isSellerRole(user.role) ? <CreateListing user={user} token={token} /> : <Navigate to="/" replace />}
             />
-            <Route path="/ai-assistant" element={<AIChatbot />} />
-            <Route
+              <Route path="/ai-assistant" element={<AIChatbot />} />
+              <Route
               path="/garden"
               element={
-                <GardenPage
-                  user={user}
-                  pendingAchievement={pendingGardenAchievement}
-                  onPendingAchievementHandled={() => setPendingGardenAchievement(null)}
-                />
-              }
+                  <GardenPage
+                    user={user}
+                    pendingAchievement={pendingGardenAchievement}
+                    onPendingAchievementHandled={() => setPendingGardenAchievement(null)}
+                  />
+                }
             />
-            <Route path="/logistics-dashboard" element={<LogisticsDashboardPage token={token} />} />
-            <Route path="/my-dashboard" element={<UserDashboard token={token} user={user} />} />
+              <Route path="/logistics-dashboard" element={<LogisticsDashboardPage token={token} />} />
+              <Route path="/pickup-scheduling" element={<LogisticsPickupsPage token={token} />} />
+                <Route path="/my-dashboard" element={<UserDashboard token={token} user={user} />} />
             <Route path="/supplier/:supplierId" element={<SupplierProfile token={token} onBack={() => navigate(-1)} />} />
 
-            {isSellerRole(user.role) && (
-              <>
-                <Route path="/my-listings" element={<MyListingsPage token={token} />} />
-                <Route path="/seller-orders" element={<SellerOrdersPage token={token} />} />
-              </>
-            )}
+              {isSellerRole(user.role) && (
+                <>
+                  <Route path="/my-listings" element={<MyListingsPage token={token} />} />
+                  <Route path="/seller-orders" element={<SellerOrdersPage token={token} />} />
+                </>
+              )}
 
             {isBuyerRole(user.role) && (
               <>
                 <Route path="/cart" element={<CartPage token={token} user={user} onOrderPlaced={handleOrderPlaced} />} />
                 <Route path="/my-orders" element={<BuyerOrdersPage token={token} />} />
-                <Route path="/diy" element={<DIYFeedPage token={token} onOpenProject={(post) => navigate(`/diy/${post.id}`)} />} />
-                <Route
-                  path="/diy/:id"
-                  element={
-                    <DIYDetailRoute
-                      token={token}
-                      onOpenMaterial={openMaterialFromDiy}
-                      onSearchMaterial={searchMaterialFromDiy}
-                    />
-                  }
-                />
               </>
             )}
 
-            {!isBuyerRole(user.role) && (
-              <>
-                <Route path="/diy" element={<RoleLockedPanel />} />
-                <Route path="/diy/:id" element={<RoleLockedPanel />} />
-              </>
-            )}
-
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-          {message ? <p className="message dashboard-message">{message}</p> : null}
-          <OrderAchievementOverlay achievement={orderAchievement} />
-        </section>
-      </main>
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+            {message ? <p className="message dashboard-message">{message}</p> : null}
+            <OrderAchievementOverlay achievement={orderAchievement} />
+          </section>
+          <GlobalAssistant />
+        </main>
+      </AgenticProvider>
     );
   }
 
   return (
-    <main className="landing-page">
-      <nav className="navbar">
-        <div className="brand-block">
-          <span className="brand-mark">S</span>
-          <div>
-            <h1>ScrapHappens</h1>
-            <p>Smart circular material marketplace</p>
+    <AgenticProvider>
+      <main className="landing-page">
+        <nav className="navbar">
+          <div className="brand-block">
+            <span className="brand-mark">S</span>
+            <div>
+              <h1>ScrapHappens</h1>
+              <p>Smart circular material marketplace</p>
+            </div>
           </div>
-        </div>
-        <div className="nav-actions">
-          <button className="nav-button nav-button-secondary" onClick={() => openAuth("login")}>Login</button>
-          <button className="nav-button" onClick={() => openAuth("register")}>Register</button>
-        </div>
-      </nav>
+          <div className="nav-actions">
+            <button className="nav-button nav-button-secondary" onClick={() => openAuth("login")}>Login</button>
+            <button className="nav-button" onClick={() => openAuth("register")}>Register</button>
+          </div>
+        </nav>
 
-      <section className="hero">
-        <div className="hero-copy">
-          <span className="eyebrow">Circular supply chain platform</span>
-          <h2>Turn leftover materials into useful inventory, fast.</h2>
-          <p>
-            A platform for suppliers, buyers, and volunteers with role-based access,
-            JWT authentication, and a live circular materials marketplace.
-          </p>
+        <section className="hero">
+          <div className="hero-copy">
+            <span className="eyebrow">Circular supply chain platform</span>
+            <h2>Turn leftover materials into useful inventory, fast.</h2>
+            <p>
+              A platform for suppliers, buyers, and volunteers with role-based access,
+              JWT authentication, and a live circular materials marketplace.
+            </p>
 
-          <div className="hero-actions">
-            <button className="hero-button" onClick={() => openAuth("register")}>Get Started</button>
-            <button className="hero-button hero-button-muted" onClick={() => openAuth("login")}>I already have an account</button>
+            <div className="hero-actions">
+              <button className="hero-button" onClick={() => openAuth("register")}>Get Started</button>
+              <button className="hero-button hero-button-muted" onClick={() => openAuth("login")}>I already have an account</button>
+            </div>
+
+            {message ? <p className="message">{message}</p> : null}
           </div>
 
-          {message ? <p className="message">{message}</p> : null}
-        </div>
-
-        {showAuth ? (
-          <AuthPanel
-            mode={mode}
-            form={form}
-            onFieldChange={updateField}
-            onClose={() => setShowAuth(false)}
-            onSubmit={onSubmit}
-          />
-        ) : (
-          <div className="feature-grid">
-            <article className="feature-card">
-              <h3>Supplier</h3>
-              <p>List extra stock, fabric scraps, and reusable material.</p>
-            </article>
-            <article className="feature-card">
-              <h3>Buyer</h3>
-              <p>Discover available material inventory and place requests quickly.</p>
-            </article>
-            <article className="feature-card">
-              <h3>Volunteer</h3>
-              <p>Coordinate collection, sorting, and community distribution.</p>
-            </article>
-          </div>
-        )}
-      </section>
-    </main>
+          {showAuth ? (
+            <AuthPanel
+              mode={mode}
+              form={form}
+              onFieldChange={updateField}
+              onClose={() => setShowAuth(false)}
+              onSubmit={onSubmit}
+            />
+          ) : (
+            <div className="feature-grid">
+              <article className="feature-card">
+                <h3>Supplier</h3>
+                <p>List extra stock, fabric scraps, and reusable material.</p>
+              </article>
+              <article className="feature-card">
+                <h3>Buyer</h3>
+                <p>Discover available material inventory and place requests quickly.</p>
+              </article>
+              <article className="feature-card">
+                <h3>Volunteer</h3>
+                <p>Coordinate collection, sorting, and community distribution.</p>
+              </article>
+            </div>
+          )}
+        </section>
+        <GlobalAssistant />
+      </main>
+    </AgenticProvider>
   );
 }
