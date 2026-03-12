@@ -11,6 +11,36 @@ export async function bootstrapDatabase() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
   `;
+
+  // Ensure new structured address fields exist without breaking existing data
+  await sql`
+    ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS street_address TEXT,
+    ADD COLUMN IF NOT EXISTS city TEXT,
+    ADD COLUMN IF NOT EXISTS state TEXT,
+    ADD COLUMN IF NOT EXISTS country TEXT,
+    ADD COLUMN IF NOT EXISTS pincode TEXT,
+    ADD COLUMN IF NOT EXISTS latitude DOUBLE PRECISION,
+    ADD COLUMN IF NOT EXISTS longitude DOUBLE PRECISION
+  `;
+
+  // Ensure role column exists with safe default for legacy databases
+  await sql`
+    ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS role TEXT DEFAULT 'buyer'
+  `;
+
+  await sql`
+    ALTER TABLE users
+    ALTER COLUMN role SET DEFAULT 'buyer'
+  `;
+
+  // Backfill any users missing a role to default buyer (in case of nullable legacy schemas)
+  await sql`
+    UPDATE users
+    SET role = 'buyer'
+    WHERE role IS NULL
+  `;
   await sql`
     CREATE TABLE IF NOT EXISTS materials (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

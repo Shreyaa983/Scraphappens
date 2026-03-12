@@ -6,6 +6,7 @@ import aiRoutes from "./modules/ai/ai.routes.js";
 import materialRoutes from "./routes/materialRoutes.js";
 import cartRoutes from "./routes/cartRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
+import logisticsRoutes from "./routes/logisticsRoutes.js";
 import voiceRoutes from "./modules/voice/voice.routes.js";
 
 const app = express();
@@ -26,5 +27,6 @@ app.use("/api/ai", aiRoutes);
 app.use("/api/materials", materialRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
+app.use("/api", logisticsRoutes);
 
 export default app;

@@ -8,7 +8,9 @@ export const env = {
   jwtSecret: process.env.JWT_SECRET,
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || "7d",
   openAiApiKey: process.env.OPENAI_API_KEY || "",
-  geminiApiKey: process.env.GEMINI_API_KEY || ""
+  geminiApiKey: process.env.GEMINI_API_KEY || "",
+  geocodingProvider: process.env.GEOCODING_PROVIDER || "opencage",
+  geocodingApiKey: process.env.GEOCODING_API_KEY || ""
 };
 
 export function validateEnv() {
