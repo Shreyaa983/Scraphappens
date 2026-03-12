@@ -66,16 +66,36 @@ export default function ProductDetailPage({ product, user, onBack, onCheckout })
         </div>
       </section>
 
-      {/* --- NEW AI SUGGESTIONS SECTION --- */}
-      <section className="ai-suggestions-section" style={{ marginTop: "2rem" }}>
-        <h4 style={{ marginBottom: "1rem" }}>✨ AI Upcycling Ideas for this item</h4>
+      {/* --- AI SUGGESTIONS SECTION --- */}
+      <section className="ai-suggestions-section" style={{ 
+          marginTop: "4rem", 
+          borderTop: "3px solid var(--color-border, #1a1a1a)", 
+          paddingTop: "3rem",
+          paddingBottom: "4rem"
+      }}>
+        <h4 style={{ 
+            margin: 0, 
+            color: "#000", 
+            marginBottom: "2.5rem", 
+            fontWeight: 500, 
+            fontSize: "1.65rem",
+            letterSpacing: "-0.5px" 
+        }}>
+          AI Upcycling Ideas
+        </h4>
         {loading ? (
-          <p>Generating creative ideas...</p>
-        ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
+          <div className="loading-shell" style={{ margin: "2rem 0", background: "rgba(255,255,255,0.05)" }}>
+              Generating creative ideas using AI...
+          </div>
+        ) : suggestions.length > 0 ? (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "1.5rem" }}>
             {suggestions.map((text, index) => (
               <SuggestionCard key={index} text={text} index={index} />
             ))}
+          </div>
+        ) : (
+          <div style={{ textAlign: "center", padding: "2rem", background: "var(--color-bg-secondary, rgba(255,255,255,0.02))", borderRadius: "16px", border: "1px dashed var(--color-border)" }}>
+              <p style={{ color: "var(--color-text-secondary)", margin: 0 }}>AI suggestions will appear here once loaded.</p>
           </div>
         )}
       </section>

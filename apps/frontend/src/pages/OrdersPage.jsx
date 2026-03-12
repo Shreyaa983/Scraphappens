@@ -435,7 +435,7 @@ export function SellerOrdersPage({ token }) {
 
                 <div className="my-listing-actions" style={{ gridTemplateColumns: '1fr' }}>
                   <Link 
-                    to={`/logistics/shipments`} 
+                    to={`/pickup-scheduling`} 
                     className="action-btn edit-btn"
                     style={{ textDecoration: 'none' }}
                   >
