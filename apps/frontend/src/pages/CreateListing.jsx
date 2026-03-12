@@ -17,11 +17,15 @@ export default function CreateListing({ user, token, onBack, editItem = null }) 
     quantity_unit: editItem?.quantity_unit || "kg",
     location: editItem?.location || "",
     image_url: editItem?.image_url || "",
+    price: editItem?.price || "",
+    is_free: editItem?.is_free || false,
+    delivery_option: editItem?.delivery_option || "pickup_only",
+    sustainability_impact: editItem?.sustainability_impact || "",
   });
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setForm(prev => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
   };
 
   const handleSubmit = async (e) => {
@@ -125,6 +129,54 @@ export default function CreateListing({ user, token, onBack, editItem = null }) 
           <label>
             Location / City
             <input name="location" value={form.location} onChange={handleChange} placeholder="e.g., Mumbai" />
+          </label>
+
+          {/* Price + free toggle */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+            <label>
+              Price (₹)
+              <input
+                type="number"
+                name="price"
+                min="0"
+                value={form.price}
+                onChange={handleChange}
+                placeholder="e.g., 500"
+                disabled={form.is_free}
+                style={{ opacity: form.is_free ? 0.5 : 1 }}
+              />
+            </label>
+            <label style={{ justifyContent: "center" }}>
+              Free / Donate
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
+                <input
+                  type="checkbox"
+                  name="is_free"
+                  checked={form.is_free}
+                  onChange={handleChange}
+                  style={{ width: 18, height: 18, accentColor: "#22c55e", cursor: "pointer" }}
+                />
+                <span style={{ fontSize: "0.88rem", color: "#9ca3af" }}>Mark as free</span>
+              </div>
+            </label>
+          </div>
+
+          <label>
+            Delivery Option
+            <select name="delivery_option" value={form.delivery_option} onChange={handleChange}>
+              <option value="pickup_only">Pickup Only</option>
+              <option value="delivery_available">Delivery Available</option>
+            </select>
+          </label>
+
+          <label>
+            Sustainability Impact
+            <input
+              name="sustainability_impact"
+              value={form.sustainability_impact}
+              onChange={handleChange}
+              placeholder="e.g., Saves 8 kg of waste from landfill"
+            />
           </label>
 
           <label>

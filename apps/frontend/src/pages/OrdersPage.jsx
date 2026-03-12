@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getMyOrdersApi, getSellerOrdersApi } from "../api";
+import ReviewForm from "../components/Marketplace/ReviewForm";
 import TrackingMap from "../components/Logistics/TrackingMap";
 import { buildTrackingRoute, getDefaultFallbackRoute } from "../services/geocodeService";
 import { trackShipment } from "../services/logisticsApi";
@@ -81,6 +82,7 @@ export function BuyerOrdersPage({ token }) {
   const [trackingLoadingByOrder, setTrackingLoadingByOrder] = useState({});
   const [shipmentMap, setShipmentMap] = useState({});
   const [viewByOrder, setViewByOrder] = useState({});
+  const [reviewSubmittedByOrder, setReviewSubmittedByOrder] = useState({});
 
   useEffect(() => {
     setShipmentMap(loadShipmentMap());
@@ -141,6 +143,12 @@ export function BuyerOrdersPage({ token }) {
     }
   }
 
+  function canShowReviewForm(order) {
+    const status = String(order?.status || "").toLowerCase();
+    const isDeliveredOrCompleted = status.includes("deliver") || status.includes("complete");
+    return isDeliveredOrCompleted && !reviewSubmittedByOrder[order.id] && Array.isArray(order.items) && order.items.length > 0;
+  }
+
   return (
     <div className="my-listings-page">
       <div className="my-listings-header">
@@ -158,6 +166,11 @@ export function BuyerOrdersPage({ token }) {
           {orders.map((order) => (
             <div key={order.id} className="my-listing-card">
               <div className="my-listing-body">
+                {(() => {
+                  const showReviewForm = canShowReviewForm(order);
+                  const firstSellerId = order.items?.[0]?.seller?.id;
+                  return (
+                    <>
                 <div className="my-listing-meta-top">
                   <span className="category-chip" style={{ position: "static", fontSize: "0.75rem" }}>
                     Order #{order.id.slice(0, 8)}
@@ -186,13 +199,17 @@ export function BuyerOrdersPage({ token }) {
                 </div>
 
                 <div className="my-listing-actions" style={{ marginTop: 10 }}>
-                  <button
-                    className="nav-button nav-button-secondary"
-                    disabled={!shipmentMap[order.id]?.shipment_id || trackingLoadingByOrder[order.id]}
-                    onClick={() => handleTrack(order.id)}
-                  >
-                    {trackingLoadingByOrder[order.id] ? "Tracking…" : "Track Shipment"}
-                  </button>
+                  {!showReviewForm ? (
+                    <button
+                      className="nav-button nav-button-secondary"
+                      disabled={!shipmentMap[order.id]?.shipment_id || trackingLoadingByOrder[order.id]}
+                      onClick={() => handleTrack(order.id)}
+                    >
+                      {trackingLoadingByOrder[order.id] ? "Tracking…" : "Track Shipment"}
+                    </button>
+                  ) : (
+                    <span className="mini-note">Tracking hidden for review-eligible orders.</span>
+                  )}
                 </div>
 
                 {trackingByOrder[order.id] ? (
@@ -264,9 +281,30 @@ export function BuyerOrdersPage({ token }) {
                           </p>
                         </div>
                       </div>
+
                     </div>
                   ))}
                 </div>
+
+                {showReviewForm ? (
+                  <div className="integration-card" style={{ marginTop: 12 }}>
+                    <h4>Leave Review</h4>
+                    <p className="mini-note" style={{ marginTop: 0 }}>
+                      One review per completed order.
+                    </p>
+                    <ReviewForm
+                      orderId={order.id}
+                      sellerId={firstSellerId}
+                      token={token}
+                      onSubmitted={() =>
+                        setReviewSubmittedByOrder((prev) => ({ ...prev, [order.id]: true }))
+                      }
+                    />
+                  </div>
+                ) : null}
+                    </>
+                  );
+                })()}
               </div>
             </div>
           ))}

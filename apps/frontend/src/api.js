@@ -133,3 +133,36 @@ export async function getSellerOrdersApi(token) {
   return parseResponse(response, "Failed to load seller orders");
 }
 
+export async function getAchievementProgressApi(token) {
+  const response = await fetch(`${API_BASE_URL}/api/achievements/progress`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return parseResponse(response, "Failed to load achievement progress");
+}
+
+export async function getMyCouponsApi(token) {
+  const response = await fetch(`${API_BASE_URL}/api/coupons`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return parseResponse(response, "Failed to load coupon wallet");
+}
+
+export async function getMyCircularScoreApi(token) {
+  const response = await fetch(`${API_BASE_URL}/api/reputation/my-score`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return parseResponse(response, "Failed to load circular score");
+}
+
+export async function submitReviewApi(payload, token) {
+  const response = await fetch(`${API_BASE_URL}/api/reviews`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  return parseResponse(response, "Failed to submit review");
+}
+

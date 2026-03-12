@@ -61,6 +61,11 @@ export default function AuthPanel({ mode, form, onFieldChange, onClose, onSubmit
           </label>
 
           <label>
+            Phone Number
+            <input type="tel" value={form.phone_number || ''} onChange={(e) => onFieldChange("phone_number", e.target.value)} placeholder="+91 98765 43210" required />
+          </label>
+
+          <label>
             Password
             <input type="password" value={form.password} onChange={(e) => onFieldChange("password", e.target.value)} required />
           </label>

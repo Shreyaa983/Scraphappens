@@ -15,7 +15,7 @@ function conditionToGrade(condition) {
     return map[condition] ?? condition?.charAt(0) ?? "—";
 }
 
-export default function MaterialDetailPage({ material, user, onBack, onEdit }) {
+export default function MaterialDetailPage({ material, user, onBack, onEdit, onViewSupplier }) {
     if (!material) return null;
 
     const isOwner = user && String(material.listed_by) === String(user.id);
@@ -109,7 +109,18 @@ export default function MaterialDetailPage({ material, user, onBack, onEdit }) {
                     <h2 className="detail-title">{material.title}</h2>
                     {subtitle && <p className="detail-subtitle">{subtitle}</p>}
 
-                    {/* Digital Material Passport */}
+                    {/* Price badge */}
+                    <div style={{ marginBottom: 16 }}>
+                        {material.is_free ? (
+                            <span style={{ fontSize: "1.6rem", fontWeight: 700, color: "#22c55e" }}>Free</span>
+                        ) : material.price ? (
+                            <span style={{ fontSize: "1.6rem", fontWeight: 700, color: "#f0fdf4" }}>
+                                &#8377;{Number(material.price).toLocaleString("en-IN")}
+                            </span>
+                        ) : (
+                            <span style={{ fontSize: "1rem", color: "#9ca3af" }}>Price not listed</span>
+                        )}
+                    </div>
                     <div className="detail-card">
                         <p className="detail-card-heading">Digital Material Passport</p>
                         <div className="detail-passport-grid">
@@ -126,17 +137,31 @@ export default function MaterialDetailPage({ material, user, onBack, onEdit }) {
                                 </span>
                             </div>
                             {material.quantity && (
-                                <div>
-                                    <span className="detail-passport-label">Quantity</span>
-                                    <span className="detail-passport-value">
-                                        {material.quantity} {material.quantity_unit || "kg"}
-                                    </span>
-                                </div>
-                            )}
+                            <div>
+                                <span className="detail-passport-label">Quantity</span>
+                                <span className="detail-passport-value">
+                                    {material.quantity} {material.quantity_unit || "kg"}
+                                </span>
+                            </div>
+                        )}
                             {material.material_type && (
                                 <div>
                                     <span className="detail-passport-label">Material</span>
                                     <span className="detail-passport-value">{material.material_type}</span>
+                                </div>
+                            )}
+                            {material.delivery_option && (
+                                <div>
+                                    <span className="detail-passport-label">Delivery</span>
+                                    <span className="detail-passport-value">
+                                        {material.delivery_option === "delivery_available" ? "Delivery Available" : "Pickup Only"}
+                                    </span>
+                                </div>
+                            )}
+                            {material.sustainability_impact && (
+                                <div style={{ gridColumn: "span 2" }}>
+                                    <span className="detail-passport-label">Sustainability Impact</span>
+                                    <span className="detail-passport-value">{material.sustainability_impact}</span>
                                 </div>
                             )}
                         </div>
@@ -185,8 +210,13 @@ export default function MaterialDetailPage({ material, user, onBack, onEdit }) {
                                         {adding ? "Adding…" : "Add to Cart"}
                                     </button>
                                 </div>
-                                <button className="detail-btn-secondary" type="button">
-                                    Contact Seller
+                                <button
+                                    className="detail-btn-secondary"
+                                    type="button"
+                                    onClick={() => onViewSupplier?.(material.listed_by || material.seller_id)}
+                                    disabled={!material.listed_by && !material.seller_id}
+                                >
+                                    View Supplier
                                 </button>
                             </>
                         )}

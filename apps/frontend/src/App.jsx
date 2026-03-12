@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { getCurrentUser, login, register } from "./api";
 import AuthPanel from "./components/AuthPanel";
 import OrderAchievementOverlay from "./components/Garden/OrderAchievementOverlay";
+import SupplierProfile from "./components/Marketplace/SupplierProfile";
+import UserDashboard from "./components/Marketplace/UserDashboard";
 import CreateListing from "./pages/CreateListing";
 import GardenPage from "./pages/GardenPage";
 import LogisticsDashboardPage from "./pages/LogisticsDashboardPage";
@@ -27,6 +29,7 @@ export default function App() {
   const [marketplaceView, setMarketplaceView] = useState("browse"); // browse | create | edit
   const [editItem, setEditItem] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null); // for modal
+  const [selectedSupplierId, setSelectedSupplierId] = useState(null);
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -51,7 +54,7 @@ export default function App() {
   });
 
   const sidebarItems = useMemo(() => {
-    const items = ["Marketplace", "AI Assistant", "Garden", "Logistics Dashboard", "Pickup Scheduling"];
+    const items = ["Marketplace", "My Dashboard", "AI Assistant", "Garden", "Logistics Dashboard", "Pickup Scheduling"];
 
     if (user && isSellerRole(user.role)) {
       items.push("My Listings", "Seller Orders");
@@ -122,6 +125,7 @@ export default function App() {
     setMarketplaceView("browse");
     setSelectedProduct(null);
     setEditItem(null);
+    setSelectedSupplierId(null);
   }
 
   function openAuth(nextMode) {
@@ -135,6 +139,7 @@ export default function App() {
     setMarketplaceView("browse");
     setSelectedProduct(null);
     setEditItem(null);
+    setSelectedSupplierId(null);
   }
 
   function handleFilterChange(key, value) {
@@ -173,6 +178,12 @@ export default function App() {
     setMarketplaceView("detail");
   }
 
+  function openSupplierProfile(supplierId) {
+    setSelectedSupplierId(supplierId);
+    setMarketplaceView("supplier");
+    setActiveSection("Marketplace");
+  }
+
   // From detail page → edit
   function openEdit(item) {
     setEditItem(item);
@@ -191,6 +202,7 @@ export default function App() {
     setMarketplaceView("browse");
     setEditItem(null);
     setSelectedProduct(null);
+    setSelectedSupplierId(null);
   }
 
   function renderMarketplaceContent() {
@@ -201,6 +213,22 @@ export default function App() {
           user={user}
           onBack={() => { setMarketplaceView("browse"); setSelectedProduct(null); }}
           onEdit={openEdit}
+          onViewSupplier={openSupplierProfile}
+        />
+      );
+    }
+    if (marketplaceView === "supplier" && selectedSupplierId) {
+      return (
+        <SupplierProfile
+          supplierId={selectedSupplierId}
+          token={token}
+          onBack={() => {
+            if (selectedProduct) {
+              setMarketplaceView("detail");
+            } else {
+              setMarketplaceView("browse");
+            }
+          }}
         />
       );
     }
@@ -250,6 +278,9 @@ export default function App() {
     }
     if (activeSection === "Seller Orders") {
       return <SellerOrdersPage token={token} />;
+    }
+    if (activeSection === "My Dashboard") {
+      return <UserDashboard token={token} user={user} />;
     }
     if (activeSection === "Garden") {
       return (
