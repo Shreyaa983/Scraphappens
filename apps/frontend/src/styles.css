@@ -2736,3 +2736,48 @@ label {
     justify-content: center;
   }
 }
+
+/* Logistics Timeline Status Highlighting */
+.logistics-timeline-step.current {
+  color: #fbbf24;
+  font-weight: 600;
+}
+
+.logistics-timeline-step.current .dot {
+  background: #fbbf24;
+  box-shadow: 0 0 8px rgba(251, 191, 36, 0.6);
+}
+
+/* Truck Icon Sizing */
+.truck-div-icon {
+  background: transparent;
+  border: 0;
+  will-change: transform;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.truck-wrap {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  transform-origin: center;
+  transition: transform 120ms linear;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.truck-wrap img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
+  flex-shrink: 0;
+}
+
+.truck-wrap.truck-emoji {
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}

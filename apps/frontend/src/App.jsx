@@ -8,7 +8,8 @@ import SupplierProfile from "./components/Marketplace/SupplierProfile";
 import UserDashboard from "./components/Marketplace/UserDashboard";
 import CreateListing from "./pages/CreateListing";
 import GardenPage from "./pages/GardenPage";
-
+import LogisticsDashboardPage from "./pages/LogisticsDashboardPage";
+import LogisticsPickupsPage from "./pages/LogisticsPickupsPage";
 import MaterialDetailPage from "./pages/MaterialDetailPage";
 import MarketplacePage from "./pages/MarketplacePage";
 import MyListingsPage from "./pages/MyListingsPage";
@@ -270,7 +271,7 @@ export default function App() {
             filters={marketplaceFilters}
             onFilterChange={handleFilterChange}
             onSelectProduct={openProductDetail}
-            onCreateClick={() => {}}
+            onCreateClick={() => { }}
           />
         );
       }
@@ -346,49 +347,49 @@ export default function App() {
           <section className="dashboard-main">
             <Routes>
               <Route
-              path="/"
-              element={
+                path="/"
+                element={
                   <MarketplacePage
                     user={user}
                     filters={marketplaceFilters}
                     onFilterChange={handleFilterChange}
                     onCreateClick={() => {
-                    if (!isSellerRole(user.role)) {
-                      setMessage("Only sellers can list materials.");
-                      return;
-                    }
-                    navigate("/create-listing");
-                  }}
-                />
+                      if (!isSellerRole(user.role)) {
+                        setMessage("Only sellers can list materials.");
+                        return;
+                      }
+                      navigate("/create-listing");
+                    }}
+                  />
                 }
-            />
+              />
               <Route
-              path="/material/:id"
-              element={<MaterialDetailPage user={user} onViewSupplier={(supplierId) => navigate(`/supplier/${supplierId}`)} />}
-            />
+                path="/material/:id"
+                element={<MaterialDetailPage user={user} onViewSupplier={(supplierId) => navigate(`/supplier/${supplierId}`)} />}
+              />
               <Route
-              path="/create-listing"
-              element={isSellerRole(user.role) ? <CreateListing user={user} token={token} /> : <Navigate to="/" replace />}
-            />
+                path="/create-listing"
+                element={isSellerRole(user.role) ? <CreateListing user={user} token={token} /> : <Navigate to="/" replace />}
+              />
               <Route
-              path="/edit-listing/:id"
-              element={isSellerRole(user.role) ? <CreateListing user={user} token={token} /> : <Navigate to="/" replace />}
-            />
+                path="/edit-listing/:id"
+                element={isSellerRole(user.role) ? <CreateListing user={user} token={token} /> : <Navigate to="/" replace />}
+              />
               <Route path="/ai-assistant" element={<AIChatbot />} />
               <Route
-              path="/garden"
-              element={
+                path="/garden"
+                element={
                   <GardenPage
                     user={user}
                     pendingAchievement={pendingGardenAchievement}
                     onPendingAchievementHandled={() => setPendingGardenAchievement(null)}
                   />
                 }
-            />
+              />
 
               <Route path="/pickup-scheduling" element={<LogisticsPickupsPage token={token} />} />
-                <Route path="/my-dashboard" element={<UserDashboard token={token} user={user} />} />
-            <Route path="/supplier/:supplierId" element={<SupplierProfile token={token} onBack={() => navigate(-1)} />} />
+              <Route path="/my-dashboard" element={<UserDashboard token={token} user={user} />} />
+              <Route path="/supplier/:supplierId" element={<SupplierProfile token={token} onBack={() => navigate(-1)} />} />
 
               {isSellerRole(user.role) && (
                 <>
@@ -397,31 +398,31 @@ export default function App() {
                 </>
               )}
 
-            {isBuyerRole(user.role) && (
-              <>
-                <Route path="/cart" element={<CartPage token={token} user={user} onOrderPlaced={handleOrderPlaced} />} />
-                <Route path="/my-orders" element={<BuyerOrdersPage token={token} />} />
-                <Route
-                  path="/diy"
-                  element={
-                    <DIYFeedPage
-                      token={token}
-                      onOpenProject={(post) => navigate(`/diy/${post.id}`)}
-                    />
-                  }
-                />
-                <Route
-                  path="/diy/:id"
-                  element={
-                    <DIYDetailRoute
-                      token={token}
-                      onOpenMaterial={openMaterialFromDiy}
-                      onSearchMaterial={searchMaterialFromDiy}
-                    />
-                  }
-                />
-              </>
-            )}
+              {isBuyerRole(user.role) && (
+                <>
+                  <Route path="/cart" element={<CartPage token={token} user={user} onOrderPlaced={handleOrderPlaced} />} />
+                  <Route path="/my-orders" element={<BuyerOrdersPage token={token} />} />
+                  <Route
+                    path="/diy"
+                    element={
+                      <DIYFeedPage
+                        token={token}
+                        onOpenProject={(post) => navigate(`/diy/${post.id}`)}
+                      />
+                    }
+                  />
+                  <Route
+                    path="/diy/:id"
+                    element={
+                      <DIYDetailRoute
+                        token={token}
+                        onOpenMaterial={openMaterialFromDiy}
+                        onSearchMaterial={searchMaterialFromDiy}
+                      />
+                    }
+                  />
+                </>
+              )}
 
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
