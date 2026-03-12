@@ -3,27 +3,23 @@
 // depending on the `globalView` prop.
 
 const GLOBAL_STATS = [
-  { icon: "♻️", label: "Waste Saved",         value: "12,480 kg" },
-  { icon: "🌿", label: "Carbon Reduction",     value: "3.2 tons"  },
-  { icon: "🌳", label: "Trees Planted",        value: "8,930"     },
-  { icon: "👥", label: "Active Users",         value: "1,245"     },
-  { icon: "🏢", label: "Organisations",        value: "42"        },
-  { icon: "🔄", label: "Transactions",         value: "5,680"     },
+  { icon: "♻️", label: "Total Waste Reused",  value: "12,480 kg" },
+  { icon: "📦", label: "Materials Traded",    value: "5,680"     },
+  { icon: "🌳", label: "Trees Unlocked",      value: "8,930"     },
+  { icon: "🌿", label: "CO₂ Reduction",       value: "3.2 tons"  },
 ];
 
 function buildMyStats(placedTrees) {
-  const count     = placedTrees.length;
+  const count = placedTrees.length;
   const wasteSaved = count * 15;
-  const carbon    = (count * 0.18).toFixed(1);
-  const achievements = [...new Set(placedTrees.map((t) => t.achievementId || t.achievement).filter(Boolean))].length;
+  const traded = count * 2;
+  const carbon = (count * 0.18).toFixed(1);
 
   return [
-    { icon: "🌳", label: "Trees Planted",      value: String(count)             },
-    { icon: "♻️", label: "Waste Saved",        value: `${wasteSaved} kg`        },
-    { icon: "🌿", label: "Carbon Offset",      value: `${carbon} tons`          },
-    { icon: "🏆", label: "Achievements",       value: String(achievements || 0) },
-    { icon: "🌱", label: "Garden Level",       value: count >= 10 ? "Expert" : count >= 5 ? "Growing" : "Seedling" },
-    { icon: "⭐", label: "Impact Score",       value: String(count * 22)        },
+    { icon: "♻️", label: "Total Waste Reused", value: `${wasteSaved} kg` },
+    { icon: "📦", label: "Materials Traded",   value: String(traded) },
+    { icon: "🌳", label: "Trees Unlocked",     value: String(count) },
+    { icon: "🌿", label: "CO₂ Reduction",      value: `${carbon} tons` },
   ];
 }
 
@@ -41,14 +37,14 @@ function StatCard({ icon, label, value, accent }) {
 
 export default function GardenStatsBar({ globalView, placedTrees }) {
   const stats = globalView ? GLOBAL_STATS : buildMyStats(placedTrees);
-  const title = globalView ? "Global forest overview" : "My garden progress";
+  const title = globalView ? "Global Forest Overview" : "Impact Stats";
   const description = globalView
-    ? "A snapshot of the platform's collective reuse, growth, and community activity."
+    ? "A snapshot of the platform's collective circular economy impact."
     : placedTrees.length > 0
-      ? "Your current impact from planted rewards, achievements, and garden growth."
-      : "Start unlocking achievements to collect plants and bring your garden to life.";
+      ? "Your current impact from reuse and successful material exchanges."
+      : "Start unlocking achievements to collect plants and build your eco-garden.";
 
-  const ACCENTS = ["#4cdf8c", "#86efac", "#34d399", "#60a5fa", "#a78bfa", "#fbbf24"];
+  const ACCENTS = ["#4cdf8c", "#f8b26a", "#34d399", "#60a5fa"];
 
   return (
     <section className={`gsbar-root${globalView ? " gsbar-global" : ""}`}>

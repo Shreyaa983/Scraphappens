@@ -1,68 +1,59 @@
 import { Link } from "react-router-dom";
 
 export default function InventoryPanel({ plants, selectedPlantId, onSelectPlant }) {
+  const hasPlants = plants.length > 0;
+
   return (
-    <aside className="inventory-panel">
-      <h3>Unlocked Plants</h3>
+    <section className="inventory-panel">
+      {hasPlants ? (
+        <>
+          <div className="inventory-head">
+            <h3>Unlocked Plants</h3>
+            <span>Select one and place it on a tile in your garden</span>
+          </div>
 
-      <div className="inventory-list">
-        {plants.length === 0 ? (
-          <p className="inventory-empty">
-            No plants yet. <Link to="/" className="inline-link-button">Browse marketplace</Link> to find materials and earn rewards.
-          </p>
-        ) : (
-          plants.map((plant) => (
-            <div
-              key={plant.id}
-              className={`inventory-item ${plant.isNew ? "inventory-item-new" : ""} ${selectedPlantId === plant.id ? "inventory-item-selected" : ""}`}
-              draggable
-              role="button"
-              tabIndex={0}
-              onDragStart={(event) => {
-                event.dataTransfer.setData("text/plain", String(plant.id));
-                onSelectPlant(plant.id);
-              }}
-              onClick={() => onSelectPlant(plant.id)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") {
-                  event.preventDefault();
+          <div className="inventory-list inventory-list-horizontal">
+            {plants.map((plant) => (
+              <article
+                key={plant.id}
+                className={`inventory-item ${plant.isNew ? "inventory-item-new" : ""} ${selectedPlantId === plant.id ? "inventory-item-selected" : ""}`}
+                draggable
+                role="button"
+                tabIndex={0}
+                onDragStart={(event) => {
+                  event.dataTransfer.setData("text/plain", String(plant.id));
                   onSelectPlant(plant.id);
-                }
-              }}
-            >
-              <div className="inventory-item-main">
-                <span className="inventory-emoji">{plant.icon || "🌳"}</span>
-                <div className="inventory-copy">
-                  <span className="inventory-label">{plant.label || "Tree"}</span>
-                  {plant.isAchievementPlant ? (
-                    <span className="inventory-subcopy">New Achievement Plant</span>
-                  ) : null}
+                }}
+                onClick={() => onSelectPlant(plant.id)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    onSelectPlant(plant.id);
+                  }
+                }}
+              >
+                <div className="inventory-item-main">
+                  <span className="inventory-emoji">{plant.icon || "🌳"}</span>
+                  <div className="inventory-copy">
+                    <span className="inventory-label">{plant.label || "Tree"}</span>
+                    <span className="inventory-subcopy">{plant.achievement || "Achievement Reward"}</span>
+                  </div>
                 </div>
-              </div>
 
-              {plant.isNew ? <span className="inventory-badge">✨ {plant.badgeText || "NEW"}</span> : null}
-
-              <div className="inventory-tooltip">
-                <strong>{plant.label || "Tree"}</strong>
-                <span>Unlocked by:</span>
-                <span>{plant.achievement}</span>
-                {plant.achievementDetails?.materialSummary ? (
-                  <>
-                    <span>Material reused:</span>
-                    <span>{plant.achievementDetails.materialSummary}</span>
-                  </>
-                ) : null}
-                {plant.achievementDetails?.impact?.display ? (
-                  <>
-                    <span>Impact:</span>
-                    <span>{plant.achievementDetails.impact.display}</span>
-                  </>
-                ) : null}
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-    </aside>
+                <button type="button" className="inventory-place-btn" onClick={() => onSelectPlant(plant.id)}>
+                  Place in Garden
+                </button>
+                {plant.isNew ? <span className="inventory-badge">✨ {plant.badgeText || "NEW"}</span> : null}
+              </article>
+            ))}
+          </div>
+        </>
+      ) : (
+        <div className="inventory-empty-collapsed">
+          <p>No plants unlocked yet. Browse the marketplace to reuse materials and grow your garden.</p>
+          <Link to="/" className="inline-link-button">Browse Marketplace</Link>
+        </div>
+      )}
+    </section>
   );
 }

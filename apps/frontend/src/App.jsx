@@ -9,7 +9,6 @@ import UserDashboard from "./components/Marketplace/UserDashboard";
 import CreateListing from "./pages/CreateListing";
 import GardenPage from "./pages/GardenPage";
 import LogisticsDashboardPage from "./pages/LogisticsDashboardPage";
-import LogisticsPickupsPage from "./pages/LogisticsPickupsPage";
 import MaterialDetailPage from "./pages/MaterialDetailPage";
 import MarketplacePage from "./pages/MarketplacePage";
 import MyListingsPage from "./pages/MyListingsPage";
@@ -49,7 +48,7 @@ export default function App() {
   });
 
   const sidebarItems = useMemo(() => {
-    const items = ["Marketplace", "My Dashboard", "AI Assistant", "Garden", "Logistics Dashboard", "Pickup Scheduling"];
+    const items = ["Marketplace", "My Dashboard", "AI Assistant", "Garden", "Logistics Dashboard"];
 
     if (user && isSellerRole(user.role)) {
       items.push("My Listings", "Seller Orders");
@@ -253,7 +252,6 @@ export default function App() {
   function renderSectionContent() {
     if (activeSection === "AI Assistant") return <AIChatbot />;
     if (activeSection === "Logistics Dashboard") return <LogisticsDashboardPage token={token} />;
-    if (activeSection === "Pickup Scheduling") return <LogisticsPickupsPage token={token} />;
     if (activeSection === "Cart") {
       return <CartPage token={token} user={user} onOrderPlaced={handleOrderPlaced} />;
     }
@@ -333,7 +331,6 @@ export default function App() {
               />
             } />
             <Route path="/logistics-dashboard" element={<LogisticsDashboardPage token={token} />} />
-            <Route path="/pickup-scheduling" element={<LogisticsPickupsPage token={token} />} />
             <Route path="/my-dashboard" element={<UserDashboard token={token} user={user} />} />
             <Route path="/supplier/:supplierId" element={<SupplierProfile token={token} onBack={() => navigate(-1)} />} />
             

@@ -23,15 +23,20 @@ export default function Tree({ position, achievement, treeType, treeLabel, anima
   const currentScaleRef = useRef(animate ? 0.01 : variant.baseScale);
   const [hovered, setHovered] = useState(false);
 
-  useFrame(() => {
-    if (!animate || !groupRef.current) {
+  useFrame(({ clock }) => {
+    if (!groupRef.current) {
       return;
     }
 
-    const targetScale = variant.baseScale;
-    const nextScale = currentScaleRef.current + (targetScale - currentScaleRef.current) * 0.14;
-    currentScaleRef.current = nextScale;
-    groupRef.current.scale.set(nextScale, nextScale, nextScale);
+    const t = clock.getElapsedTime();
+    groupRef.current.rotation.z = Math.sin(t * 0.9 + position[0]) * 0.015;
+
+    if (animate) {
+      const targetScale = variant.baseScale;
+      const nextScale = currentScaleRef.current + (targetScale - currentScaleRef.current) * 0.14;
+      currentScaleRef.current = nextScale;
+      groupRef.current.scale.set(nextScale, nextScale, nextScale);
+    }
   });
 
   return (
@@ -45,11 +50,21 @@ export default function Tree({ position, achievement, treeType, treeLabel, anima
     >
       <primitive object={scene.clone()} />
 
-      {hovered && achievement ? (
-        <group position={[0, 2, 0]}>
-          <TreeAchievementPopup achievement={achievement} treeLabel={treeLabel || "Tree"} />
+      {achievement ? (
+        <group position={[0, -variant.yOffset + 0.2, 0]}>
+          <mesh rotation={[-Math.PI / 2, 0, 0]}>
+            <ringGeometry args={[0.65, 0.88, 36]} />
+            <meshBasicMaterial color={hovered ? "#fbbf24" : "#86efac"} transparent opacity={0.75} />
+          </mesh>
         </group>
       ) : null}
+
+      {achievement ? (
+        <group position={[0, 2.6, 0]}>
+          <TreeAchievementPopup achievement={achievement} treeLabel={treeLabel || "Tree"} compact={!hovered} />
+        </group>
+      ) : null}
+
     </group>
   );
 }

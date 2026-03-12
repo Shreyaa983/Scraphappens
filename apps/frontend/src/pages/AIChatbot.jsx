@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Leaf, PlusCircle } from 'lucide-react';
+import { Send, PlusCircle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Link } from 'react-router-dom';
@@ -95,77 +95,61 @@ const AIChatbot = () => {
 
   return (
     <div className="page-stack">
-      <section className="dashboard-card ai-layout">
-        <div className="section-heading">
+      <section className="ai-chat-shell">
+        <header className="ai-chat-header">
           <div>
             <span className="eyebrow">Smart Assistant</span>
             <h3>Circular Loop Chatbot</h3>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <Link to="/" className="section-tag" style={{ textDecoration: 'none' }}>View Marketplace</Link>
-            <button
-              type="button"
-              onClick={handleNewChat}
-              title="Start a new chat"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '6px 12px',
-                background: 'transparent',
-                border: '1.5px solid var(--color-primary, #6c63ff)',
-                borderRadius: '8px',
-                color: 'var(--color-primary, #6c63ff)',
-                cursor: 'pointer',
-                fontSize: '13px',
-                fontWeight: 600,
-                transition: 'all 0.2s ease',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-primary, #6c63ff)'; e.currentTarget.style.color = '#fff'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--color-primary, #6c63ff)'; }}
-            >
+          <div className="ai-chat-header-actions">
+            <Link to="/" className="section-tag ai-chat-link">View Marketplace</Link>
+            <button type="button" onClick={handleNewChat} title="Start a new chat" className="ai-new-chat-btn">
               <PlusCircle size={15} />
               New Chat
             </button>
           </div>
-        </div>
+        </header>
 
-        <div className="chat-thread" ref={scrollRef} style={{ minHeight: '400px', maxHeight: '500px' }}>
+        <div className="chat-thread" ref={scrollRef}>
           {messages.map((msg, i) => (
-            <div 
-              key={i} 
-              className={`chat-bubble ${msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-assistant'}`}
-            >
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                components={{
-                  p: ({ node, ...props }) => <p style={{ margin: 0, marginBottom: '8px', whiteSpace: 'pre-wrap' }} {...props} />,
-                  ul: ({ node, ...props }) => <ul style={{ margin: '0 0 8px 20px', padding: 0 }} {...props} />,
-                  ol: ({ node, ...props }) => <ol style={{ margin: '0 0 8px 20px', padding: 0 }} {...props} />,
-                  li: ({ node, ...props }) => <li style={{ marginBottom: '4px' }} {...props} />,
-                  strong: ({ node, ...props }) => <strong style={{ fontWeight: 800 }} {...props} />,
-                }}
-              >
-                {msg.text}
-              </ReactMarkdown>
+            <div key={i} className={`chat-row ${msg.role === 'user' ? 'chat-row-user' : 'chat-row-assistant'}`}>
+              <div className={`chat-bubble ${msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-assistant'}`}>
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    p: ({ node, ...props }) => <p style={{ margin: 0, marginBottom: '8px', whiteSpace: 'pre-wrap' }} {...props} />,
+                    ul: ({ node, ...props }) => <ul style={{ margin: '0 0 8px 20px', padding: 0 }} {...props} />,
+                    ol: ({ node, ...props }) => <ol style={{ margin: '0 0 8px 20px', padding: 0 }} {...props} />,
+                    li: ({ node, ...props }) => <li style={{ marginBottom: '4px' }} {...props} />,
+                    strong: ({ node, ...props }) => <strong style={{ fontWeight: 800 }} {...props} />,
+                  }}
+                >
+                  {msg.text}
+                </ReactMarkdown>
+              </div>
             </div>
           ))}
-          {loading && <div className="mini-note">Assistant is thinking...</div>}
+          {loading && (
+            <div className="chat-row chat-row-assistant">
+              <div className="chat-bubble chat-bubble-assistant mini-note">Assistant is thinking...</div>
+            </div>
+          )}
         </div>
 
-        <div className="ai-input-stack">
+        <div className="ai-composer-wrap">
           <div className="chat-input-row">
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
               placeholder="Ask about materials, reuse tips, or marketplace features..."
             />
-            <button 
-              type="button" 
-              className="submit-button" 
+            <button
+              type="button"
+              className="submit-button"
               onClick={handleSend}
               disabled={loading}
+              aria-label="Send message"
             >
               <Send size={18} />
             </button>
@@ -176,4 +160,4 @@ const AIChatbot = () => {
   );
 };
 
-export default AIChatbot;
+export default AIChatbot;

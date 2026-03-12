@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { addToCart, getProductSuggestions, getMaterialById } from "../api";
 import SuggestionCard from "../components/SuggestionCard";
+import ARModelViewer from "../components/ARModelViewer";
 
 const FALLBACK_IMAGE =
     "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=900&q=80";
@@ -27,6 +28,7 @@ export default function MaterialDetailPage({ material: initialMaterial, user, on
     const [adding, setAdding] = useState(false);
     const [suggestions, setSuggestions] = useState([]);
     const [fetchingSuggestions, setFetchingSuggestions] = useState(false);
+    const [showARModal, setShowARModal] = useState(false);
 
     useEffect(() => {
         if (!material && id) {
@@ -261,6 +263,18 @@ export default function MaterialDetailPage({ material: initialMaterial, user, on
                                 <button
                                     className="detail-btn-secondary"
                                     type="button"
+                                    onClick={() => setShowARModal(true)}
+                                    style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "center" }}
+                                >
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <rect x="3" y="3" width="18" height="18" rx="2" />
+                                        <path d="M9 11l3 3L22 4" />
+                                    </svg>
+                                    View in AR
+                                </button>
+                                <button
+                                    className="detail-btn-secondary"
+                                    type="button"
                                     onClick={() => onViewSupplier?.(material.listed_by || material.seller_id)}
                                     disabled={!material.listed_by && !material.seller_id}
                                 >
@@ -277,6 +291,13 @@ export default function MaterialDetailPage({ material: initialMaterial, user, on
                     )}
                 </div>
             </div>
+
+            {/* AR Modal */}
+            <ARModelViewer
+              material={material}
+              isOpen={showARModal}
+              onClose={() => setShowARModal(false)}
+            />
 
             {/* --- AI SUGGESTIONS SECTION --- */}
             <section className="ai-suggestions-section" style={{ 

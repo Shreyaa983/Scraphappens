@@ -84,6 +84,7 @@ export function BuyerOrdersPage({ token }) {
   const [shipmentMap, setShipmentMap] = useState({});
   const [viewByOrder, setViewByOrder] = useState({});
   const [reviewSubmittedByOrder, setReviewSubmittedByOrder] = useState({});
+  const [reviewOpenByOrder, setReviewOpenByOrder] = useState({});
 
   useEffect(() => {
     setShipmentMap(loadShipmentMap());
@@ -150,166 +151,174 @@ export function BuyerOrdersPage({ token }) {
     return isDeliveredOrCompleted && !reviewSubmittedByOrder[order.id] && Array.isArray(order.items) && order.items.length > 0;
   }
 
+  function getStatusMeta(statusText) {
+    const status = String(statusText || "").toLowerCase();
+    if (status.includes("cancel")) return { label: "Cancelled", className: "status-cancelled" };
+    if (status.includes("deliver") || status.includes("complete")) return { label: "Delivered", className: "status-delivered" };
+    if (status.includes("ship") || status.includes("transit") || status.includes("out")) return { label: "Shipped", className: "status-shipped" };
+    return { label: "Pending", className: "status-pending" };
+  }
+
   return (
-    <div className="my-listings-page">
-      <div className="my-listings-header">
-        <h3>My Orders <span className="count">({orders.length})</span></h3>
-        <p className="my-listings-sub">Orders you have placed as a buyer.</p>
+    <div className="my-orders-page">
+      <div className="my-orders-header">
+        <h3>
+          My Orders <span className="my-orders-count">({orders.length})</span>
+        </h3>
+        <p>Track your purchases and leave reviews after delivery.</p>
       </div>
 
       {orders.length === 0 ? (
-        <div className="empty-state">
-          <p>No orders yet.</p>
-          <span>Add items to your <Link to="/cart" className="inline-link-button">cart</Link> and place an order from the <Link to="/" className="inline-link-button">marketplace</Link>.</span>
+        <div className="my-orders-empty">
+          <p>You haven't placed any orders yet.</p>
+          <Link to="/" className="inline-link-button">Browse Marketplace</Link>
         </div>
       ) : (
-        <div className="my-listings-grid">
+        <div className="my-orders-list">
           {orders.map((order) => (
-            <div key={order.id} className="my-listing-card">
-              <div className="my-listing-body">
-                {(() => {
-                  const showReviewForm = canShowReviewForm(order);
-                  const firstSellerId = order.items?.[0]?.seller?.id;
-                  return (
-                    <>
-                <div className="my-listing-meta-top">
-                  <span className="category-chip" style={{ position: "static", fontSize: "0.75rem" }}>
-                    Order #{order.id.slice(0, 8)}
-                  </span>
-                  <span className="my-listing-date">
-                    {new Date(order.created_at).toLocaleDateString("en-IN", {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                    })}
-                  </span>
-                </div>
-                <h4>Status: {order.status}</h4>
-                <p className="card-desc">
-                  Shipping to: {order.shipping_address || "—"}
-                </p>
-                {shipmentMap[order.id]?.shipment_id ? (
-                  <p className="detail-subtext">Shipment ID: {shipmentMap[order.id].shipment_id}</p>
-                ) : (
-                  <p className="detail-subtext">Shipment not attached yet.</p>
-                )}
-                <div className="card-footer-meta">
-                  <div className="meta-item">
-                    <span>{order.items.length} item(s)</span>
-                  </div>
-                </div>
-
-                <div className="my-listing-actions" style={{ marginTop: 10 }}>
-                  {!showReviewForm ? (
-                    <button
-                      className="nav-button nav-button-secondary"
-                      disabled={!shipmentMap[order.id]?.shipment_id || trackingLoadingByOrder[order.id]}
-                      onClick={() => handleTrack(order.id)}
-                    >
-                      {trackingLoadingByOrder[order.id] ? "Tracking…" : "Track Shipment"}
-                    </button>
-                  ) : (
-                    <span className="mini-note">Tracking hidden for review-eligible orders.</span>
-                  )}
-                </div>
-
-                {trackingByOrder[order.id] ? (
-                  <div className="integration-card" style={{ marginTop: 12 }}>
-                    <h4>Shipment Tracking</h4>
-                    <div className="tracking-view-toggle">
-                      <button
-                        type="button"
-                        className={`tracking-toggle-btn ${!viewByOrder[order.id] || viewByOrder[order.id] === "timeline" ? "active" : ""}`}
-                        onClick={() => setViewByOrder((prev) => ({ ...prev, [order.id]: "timeline" }))}
-                      >
-                        Timeline View
-                      </button>
-                      <button
-                        type="button"
-                        className={`tracking-toggle-btn ${viewByOrder[order.id] === "map" ? "active" : ""}`}
-                        onClick={() => setViewByOrder((prev) => ({ ...prev, [order.id]: "map" }))}
-                      >
-                        Map View
-                      </button>
-                    </div>
-
-                    {!viewByOrder[order.id] || viewByOrder[order.id] === "timeline" ? (
-                      <>
-                        <p>Current Status: {trackingByOrder[order.id].shipment_status || "Unknown"}</p>
-                        <p>Courier: {trackingByOrder[order.id].courier || "Default Courier"}</p>
-                        <p>Current Location: {trackingByOrder[order.id].current_location || "Unknown"}</p>
-                        <p>Estimated Delivery: {trackingByOrder[order.id].expected_delivery || "Unknown"}</p>
-
-                        <div className="logistics-timeline">
-                          {buildTimelineSteps(trackingByOrder[order.id].shipment_status).map((step) => (
-                            <div key={`${order.id}-${step.key}`} className={`logistics-timeline-step ${step.done ? "done" : ""}`}>
-                              <span className="dot" />
-                              <span>{step.label}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        {trackingByOrder[order.id].routeFallbackUsed ? (
-                          <p className="mini-note">Map route is using fallback coordinates.</p>
-                        ) : null}
-                        <TrackingMap
-                          stops={trackingByOrder[order.id].routeStops || []}
-                          currentStatus={trackingByOrder[order.id].shipment_status}
-                          truckIconUrl={truckIconUrl}
-                        />
-                      </>
-                    )}
-
-                    {trackingByOrder[order.id].error ? <p className="mini-note">{trackingByOrder[order.id].error}</p> : null}
-                  </div>
-                ) : null}
-
-                <div style={{ marginTop: 10, display: "grid", gap: 8 }}>
-                  {order.items.map((it) => (
-                    <div key={it.id} className="market-card" style={{ padding: 10, borderRadius: 10 }}>
-                      <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                        <img
-                          src={it.image_url || FALLBACK_IMAGE}
-                          alt={it.material_title}
-                          style={{ width: 52, height: 52, borderRadius: 12, objectFit: "cover" }}
-                        />
-                        <div>
-                        <Link to={`/material/${it.material_id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                          <p style={{ margin: 0, fontWeight: 600 }}>{it.material_title}</p>
-                        </Link>
-                        <p style={{ margin: 0, fontSize: 12, color: "#9ca3af" }}>
-                          Qty: {it.quantity} · Seller: {it.seller.name}
+            <article key={order.id} className="order-card">
+              {(() => {
+                const showReviewForm = canShowReviewForm(order);
+                const firstSellerId = order.items?.[0]?.seller?.id;
+                const statusMeta = getStatusMeta(order.status);
+                const isReviewOpen = Boolean(reviewOpenByOrder[order.id]);
+                return (
+                  <>
+                    <header className="order-card-header">
+                      <div>
+                        <p className="order-label">Order #{order.id.slice(0, 8)}</p>
+                        <p className="order-date">
+                          {new Date(order.created_at).toLocaleDateString("en-IN", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })}
                         </p>
-                        </div>
                       </div>
+                      <span className={`order-status-badge ${statusMeta.className}`}>Status: {statusMeta.label}</span>
+                    </header>
 
-                    </div>
-                  ))}
-                </div>
+                    <section className="order-card-shipping">
+                      <div>
+                        <p className="order-section-label">Shipping Address</p>
+                        <p className="order-section-value">{order.shipping_address || "—"}</p>
+                      </div>
+                      <div>
+                        <p className="order-section-label">Shipment ID</p>
+                        <p className="order-shipment-id">{shipmentMap[order.id]?.shipment_id || "Not attached yet"}</p>
+                      </div>
+                    </section>
 
-                {showReviewForm ? (
-                  <div className="integration-card" style={{ marginTop: 12 }}>
-                    <h4>Leave Review</h4>
-                    <p className="mini-note" style={{ marginTop: 0 }}>
-                      One review per completed order.
-                    </p>
-                    <ReviewForm
-                      orderId={order.id}
-                      sellerId={firstSellerId}
-                      token={token}
-                      onSubmitted={() =>
-                        setReviewSubmittedByOrder((prev) => ({ ...prev, [order.id]: true }))
-                      }
-                    />
-                  </div>
-                ) : null}
-                    </>
-                  );
-                })()}
-              </div>
-            </div>
+                    <section className="order-products">
+                      {order.items.map((it) => (
+                        <article key={it.id} className="order-product-row">
+                          <img src={it.image_url || FALLBACK_IMAGE} alt={it.material_title} />
+                          <div className="order-product-copy">
+                            <Link to={`/material/${it.material_id}`} className="order-product-title-link">
+                              <h4>{it.material_title}</h4>
+                            </Link>
+                            <p>Quantity: {it.quantity}</p>
+                            <p>Seller: {it.seller.name}</p>
+                          </div>
+                        </article>
+                      ))}
+                    </section>
+
+                    <footer className="order-actions">
+                      {!showReviewForm ? (
+                        <button
+                          className="order-action-track"
+                          disabled={!shipmentMap[order.id]?.shipment_id || trackingLoadingByOrder[order.id]}
+                          onClick={() => handleTrack(order.id)}
+                        >
+                          {trackingLoadingByOrder[order.id] ? "Tracking…" : "Track Shipment"}
+                        </button>
+                      ) : (
+                        <div className="order-review-eligible">
+                          <p>This order has been delivered. Leave a review to help other buyers.</p>
+                          <button
+                            type="button"
+                            className="order-action-review"
+                            onClick={() =>
+                              setReviewOpenByOrder((prev) => ({ ...prev, [order.id]: !prev[order.id] }))
+                            }
+                          >
+                            {isReviewOpen ? "Hide Review Form" : "Leave Review"}
+                          </button>
+                        </div>
+                      )}
+                    </footer>
+
+                    {trackingByOrder[order.id] ? (
+                      <section className="order-tracking-panel">
+                        <div className="tracking-view-toggle">
+                          <button
+                            type="button"
+                            className={`tracking-toggle-btn ${!viewByOrder[order.id] || viewByOrder[order.id] === "timeline" ? "active" : ""}`}
+                            onClick={() => setViewByOrder((prev) => ({ ...prev, [order.id]: "timeline" }))}
+                          >
+                            Timeline View
+                          </button>
+                          <button
+                            type="button"
+                            className={`tracking-toggle-btn ${viewByOrder[order.id] === "map" ? "active" : ""}`}
+                            onClick={() => setViewByOrder((prev) => ({ ...prev, [order.id]: "map" }))}
+                          >
+                            Map View
+                          </button>
+                        </div>
+
+                        {!viewByOrder[order.id] || viewByOrder[order.id] === "timeline" ? (
+                          <>
+                            <p>Current Status: {trackingByOrder[order.id].shipment_status || "Unknown"}</p>
+                            <p>Courier: {trackingByOrder[order.id].courier || "Default Courier"}</p>
+                            <p>Current Location: {trackingByOrder[order.id].current_location || "Unknown"}</p>
+                            <p>Estimated Delivery: {trackingByOrder[order.id].expected_delivery || "Unknown"}</p>
+
+                            <div className="logistics-timeline">
+                              {buildTimelineSteps(trackingByOrder[order.id].shipment_status).map((step) => (
+                                <div key={`${order.id}-${step.key}`} className={`logistics-timeline-step ${step.done ? "done" : ""}`}>
+                                  <span className="dot" />
+                                  <span>{step.label}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            {trackingByOrder[order.id].routeFallbackUsed ? (
+                              <p className="mini-note">Map route is using fallback coordinates.</p>
+                            ) : null}
+                            <TrackingMap
+                              stops={trackingByOrder[order.id].routeStops || []}
+                              currentStatus={trackingByOrder[order.id].shipment_status}
+                              truckIconUrl={truckIconUrl}
+                            />
+                          </>
+                        )}
+
+                        {trackingByOrder[order.id].error ? <p className="mini-note">{trackingByOrder[order.id].error}</p> : null}
+                      </section>
+                    ) : null}
+
+                    {showReviewForm && isReviewOpen ? (
+                      <section className="order-review-panel">
+                        <h4>Leave Review</h4>
+                        <ReviewForm
+                          orderId={order.id}
+                          sellerId={firstSellerId}
+                          token={token}
+                          onSubmitted={() => {
+                            setReviewSubmittedByOrder((prev) => ({ ...prev, [order.id]: true }));
+                            setReviewOpenByOrder((prev) => ({ ...prev, [order.id]: false }));
+                          }}
+                        />
+                      </section>
+                    ) : null}
+                  </>
+                );
+              })()}
+            </article>
           ))}
         </div>
       )}
