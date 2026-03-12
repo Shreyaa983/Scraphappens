@@ -5,6 +5,12 @@ export default defineConfig({
   plugins: [react()],
   assetsInclude: ["**/*.glb"],
   server: {
-    port: 5173
+    port: 5173,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:4000',
+        changeOrigin: true,
+      }
+    }
   }
 });
