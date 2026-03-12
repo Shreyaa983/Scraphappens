@@ -4,6 +4,8 @@ import AuthPanel from "./components/AuthPanel";
 import OrderAchievementOverlay from "./components/Garden/OrderAchievementOverlay";
 import CreateListing from "./pages/CreateListing";
 import GardenPage from "./pages/GardenPage";
+import LogisticsDashboardPage from "./pages/LogisticsDashboardPage";
+import LogisticsPickupsPage from "./pages/LogisticsPickupsPage";
 import MaterialDetailPage from "./pages/MaterialDetailPage";
 import MarketplacePage from "./pages/MarketplacePage";
 import MyListingsPage from "./pages/MyListingsPage";
@@ -49,7 +51,7 @@ export default function App() {
   });
 
   const sidebarItems = useMemo(() => {
-    const items = ["Marketplace", "AI Assistant", "Garden"];
+    const items = ["Marketplace", "AI Assistant", "Garden", "Logistics Dashboard", "Pickup Scheduling"];
 
     if (user && isSellerRole(user.role)) {
       items.push("My Listings", "Seller Orders");
@@ -238,8 +240,10 @@ export default function App() {
 
   function renderSectionContent() {
     if (activeSection === "AI Assistant") return <AIChatbot />;
+    if (activeSection === "Logistics Dashboard") return <LogisticsDashboardPage token={token} />;
+    if (activeSection === "Pickup Scheduling") return <LogisticsPickupsPage token={token} />;
     if (activeSection === "Cart") {
-      return <CartPage token={token} onOrderPlaced={handleOrderPlaced} />;
+      return <CartPage token={token} user={user} onOrderPlaced={handleOrderPlaced} />;
     }
     if (activeSection === "My Orders") {
       return <BuyerOrdersPage token={token} />;

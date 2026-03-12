@@ -108,7 +108,7 @@ export async function placeOrder(req, res) {
 
       await sql`COMMIT`;
 
-      const shipment = createShipment({
+      const shipment = await createShipment({
         order,
         items: orderItems.map((oi) => ({
           material_id: oi.material_id,

@@ -76,7 +76,7 @@ export async function registerUser({
       ${latitude},
       ${longitude}
     )
-    RETURNING id, name, email, role, created_at
+    RETURNING id, name, email, role, created_at, street_address, city, state, country, pincode, latitude, longitude
   `;
 
   const user = users[0];
@@ -90,7 +90,7 @@ export async function loginUser({ email, password }) {
   }
 
   const users = await sql`
-    SELECT id, name, email, role, password_hash, created_at
+    SELECT id, name, email, role, password_hash, created_at, street_address, city, state, country, pincode, latitude, longitude
     FROM users
     WHERE email = ${email}
     LIMIT 1
@@ -113,7 +113,7 @@ export async function loginUser({ email, password }) {
 
 export async function getUserById(userId) {
   const users = await sql`
-    SELECT id, name, email, role, created_at
+    SELECT id, name, email, role, created_at, street_address, city, state, country, pincode, latitude, longitude
     FROM users
     WHERE id = ${userId}
     LIMIT 1

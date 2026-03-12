@@ -1,15 +1,160 @@
-import { useEffect, useState } from "react";
-import { getCart, removeCartItem, placeOrder } from "../api";
+import { useEffect, useMemo, useState } from "react";
+import { getCart, placeOrder, removeCartItem } from "../api";
+import { createShipment, getShippingRates } from "../services/logisticsApi";
 
 const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=80";
 
-export default function CartPage({ token, onOrderPlaced }) {
+const SHIPMENT_BY_ORDER_KEY = "shipmentByOrder";
+
+function parsePincode(input) {
+  return String(input || "").replace(/\D/g, "").slice(0, 6);
+}
+
+function firstNonEmpty(...values) {
+  for (const value of values) {
+    if (value === null || value === undefined) continue;
+    const normalized = String(value).trim();
+    if (normalized) return normalized;
+  }
+  return "";
+}
+
+function estimateWeight(items) {
+  const totalQty = (items || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+  return Math.max(1, totalQty || 1);
+}
+
+function loadShipmentMap() {
+  try {
+    const raw = localStorage.getItem(SHIPMENT_BY_ORDER_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function persistShipmentMap(nextMap) {
+  localStorage.setItem(SHIPMENT_BY_ORDER_KEY, JSON.stringify(nextMap));
+}
+
+function buildUserAddress(user) {
+  if (!user) {
+    return {
+      line: "",
+      city: "",
+      state: "",
+      country: "India",
+      pincode: "",
+    };
+  }
+
+  const primaryAddress = user.address || user.address_details || user.location || {};
+  const profileAddress = user.profile?.address || {};
+
+  return {
+    line: firstNonEmpty(
+      user.street_address,
+      user.streetAddress,
+      user.street,
+      user.address_line,
+      user.line1,
+      user.address,
+      primaryAddress.street_address,
+      primaryAddress.streetAddress,
+      primaryAddress.street,
+      primaryAddress.address_line,
+      primaryAddress.line1,
+      primaryAddress.address,
+      profileAddress.street_address,
+      profileAddress.streetAddress,
+      profileAddress.street,
+      profileAddress.address_line,
+      profileAddress.line1,
+      profileAddress.address,
+    ),
+    city: firstNonEmpty(
+      user.city,
+      user.town,
+      user.district,
+      primaryAddress.city,
+      primaryAddress.town,
+      primaryAddress.district,
+      profileAddress.city,
+      profileAddress.town,
+      profileAddress.district,
+    ),
+    state: firstNonEmpty(
+      user.state,
+      user.province,
+      primaryAddress.state,
+      primaryAddress.province,
+      profileAddress.state,
+      profileAddress.province,
+    ),
+    country: firstNonEmpty(
+      user.country,
+      primaryAddress.country,
+      profileAddress.country,
+      "India",
+    ),
+    pincode: parsePincode(
+      firstNonEmpty(
+        user.pincode,
+        user.pin_code,
+        user.postal_code,
+        user.postalCode,
+        user.zip,
+        user.zip_code,
+        primaryAddress.pincode,
+        primaryAddress.pin_code,
+        primaryAddress.postal_code,
+        primaryAddress.postalCode,
+        primaryAddress.zip,
+        primaryAddress.zip_code,
+        profileAddress.pincode,
+        profileAddress.pin_code,
+        profileAddress.postal_code,
+        profileAddress.postalCode,
+        profileAddress.zip,
+        profileAddress.zip_code,
+      )
+    ) || "",
+  };
+}
+
+function addressToDisplay(address) {
+  return [address.line, address.city, address.state, address.country, address.pincode].filter(Boolean).join(", ");
+}
+
+function supplierAddressFromItems(items) {
+  const first = items?.[0] || {};
+  return {
+    name: first.seller_name || "Supplier Hub",
+    address: first.seller_street_address || first.location || "Supplier address",
+    city: first.seller_city || "Mumbai",
+    state: first.seller_state || "Maharashtra",
+    country: first.seller_country || "India",
+    pincode: parsePincode(first.seller_pincode) || "400001",
+    lat: Number.isFinite(Number(first.seller_latitude)) ? Number(first.seller_latitude) : undefined,
+    lng: Number.isFinite(Number(first.seller_longitude)) ? Number(first.seller_longitude) : undefined,
+  };
+}
+
+export default function CartPage({ token, user, onOrderPlaced }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [placing, setPlacing] = useState(false);
   const [message, setMessage] = useState("");
-  const [shippingAddress, setShippingAddress] = useState("");
+  const [shippingRates, setShippingRates] = useState([]);
+  const [shippingRatesLoading, setShippingRatesLoading] = useState(false);
+  const [selectedCourierIndex, setSelectedCourierIndex] = useState(0);
+  const [shippingFallbackMessage, setShippingFallbackMessage] = useState("");
+  const [orderConfirmation, setOrderConfirmation] = useState(null);
+
+  const receiverAddress = useMemo(() => buildUserAddress(user), [user]);
+  const receiverDisplayAddress = useMemo(() => addressToDisplay(receiverAddress), [receiverAddress]);
+  const supplierAddress = useMemo(() => supplierAddressFromItems(items), [items]);
 
   useEffect(() => {
     async function load() {
@@ -26,6 +171,50 @@ export default function CartPage({ token, onOrderPlaced }) {
     load();
   }, [token]);
 
+  async function handleFetchShippingRates() {
+    const pickup = parsePincode(supplierAddress.pincode);
+    const delivery = parsePincode(receiverAddress.pincode);
+
+    if (!items.length) {
+      setMessage("Add at least one cart item to fetch shipping rates.");
+      return;
+    }
+
+    if (!pickup || !delivery) {
+      setMessage("Address pincode missing in profile/supplier data. Please verify saved address fields.");
+      return;
+    }
+
+    try {
+      setShippingRatesLoading(true);
+      setShippingFallbackMessage("");
+      setMessage("");
+
+      const response = await getShippingRates(
+        {
+          pickup_pincode: pickup,
+          delivery_pincode: delivery,
+          weight: estimateWeight(items),
+        },
+        token
+      );
+
+      const rates = response?.rates || [];
+      setShippingRates(rates);
+      setSelectedCourierIndex(0);
+
+      if (response?.fallback_used) {
+        setShippingFallbackMessage("Shipping estimate unavailable. Default courier will be used.");
+      }
+    } catch {
+      setShippingRates([{ courier: "Delhivery", price: 80, eta: "2 days" }]);
+      setSelectedCourierIndex(0);
+      setShippingFallbackMessage("Shipping estimate unavailable. Default courier will be used.");
+    } finally {
+      setShippingRatesLoading(false);
+    }
+  }
+
   async function handleRemove(id) {
     setMessage("");
     try {
@@ -41,18 +230,90 @@ export default function CartPage({ token, onOrderPlaced }) {
       setMessage("Your cart is empty.");
       return;
     }
-    if (!shippingAddress.trim()) {
-      setMessage("Please enter a shipping address.");
+
+    const shippingAddress = receiverDisplayAddress;
+    if (!shippingAddress) {
+      setMessage("Address not available in profile. Please update your account address.");
       return;
     }
+
+    const selectedCourier = shippingRates[selectedCourierIndex] || shippingRates[0] || null;
+
     try {
       setPlacing(true);
       setMessage("");
+      setOrderConfirmation(null);
+
       const result = await placeOrder({ shipping_address: shippingAddress }, token);
+
+      let shipmentResult = result?.shipment || null;
+
+      try {
+        const materialName = items.length > 1 ? `${items[0].title} + ${items.length - 1} more` : (items[0]?.title || "Reusable Material");
+        const shipmentPayload = {
+          order_id: result?.order?.id,
+          supplier_address: {
+            name: supplierAddress.name,
+            address: supplierAddress.address,
+            city: supplierAddress.city,
+            state: supplierAddress.state,
+            country: supplierAddress.country,
+            pincode: parsePincode(supplierAddress.pincode) || "400001",
+            phone: "9999999999",
+            lat: supplierAddress.lat,
+            lng: supplierAddress.lng,
+          },
+          receiver_address: {
+            name: user?.name || "Receiver",
+            address: receiverAddress.line || shippingAddress,
+            city: receiverAddress.city || "Mumbai",
+            state: receiverAddress.state || "Maharashtra",
+            country: receiverAddress.country || "India",
+            pincode: parsePincode(receiverAddress.pincode) || "400001",
+            phone: "9999999998",
+            email: user?.email || "receiver@scraphappens.local",
+          },
+          material_name: materialName,
+          weight: estimateWeight(items),
+          price: Number(result?.order?.total_amount || 0),
+        };
+
+        const shippingCreateResponse = await createShipment(shipmentPayload, token);
+        if (shippingCreateResponse?.shipment) {
+          shipmentResult = shippingCreateResponse.shipment;
+        }
+      } catch {
+        setShippingFallbackMessage("Shipping estimate unavailable. Default courier will be used.");
+      }
+
+      if (result?.order?.id && shipmentResult?.shipment_id) {
+        const currentMap = loadShipmentMap();
+        currentMap[result.order.id] = {
+          shipment_id: shipmentResult.shipment_id,
+          tracking_id: shipmentResult.tracking_id,
+          courier: selectedCourier?.courier || "Default Courier",
+          eta: selectedCourier?.eta || "2 days",
+          created_at: new Date().toISOString(),
+        };
+        persistShipmentMap(currentMap);
+      }
+
+      setOrderConfirmation({
+        orderId: result?.order?.id,
+        shipmentId: shipmentResult?.shipment_id || "Pending",
+        trackingId: shipmentResult?.tracking_id || "Pending",
+        courier: selectedCourier?.courier || "Default Courier",
+        eta: selectedCourier?.eta || "2 days",
+      });
+
       setItems([]);
-      setShippingAddress("");
       setMessage("Order placed successfully. Unlocking your garden reward...");
-      if (onOrderPlaced) onOrderPlaced(result);
+      if (onOrderPlaced) {
+        onOrderPlaced({
+          ...result,
+          shipment: shipmentResult || result?.shipment,
+        });
+      }
     } catch (err) {
       setMessage(err.message || "Failed to place order");
     } finally {
@@ -116,22 +377,80 @@ export default function CartPage({ token, onOrderPlaced }) {
           </div>
 
           <div className="dashboard-card" style={{ marginTop: 20 }}>
-            <h4 style={{ marginBottom: 12 }}>Shipping address</h4>
-            <textarea
-              rows={3}
-              value={shippingAddress}
-              onChange={(e) => setShippingAddress(e.target.value)}
-              placeholder="Flat, street, city, pincode"
-            />
+            <h4 style={{ marginBottom: 8 }}>Checkout Address (from profile)</h4>
+            <p className="mini-note">{receiverDisplayAddress || "Address unavailable. Please update profile address."}</p>
+
+            <div className="integration-card" style={{ marginTop: 10 }}>
+              <h4>Address Details (DB)</h4>
+              <p>Street: {receiverAddress.line || "—"}</p>
+              <p>City: {receiverAddress.city || "—"}</p>
+              <p>State: {receiverAddress.state || "—"}</p>
+              <p>Country: {receiverAddress.country || "—"}</p>
+              <p>Pincode: {receiverAddress.pincode || "—"}</p>
+            </div>
+
+            <div className="logistics-shipping-options">
+              <h4>Shipping Options</h4>
+
+              <div className="logistics-pincode-row">
+                <label>
+                  Pickup pincode
+                  <input value={parsePincode(supplierAddress.pincode)} readOnly />
+                </label>
+                <label>
+                  Delivery pincode
+                  <input value={parsePincode(receiverAddress.pincode)} readOnly />
+                </label>
+              </div>
+
+              <button
+                type="button"
+                className="nav-button nav-button-secondary"
+                onClick={handleFetchShippingRates}
+                disabled={shippingRatesLoading || !receiverDisplayAddress}
+              >
+                {shippingRatesLoading ? "Checking shipping rates…" : "Fetch Shipping Rates"}
+              </button>
+
+              {shippingFallbackMessage ? <p className="mini-note">{shippingFallbackMessage}</p> : null}
+
+              {shippingRates.length > 0 ? (
+                <div className="logistics-rates-list">
+                  {shippingRates.map((rate, index) => (
+                    <label key={`${rate.courier}-${index}`} className={`logistics-rate-item ${selectedCourierIndex === index ? "logistics-rate-item-selected" : ""}`}>
+                      <input
+                        type="radio"
+                        checked={selectedCourierIndex === index}
+                        onChange={() => setSelectedCourierIndex(index)}
+                      />
+                      <span>🚚 {rate.courier} — ₹{rate.price} — {rate.eta}</span>
+                    </label>
+                  ))}
+                </div>
+              ) : (
+                <p className="mini-note">Shipping estimate unavailable. Default courier will be used.</p>
+              )}
+            </div>
+
             <button
               type="button"
               className="nav-button"
               style={{ marginTop: 12, alignSelf: "flex-start" }}
               onClick={handlePlaceOrder}
-              disabled={placing}
+              disabled={placing || !receiverDisplayAddress}
             >
               {placing ? "Placing order…" : "Place Order"}
             </button>
+
+            {orderConfirmation ? (
+              <div className="integration-card" style={{ marginTop: 16 }}>
+                <h4>Order Confirmed</h4>
+                <p>Shipment ID: {orderConfirmation.shipmentId}</p>
+                <p>Tracking ID: {orderConfirmation.trackingId}</p>
+                <p>Courier: {orderConfirmation.courier}</p>
+                <p>Estimated Delivery: {orderConfirmation.eta}</p>
+              </div>
+            ) : null}
           </div>
         </>
       )}
@@ -140,5 +459,3 @@ export default function CartPage({ token, onOrderPlaced }) {
     </div>
   );
 }
-
-
