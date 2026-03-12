@@ -217,6 +217,17 @@ export async function placeOrder(req, res) {
         },
       });
 
+
+      try {
+        const testPhone = "9619200100"; 
+        const materialSummary = cartRows[0]?.title || cartRows[0]?.material_type || "Scrap Materials";  
+        console.log(`Attempting to send WhatsApp for: ${materialSummary}`);
+        await sendOrderNotification(testPhone, materialSummary);
+        
+      } catch (wsError) {
+        console.error("WhatsApp notification failed, but order was placed:", wsError);
+      }
+
       const achievement = buildCircularAchievement({
         order,
         cartRows,

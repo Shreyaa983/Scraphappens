@@ -1,11 +1,17 @@
-import { useState } from "react";
-import { createMaterial, updateMaterial } from "../api";
+import { useState, useEffect } from "react";
+import { useLocation, useParams, useNavigate, Link } from "react-router-dom";
+import { createMaterial, updateMaterial, getMaterialById } from "../api";
 import { categories, conditions } from "../data/mockData";
 
-export default function CreateListing({ user, token, onBack, editItem = null }) {
-  const isEdit = Boolean(editItem);
+export default function CreateListing({ user, token }) {
+  const navigate = useNavigate();
+  const { id } = useParams();
+  const location = useLocation();
+  const [editItem, setEditItem] = useState(propEditItem || location.state?.editItem || null);
+  const isEdit = Boolean(id || editItem);
 
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(!editItem && !!id);
   const [error, setError] = useState("");
   const [form, setForm] = useState({
     title: editItem?.title || "",
@@ -33,12 +39,12 @@ export default function CreateListing({ user, token, onBack, editItem = null }) 
     setLoading(true);
     setError("");
     try {
-      if (isEdit) {
+      if (isEdit && editItem) {
         await updateMaterial(editItem.id, form, token);
       } else {
         await createMaterial(form, token);
       }
-      onBack();
+      navigate(-1);
     } catch (err) {
       setError(err.message || "Something went wrong");
       setLoading(false);
@@ -50,7 +56,7 @@ export default function CreateListing({ user, token, onBack, editItem = null }) 
       <header className="marketplace-top-nav">
         <button
           className="nav-button nav-button-secondary"
-          onClick={onBack}
+          onClick={() => navigate(-1)}
           style={{ whiteSpace: "nowrap" }}
         >
           ← Back
@@ -58,10 +64,11 @@ export default function CreateListing({ user, token, onBack, editItem = null }) 
         <h2 style={{ color: "white", margin: 0, fontSize: "1.3rem" }}>
           {isEdit ? "Edit Listing" : "Create New Listing"}
         </h2>
-        <div style={{ width: 120 }} />
+        <Link to="/" className="nav-button nav-button-secondary" style={{ textDecoration: 'none' }}>Marketplace</Link>
       </header>
 
       <div className="dashboard-card" style={{ maxWidth: 680, margin: "0 auto", width: "100%" }}>
+        {fetching && <div className="loading-shell">Loading listing details...</div>}
         {error && (
           <div style={{ color: "#ef4444", marginBottom: 16, padding: "12px 16px", background: "rgba(239,68,68,0.1)", borderRadius: 10 }}>
             {error}

@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 export default function InventoryPanel({ plants, selectedPlantId, onSelectPlant }) {
   return (
     <aside className="inventory-panel">
@@ -5,7 +7,9 @@ export default function InventoryPanel({ plants, selectedPlantId, onSelectPlant 
 
       <div className="inventory-list">
         {plants.length === 0 ? (
-          <p className="inventory-empty">Unlock an achievement to receive your first plant.</p>
+          <p className="inventory-empty">
+            No plants yet. <Link to="/" className="inline-link-button">Browse marketplace</Link> to find materials and earn rewards.
+          </p>
         ) : (
           plants.map((plant) => (
             <div

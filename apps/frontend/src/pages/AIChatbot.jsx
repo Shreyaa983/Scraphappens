@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Send, Leaf, PlusCircle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { Link } from 'react-router-dom';
 
 const AIChatbot = () => {
   const STORAGE_KEY = 'scraphappens_chat_history';
@@ -101,7 +102,7 @@ const AIChatbot = () => {
             <h3>Circular Loop Chatbot</h3>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span className="section-tag">Direct Chat</span>
+            <Link to="/" className="section-tag" style={{ textDecoration: 'none' }}>View Marketplace</Link>
             <button
               type="button"
               onClick={handleNewChat}

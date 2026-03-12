@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { getMyMaterials, deleteMaterialById } from "../api";
 
 const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=80";
 
-export default function MyListingsPage({ token, onEdit }) {
+export default function MyListingsPage({ token }) {
+    const navigate = useNavigate();
     const [listings, setListings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [deletingId, setDeletingId] = useState(null);
@@ -49,7 +51,7 @@ export default function MyListingsPage({ token, onEdit }) {
                         <rect x="2" y="3" width="20" height="14" rx="2" /><path d="M8 21h8M12 17v4" />
                     </svg>
                     <p>No listings yet.</p>
-                    <span>Head to the Marketplace and click "List Material" to post one.</span>
+                    <span>Head to the <Link to="/" className="inline-link-button">Marketplace</Link> and click "List Material" to post one.</span>
                 </div>
             ) : (
                 <div className="my-listings-grid">
@@ -73,7 +75,7 @@ export default function MyListingsPage({ token, onEdit }) {
                                     {item.location && <div className="meta-item"><span>📍 {item.location}</span></div>}
                                 </div>
                                 <div className="my-listing-actions">
-                                    <button className="my-listing-edit-btn" onClick={() => onEdit(item)}>
+                                    <button className="my-listing-edit-btn" onClick={() => navigate(`/edit-listing/${item.id}`, { state: { editItem: item } })}>
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />

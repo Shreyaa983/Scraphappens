@@ -45,6 +45,11 @@ export async function getMaterials() {
   return parseResponse(response, "Failed to fetch materials");
 }
 
+export async function getMaterialById(id) {
+  const response = await fetch(`${API_BASE_URL}/api/materials/${id}`);
+  return parseResponse(response, "Failed to fetch material details");
+}
+
 export async function getMyMaterials(token) {
   const response = await fetch(`${API_BASE_URL}/api/materials/me`, {
     headers: { Authorization: `Bearer ${token}` }

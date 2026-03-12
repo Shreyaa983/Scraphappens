@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { getLogisticsDashboard } from "../services/logisticsApi";
 
 const INITIAL_METRICS = {
@@ -56,10 +57,10 @@ export default function LogisticsDashboardPage({ token }) {
             <span>Active Deliveries</span>
             <strong>{metrics.active_deliveries}</strong>
           </article>
-          <article className="stat-card">
+          <Link to="/pickup-scheduling" className="stat-card" style={{ textDecoration: 'none' }}>
             <span>Scheduled Pickups</span>
             <strong>{metrics.scheduled_pickups}</strong>
-          </article>
+          </Link>
           <article className="stat-card">
             <span>Waste Transported (kg)</span>
             <strong>{metrics.waste_moved_kg}</strong>

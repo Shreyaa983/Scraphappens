@@ -1,5 +1,7 @@
-import { useState } from "react";
-import { addToCart } from "../api";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { addToCart, getProductSuggestions, getMaterialById } from "../api";
+import SuggestionCard from "../components/SuggestionCard";
 
 const FALLBACK_IMAGE =
     "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=900&q=80";
@@ -15,6 +17,42 @@ function conditionToGrade(condition) {
     return map[condition] ?? condition?.charAt(0) ?? "—";
 }
 
+export default function MaterialDetailPage({ material: initialMaterial, user, onBack, onEdit }) {
+    const { id } = useParams();
+    const navigate = useNavigate();
+    const [material, setMaterial] = useState(initialMaterial);
+    const [loading, setLoading] = useState(!initialMaterial && !!id);
+    const [quantity, setQuantity] = useState(1);
+    const [message, setMessage] = useState("");
+    const [adding, setAdding] = useState(false);
+    const [suggestions, setSuggestions] = useState([]);
+    const [fetchingSuggestions, setFetchingSuggestions] = useState(false);
+
+    useEffect(() => {
+        if (!material && id) {
+            const fetchMaterial = async () => {
+                try {
+                    setLoading(true);
+                    const data = await getMaterialById(id);
+                    setMaterial(data.material);
+                } catch (err) {
+                    console.error("Failed to fetch material", err);
+                    setMessage("Failed to load material details.");
+                } finally {
+                    setLoading(false);
+                }
+            };
+            fetchMaterial();
+        }
+    }, [id, material]);
+
+    const handleBack = () => {
+        if (onBack) onBack();
+        else navigate(-1);
+    };
+
+    if (loading) return <div className="loading-shell">Loading material details...</div>;
+    if (!material) return <div className="loading-shell">Material not found.</div>;
 export default function MaterialDetailPage({ material, user, onBack, onEdit, onViewSupplier }) {
     if (!material) return null;
 
@@ -38,9 +76,20 @@ export default function MaterialDetailPage({ material, user, onBack, onEdit, onV
         "Reuse Ready",
     ];
 
-    const [quantity, setQuantity] = useState(1);
-    const [message, setMessage] = useState("");
-    const [adding, setAdding] = useState(false);
+
+    const handleGetSuggestions = async () => {
+        if (!material.title) return;
+        setFetchingSuggestions(true);
+        try {
+            const data = await getProductSuggestions(material.title);
+            setSuggestions(data.suggestions || []);
+        } catch (err) {
+            console.error("Failed to fetch AI suggestions", err);
+            setMessage("Error fetching AI suggestions. Please check if backend is running.");
+        } finally {
+            setFetchingSuggestions(false);
+        }
+    };
 
     const handleAddToCart = async () => {
         setMessage("");
@@ -71,7 +120,7 @@ export default function MaterialDetailPage({ material, user, onBack, onEdit, onV
     return (
         <div className="detail-page">
             {/* Back button */}
-            <button className="detail-back-btn" onClick={onBack}>
+            <button className="detail-back-btn" onClick={handleBack}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                     <path d="M19 12H5M12 19l-7-7 7-7" />
                 </svg>
@@ -188,7 +237,7 @@ export default function MaterialDetailPage({ material, user, onBack, onEdit, onV
                     {/* Actions */}
                     <div className="detail-actions">
                         {isOwner ? (
-                            <button className="detail-btn-primary" onClick={() => onEdit(material)}>
+                            <button className="detail-btn-primary" onClick={() => onEdit ? onEdit(material) : navigate(`/edit-listing/${material.id}`, { state: { editItem: material } })}>
                                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
@@ -229,6 +278,74 @@ export default function MaterialDetailPage({ material, user, onBack, onEdit, onV
                     )}
                 </div>
             </div>
+
+            {/* --- AI SUGGESTIONS SECTION --- */}
+            <section className="ai-suggestions-section" style={{ 
+                marginTop: "3rem", 
+                borderTop: "1px solid rgba(255,255,255,0.1)", 
+                paddingTop: "2rem",
+                paddingBottom: "2rem"
+            }}>
+                <div style={{ 
+                    display: "flex", 
+                    flexWrap: "wrap",
+                    alignItems: "center", 
+                    gap: "20px",
+                    marginBottom: "2rem" 
+                }}>
+                    <h3 style={{ margin: 0, color: "#fff", display: "flex", alignItems: "center", gap: "12px", flex: 1, minWidth: "250px" }}>
+                        <span style={{ fontSize: "1.6rem" }}>✨</span> AI Upcycling Ideas for this item
+                    </h3>
+                    
+                    {suggestions.length === 0 && !fetchingSuggestions && (
+                        <button 
+                            className="hero-button" 
+                            onClick={handleGetSuggestions}
+                            style={{ 
+                                padding: "10px 24px", 
+                                borderRadius: "14px", 
+                                width: "fit-content",
+                                fontSize: "0.95rem",
+                                whiteSpace: "nowrap",
+                                flexShrink: 0
+                            }}
+                        >
+                            Get AI Suggestions
+                        </button>
+                    )}
+                    
+                    {suggestions.length > 0 && (
+                        <button 
+                            className="nav-button nav-button-secondary" 
+                            onClick={() => setSuggestions([])}
+                            style={{ padding: "8px 16px", fontSize: "0.85rem", width: "auto" }}
+                        >
+                            Clear Ideas
+                        </button>
+                    )}
+                </div>
+                
+                {fetchingSuggestions ? (
+                    <div className="loading-shell" style={{ margin: "2rem 0", background: "rgba(255,255,255,0.05)" }}>
+                        Generating creative ideas using AI...
+                    </div>
+                ) : suggestions.length > 0 ? (
+                    <div style={{ 
+                        display: "grid", 
+                        gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", 
+                        gap: "1.5rem" 
+                    }}>
+                        {suggestions.map((text, index) => (
+                            <SuggestionCard key={index} text={text} index={index} />
+                        ))}
+                    </div>
+                ) : (
+                    <div style={{ textAlign: "center", padding: "2rem", background: "rgba(255,255,255,0.02)", borderRadius: "16px" }}>
+                        <p style={{ color: "#9ca3af", marginBottom: "1rem" }}>Click the button above to get creative AI ideas for upcycling this material.</p>
+                    </div>
+                )}
+            </section>
         </div>
     );
+}
 }
