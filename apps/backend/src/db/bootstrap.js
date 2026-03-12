@@ -11,4 +11,54 @@ export async function bootstrapDatabase() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
   `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS materials (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      title TEXT NOT NULL,
+      description TEXT,
+      material_type TEXT,
+      category TEXT,
+      condition TEXT,
+      quantity INTEGER,
+      quantity_unit TEXT DEFAULT 'kg',
+      location TEXT,
+      image_url TEXT,
+      listed_by UUID REFERENCES users(id),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
+  // Add quantity_unit column for existing installs
+  await sql`ALTER TABLE materials ADD COLUMN IF NOT EXISTS quantity_unit TEXT DEFAULT 'kg';`;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS cart_items (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID REFERENCES users(id),
+      material_id UUID REFERENCES materials(id),
+      quantity INTEGER,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS orders (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      buyer_id UUID REFERENCES users(id),
+      order_status TEXT DEFAULT 'pending',
+      total_amount INTEGER,
+      shipping_address TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS order_items (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      order_id UUID REFERENCES orders(id),
+      material_id UUID REFERENCES materials(id),
+      seller_id UUID REFERENCES users(id),
+      quantity INTEGER,
+      price INTEGER
+    );
+  `;
 }
