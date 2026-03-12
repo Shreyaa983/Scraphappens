@@ -9,6 +9,7 @@ export const env = {
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || "7d",
   openAiApiKey: process.env.OPENAI_API_KEY || "",
   geminiApiKey: process.env.GEMINI_API_KEY || "",
+  geminiAgentApiKey: process.env.GEMINI_AGENT_API_KEY || "",
   geocodingProvider: process.env.GEOCODING_PROVIDER || "opencage",
   geocodingApiKey: process.env.GEOCODING_API_KEY || "",
   pexelsApiKey: process.env.PEXELS_API_KEY || ""
