@@ -6,11 +6,15 @@ import aiRoutes from "./modules/ai/ai.routes.js";
 import materialRoutes from "./routes/materialRoutes.js";
 import cartRoutes from "./routes/cartRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
+import voiceRoutes from "./modules/voice/voice.routes.js";
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+app.use(express.urlencoded({ extended: true }));
+app.use("/api/voice", voiceRoutes);
 
 app.get("/health", (_, res) => {
   res.status(200).json({ status: "ok" });
