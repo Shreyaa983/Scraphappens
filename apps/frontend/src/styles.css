@@ -628,14 +628,200 @@ select option {
   background: rgba(255, 255, 255, 0.05);
 }
 
+.garden-page {
+  position: relative;
+  min-height: 78vh;
+}
+
+.garden-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.inventory-panel {
+  position: relative;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 16px;
+  backdrop-filter: blur(10px);
+}
+
+.inventory-panel h3 {
+  margin: 0 0 12px;
+  font-size: 1rem;
+}
+
+.inventory-list {
+  display: grid;
+  gap: 10px;
+}
+
+.inventory-empty {
+  margin: 0;
+  color: #9ca3af;
+  font-size: 0.9rem;
+}
+
+.inventory-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  cursor: grab;
+  user-select: none;
+}
+
+.inventory-item-selected {
+  outline: 1px solid rgba(60, 255, 107, 0.6);
+}
+
+.inventory-item-new {
+  box-shadow: 0 0 14px rgba(60, 255, 107, 0.45);
+}
+
+.inventory-emoji {
+  font-size: 1.45rem;
+  filter: drop-shadow(0 0 8px rgba(60, 255, 107, 0.7));
+}
+
+.inventory-label {
+  font-weight: 600;
+}
+
+.inventory-tooltip {
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  gap: 2px;
+  min-width: 170px;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #13161d;
+  color: #f3f4f6;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+  z-index: 4;
+}
+
+.inventory-item:hover .inventory-tooltip {
+  opacity: 1;
+}
+
+.garden-scene-shell {
+  position: relative;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.garden-scene-canvas {
+  height: 74vh;
+}
+
+.unlock-achievement-button {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 5;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(10, 17, 28, 0.88);
+  color: #f9fafb;
+  font-weight: 600;
+}
+
+.unlock-achievement-button:hover {
+  background: rgba(16, 24, 38, 0.95);
+}
+
+.achievement-popup {
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 7;
+  min-width: 280px;
+  text-align: center;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: rgba(14, 22, 33, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+  animation: achievement-in 220ms ease-out;
+}
+
+.achievement-title {
+  margin: 0;
+  font-weight: 700;
+}
+
+.achievement-name {
+  margin: 3px 0;
+  color: #d1d5db;
+}
+
+.achievement-reward {
+  margin: 0;
+  color: #86efac;
+  font-weight: 600;
+}
+
+.tree-achievement-popup {
+  display: grid;
+  gap: 2px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #1e1e1e;
+  color: #ffffff;
+  font-size: 12px;
+  white-space: nowrap;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.tree-achievement-popup p {
+  margin: 0;
+}
+
+@keyframes achievement-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -10px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
 @media (max-width: 1100px) {
   .marketplace-layout,
   .detail-layout,
   .dashboard-grid,
   .garden-grid,
   .form-grid,
-  .hero {
+  .hero,
+  .garden-layout {
     grid-template-columns: 1fr;
+  }
+
+  .inventory-tooltip {
+    left: 0;
+    top: calc(100% + 8px);
+    transform: none;
   }
 }
 
@@ -678,5 +864,458 @@ select option {
 
   .chat-bubble {
     max-width: 100%;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GLOBAL FOREST VIEW
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* "Global Impact" button — top-right of garden scene shell */
+.global-impact-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 5;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(92, 240, 120, 0.35);
+  background: rgba(10, 17, 28, 0.88);
+  color: #86efac;
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: background 0.18s ease, box-shadow 0.18s ease;
+  backdrop-filter: blur(6px);
+}
+
+.global-impact-btn:hover {
+  background: rgba(20, 34, 52, 0.96);
+  box-shadow: 0 0 18px rgba(60, 255, 107, 0.25);
+}
+
+/* Full-width wrapper that replaces the garden layout during global view */
+.global-view-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+  animation: global-view-in 380ms ease-out;
+}
+
+@keyframes global-view-in {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* The 3D canvas for the global forest */
+.global-forest-canvas {
+  width: 100%;
+  height: 60vh;
+  border-radius: 0 0 18px 18px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-top: none;
+  background: #1a2e1a;
+}
+
+/* "My Garden" label rendered inside the 3D scene via Html */
+.garden-world-label {
+  background: rgba(14, 22, 33, 0.9);
+  border: 1px solid rgba(92, 240, 120, 0.4);
+  color: #86efac;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 0 14px rgba(60, 255, 107, 0.2);
+  pointer-events: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GARDEN STATS BAR (below canvas)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.gsbar-root {
+  margin-top: 14px;
+  padding: 16px 20px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+  animation: gsbar-in 320ms ease-out;
+}
+
+.gsbar-global {
+  border-color: rgba(60, 255, 107, 0.15);
+  background: rgba(8, 20, 14, 0.55);
+}
+
+@keyframes gsbar-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.gsbar-heading {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 12px;
+}
+
+.gsbar-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.gsbar-card {
+  flex: 1 1 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 12px 8px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  text-align: center;
+  min-width: 90px;
+}
+
+.gsbar-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.gsbar-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #4cdf8c;
+  line-height: 1.1;
+}
+
+.gsbar-label {
+  font-size: 0.68rem;
+  color: #9ca3af;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Global grid: "My Garden" label (inside R3F Html) */
+.global-grid-my-label {
+  background: rgba(10, 18, 28, 0.92);
+  border: 1px solid rgba(60, 255, 107, 0.5);
+  color: #86efac;
+  padding: 4px 11px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 0 12px rgba(60, 255, 107, 0.22);
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Global grid: garden stat popup on hover */
+.global-grid-popup {
+  background: rgba(8, 14, 22, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 12px;
+  padding: 10px 14px;
+  min-width: 130px;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+  user-select: none;
+  animation: grid-popup-in 160ms ease-out;
+}
+
+@keyframes grid-popup-in {
+  from { opacity: 0; transform: translateY(6px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.global-grid-popup-name {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #f3f4f6;
+  margin-bottom: 6px;
+  white-space: nowrap;
+}
+
+.global-grid-popup-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 0 0 6px;
+}
+
+.global-grid-popup-stat-label {
+  font-size: 0.65rem;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 500;
+  margin-bottom: 3px;
+}
+
+.global-grid-popup-stat-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #4cdf8c;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   GLOBAL STATS PANEL
+   ───────────────────────────────────────────────────────────────────────── */
+
+.global-stats-panel {
+  width: 100%;
+  background: rgba(8, 14, 22, 0.97);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: none;
+  border-radius: 18px 18px 0 0;
+  padding: 20px 24px 18px;
+  backdrop-filter: blur(16px);
+  animation: stats-slide-down 380ms ease-out;
+}
+
+@keyframes stats-slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Header row */
+.gstat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.gstat-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #f3f4f6;
+}
+
+.gstat-subtitle {
+  margin: 3px 0 0;
+  font-size: 0.83rem;
+  color: #9ca3af;
+}
+
+.gstat-back-btn {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.05);
+  color: #d1d5db;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease;
+  white-space: nowrap;
+}
+
+.gstat-back-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #f9fafb;
+}
+
+/* Primary stats cards row */
+.gstat-cards-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.gstat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-width: 100px;
+  flex: 1;
+  padding: 12px 10px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  text-align: center;
+}
+
+.gstat-icon {
+  font-size: 1.3rem;
+}
+
+.gstat-value {
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.gstat-label {
+  font-size: 0.72rem;
+  color: #9ca3af;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Bottom row: materials + categories + narrative */
+.gstat-bottom-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 14px;
+}
+
+.gstat-section {
+  padding: 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.gstat-section-title {
+  margin: 0 0 12px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #e5e7eb;
+}
+
+/* Material bars */
+.gstat-mat-list {
+  display: grid;
+  gap: 7px;
+}
+
+.gstat-matrow {
+  display: grid;
+  grid-template-columns: 52px 1fr 34px;
+  align-items: center;
+  gap: 8px;
+}
+
+.gstat-matname {
+  font-size: 0.78rem;
+  color: #d1d5db;
+  font-weight: 500;
+}
+
+.gstat-matbar-bg {
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.gstat-matbar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.5s ease;
+}
+
+.gstat-matpct {
+  font-size: 0.72rem;
+  color: #9ca3af;
+  text-align: right;
+}
+
+/* Category bar chart */
+.gstat-cat-grid {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  height: 80px;
+}
+
+.gstat-cat-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.gstat-cat-fill {
+  width: 100%;
+  background: linear-gradient(180deg, #4cdf8c 0%, #1a8c4a 100%);
+  border-radius: 4px 4px 0 0;
+  min-height: 6px;
+  transition: height 0.6s ease;
+}
+
+.gstat-cat-label {
+  font-size: 0.65rem;
+  color: #9ca3af;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.gstat-cat-pct {
+  font-size: 0.72rem;
+  color: #86efac;
+  font-weight: 600;
+}
+
+/* Narrative section */
+.gstat-narrative {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.gstat-narrative-text {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #d1d5db;
+  line-height: 1.55;
+}
+
+.gstat-tagline {
+  margin-top: auto;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(60, 255, 107, 0.07);
+  border-left: 3px solid #3cff6b;
+  font-size: 0.82rem;
+  font-style: italic;
+  color: #86efac;
+  font-weight: 600;
+}
+
+/* Responsive: collapse bottom row on smaller screens */
+@media (max-width: 900px) {
+  .gstat-bottom-row {
+    grid-template-columns: 1fr;
+  }
+
+  .gstat-cards-row {
+    justify-content: center;
+  }
+
+  .gstat-card {
+    min-width: 80px;
+    flex: 0 1 calc(33% - 10px);
   }
 }
