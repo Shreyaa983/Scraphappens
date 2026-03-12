@@ -1,59 +1,238 @@
 :root {
   font-family: Inter, system-ui, Arial, sans-serif;
   line-height: 1.5;
+  color: #f9fafb;
+  background: #050505;
 }
 
 body {
   margin: 0;
-  background: #f7f7f9;
+  background:
+    radial-gradient(circle at top, rgba(96, 165, 250, 0.12), transparent 30%),
+    linear-gradient(180deg, #050505 0%, #0f0f10 100%);
 }
 
-.container {
-  max-width: 720px;
-  margin: 40px auto;
-  padding: 24px;
+.landing-page {
+  min-height: 100vh;
+  padding: 24px 32px 48px;
 }
 
-.toggle-row {
+.navbar {
   display: flex;
-  gap: 8px;
-  margin: 16px 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 8px 0 24px;
+}
+
+.brand-block {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.brand-block h1,
+.brand-block p,
+.hero h2,
+.hero p,
+.feature-card h3,
+.feature-card p,
+.auth-panel h3,
+.status-card p,
+.message {
+  margin: 0;
+}
+
+.brand-mark {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #ffffff, #9ca3af);
+  color: #050505;
+  font-weight: 800;
+  font-size: 1.1rem;
+}
+
+.brand-block p {
+  color: #9ca3af;
+  font-size: 0.9rem;
+}
+
+.nav-actions,
+.hero-actions {
+  display: flex;
+  gap: 12px;
 }
 
 button {
   border: none;
-  background: #111827;
-  color: #fff;
-  padding: 10px 14px;
-  border-radius: 8px;
   cursor: pointer;
 }
 
-button.active {
-  background: #374151;
+.nav-button,
+.hero-button,
+.submit-button {
+  padding: 12px 18px;
+  border-radius: 999px;
+  font-weight: 600;
+  color: #050505;
+  background: #ffffff;
 }
 
-.card {
-  background: #fff;
-  border-radius: 10px;
-  padding: 16px;
-  box-shadow: 0 3px 14px rgba(0, 0, 0, 0.08);
+.nav-button-secondary,
+.hero-button-muted {
+  background: transparent;
+  color: #f9fafb;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.hero {
+  max-width: 1200px;
+  margin: 32px auto 0;
   display: grid;
+  grid-template-columns: 1.2fr 0.9fr;
+  gap: 32px;
+  align-items: start;
+}
+
+.hero-copy {
+  padding-top: 40px;
+}
+
+.eyebrow {
+  display: inline-block;
+  margin-bottom: 16px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #d1d5db;
+  font-size: 0.85rem;
+}
+
+.hero h2 {
+  font-size: clamp(2.6rem, 5vw, 4.8rem);
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+  max-width: 720px;
+}
+
+.hero-copy > p {
+  margin-top: 18px;
+  max-width: 640px;
+  color: #9ca3af;
+  font-size: 1.05rem;
+}
+
+.hero-actions {
+  margin-top: 28px;
+  flex-wrap: wrap;
+}
+
+.auth-panel,
+.feature-card,
+.status-card {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  backdrop-filter: blur(12px);
+}
+
+.auth-panel {
+  padding: 24px;
+  display: grid;
+  gap: 14px;
+}
+
+.auth-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 12px;
+}
+
+.close-button {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  font-size: 1.25rem;
 }
 
 label {
   display: grid;
   gap: 6px;
+  color: #e5e7eb;
 }
 
 input,
 select {
-  padding: 10px;
-  border-radius: 8px;
-  border: 1px solid #d1d5db;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+}
+
+select option {
+  color: #111827;
+}
+
+.feature-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.feature-card {
+  padding: 22px;
+}
+
+.feature-card p,
+.status-card p,
+.message {
+  color: #d1d5db;
+}
+
+.status-card {
+  margin-top: 28px;
+  padding: 18px 20px;
+  max-width: 340px;
+}
+
+.status-title {
+  color: #ffffff !important;
+  font-weight: 700;
 }
 
 .message {
-  margin-top: 16px;
+  margin-top: 18px;
+}
+
+@media (max-width: 900px) {
+  .landing-page {
+    padding: 18px 18px 32px;
+  }
+
+  .navbar,
+  .hero {
+    grid-template-columns: 1fr;
+  }
+
+  .navbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .nav-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .hero-copy {
+    padding-top: 8px;
+  }
 }
