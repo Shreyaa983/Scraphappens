@@ -17,13 +17,30 @@ function createToken(user) {
   );
 }
 
-export async function registerUser({ name, email, password, role }) {
+export async function registerUser({
+  name,
+  email,
+  password,
+  role,
+  street_address,
+  city,
+  state,
+  country,
+  pincode,
+  latitude,
+  longitude
+}) {
   if (!name || !email || !password || !role) {
     throw new Error("name, email, password, and role are required");
   }
 
   if (!validRoles.includes(role)) {
-    throw new Error("Invalid role. Use supplier, buyer, or volunteer");
+    throw new Error("Invalid role. Use seller, buyer, or volunteer");
+  }
+
+  // Basic address validation when registering
+  if (!street_address || !city || !state || !country || !pincode) {
+    throw new Error("street_address, city, state, country, and pincode are required");
   }
 
   const existing = await sql`SELECT id FROM users WHERE email = ${email} LIMIT 1`;
@@ -33,8 +50,32 @@ export async function registerUser({ name, email, password, role }) {
 
   const passwordHash = await bcrypt.hash(password, 10);
   const users = await sql`
-    INSERT INTO users (name, email, password_hash, role)
-    VALUES (${name}, ${email}, ${passwordHash}, ${role})
+    INSERT INTO users (
+      name,
+      email,
+      password_hash,
+      role,
+      street_address,
+      city,
+      state,
+      country,
+      pincode,
+      latitude,
+      longitude
+    )
+    VALUES (
+      ${name},
+      ${email},
+      ${passwordHash},
+      ${role},
+      ${street_address},
+      ${city},
+      ${state},
+      ${country},
+      ${pincode},
+      ${latitude},
+      ${longitude}
+    )
     RETURNING id, name, email, role, created_at
   `;
 

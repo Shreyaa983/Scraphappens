@@ -3,7 +3,8 @@ function TrustBadge({ grade }) {
 }
 
 export default function ProductDetailPage({ product, user, onBack, onCheckout }) {
-  const canEdit = user.role === "supplier" && user.email === product.ownerEmail;
+  const isSeller = user && (user.role === "seller" || user.role === "supplier");
+  const canEdit = isSeller && user.email === product.ownerEmail;
 
   return (
     <div className="page-stack">

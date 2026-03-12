@@ -4,6 +4,7 @@ import { authenticate } from "../../middleware/auth.js";
 
 const router = Router();
 
+// Register now accepts static address fields and stores them directly
 router.post("/register", register);
 router.post("/login", login);
 router.get("/me", authenticate, me);

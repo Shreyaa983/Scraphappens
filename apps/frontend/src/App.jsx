@@ -12,7 +12,11 @@ import AIChatbot from "./pages/AIChatbot";
 import { BuyerOrdersPage, SellerOrdersPage } from "./pages/OrdersPage";
 import { queuePendingGardenReward } from "./utils/gardenRewards";
 
-const roles = ["supplier", "buyer", "volunteer"];
+const roles = ["seller", "buyer", "volunteer"];
+
+const isSellerRole = (role) => role === "seller" || role === "supplier";
+const isBuyerRole = (role) => role === "buyer";
+const isVolunteerRole = (role) => role === "volunteer";
 
 export default function App() {
   const [mode, setMode] = useState("register");
@@ -21,7 +25,17 @@ export default function App() {
   const [marketplaceView, setMarketplaceView] = useState("browse"); // browse | create | edit
   const [editItem, setEditItem] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null); // for modal
-  const [form, setForm] = useState({ name: "", email: "", password: "", role: roles[0] });
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+    role: roles[0],
+    street_address: "",
+    city: "",
+    state: "",
+    country: "",
+    pincode: ""
+  });
   const [token, setToken] = useState(localStorage.getItem("token") || "");
   const [user, setUser] = useState(null);
   const [message, setMessage] = useState("");
@@ -35,11 +49,22 @@ export default function App() {
   });
 
   const sidebarItems = useMemo(() => {
-    const base = ["Marketplace", "My Listings", "Cart", "My Orders", "AI Assistant", "Garden"];
-    if (user?.role === "supplier") {
-      base.push("Seller Orders");
+    const items = ["Marketplace", "AI Assistant", "Garden"];
+
+    if (user && isSellerRole(user.role)) {
+      items.push("My Listings", "Seller Orders");
     }
-    return base;
+
+    if (user && isBuyerRole(user.role)) {
+      items.push("Cart", "My Orders");
+    }
+
+    // Volunteers currently use shared sections (Marketplace, Garden, AI)
+    if (user && isVolunteerRole(user.role)) {
+      // Placeholder for future volunteer-specific UI
+    }
+
+    return items;
   }, [user]);
 
   useEffect(() => {
@@ -61,8 +86,8 @@ export default function App() {
 
   const roleTitle = useMemo(() => {
     if (!user) return "Marketplace";
-    if (user.role === "supplier") return "Seller Dashboard";
-    if (user.role === "buyer") return "Buyer Dashboard";
+    if (isSellerRole(user.role)) return "Seller Dashboard";
+    if (isBuyerRole(user.role)) return "Buyer Dashboard";
     return "Volunteer Dashboard";
   }, [user]);
 
@@ -178,6 +203,17 @@ export default function App() {
       );
     }
     if (marketplaceView === "create") {
+      if (!user || !isSellerRole(user.role)) {
+        return (
+          <MarketplacePage
+            user={user}
+            filters={marketplaceFilters}
+            onFilterChange={handleFilterChange}
+            onSelectProduct={openProductDetail}
+            onCreateClick={() => {}}
+          />
+        );
+      }
       return <CreateListing user={user} token={token} onBack={goBackFromForm} />;
     }
     if (marketplaceView === "edit" && editItem) {
@@ -189,7 +225,13 @@ export default function App() {
         filters={marketplaceFilters}
         onFilterChange={handleFilterChange}
         onSelectProduct={openProductDetail}
-        onCreateClick={() => setMarketplaceView("create")}
+        onCreateClick={() => {
+          if (!user || !isSellerRole(user.role)) {
+            setMessage("Only sellers can create material listings.");
+            return;
+          }
+          setMarketplaceView("create");
+        }}
       />
     );
   }
