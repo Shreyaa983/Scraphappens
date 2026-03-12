@@ -2,49 +2,63 @@ import React from 'react';
 
 export default function SuggestionCard({ text, index }) {
     return (
-        <div className="glass-suggestion-card">
-            <div className="card-header">
-                <span className="idea-number">IDEA {index + 1}</span>
+        <div className="suggestion-card-wrapper">
+            <div className="suggestion-card-header">
+                <span className="suggestion-idea-badge">Idea {index + 1}</span>
             </div>
-            <p className="card-text">{text}</p>
+            <p className="suggestion-card-text">{text}</p>
 
             <style jsx>{`
-        .glass-suggestion-card {
-          /* Glassmorphism Effect */
-          background: rgba(255, 255, 255, 0.1);
-          backdrop-filter: blur(10px);
-          -webkit-backdrop-filter: blur(10px);
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          border-radius: 16px;
-          
+        .suggestion-card-wrapper {
+          background: var(--color-bg-secondary, #ffffff);
+          border: 2px solid var(--color-border, #1a1a1a);
+          border-radius: var(--radius-lg, 16px);
           padding: 1.5rem;
           display: flex;
           flex-direction: column;
-          gap: 12px;
-          transition: transform 0.2s ease, box-shadow 0.2s ease;
-          min-height: 140px;
+          gap: 16px;
+          transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+          min-height: 160px;
+          box-shadow: var(--neo-shadow, 4px 4px 0px #1a1a1a);
+          position: relative;
+          overflow: hidden;
         }
 
-        .glass-suggestion-card:hover {
-          transform: translateY(-5px);
-          background: rgba(255, 255, 255, 0.15);
-          box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+        .suggestion-card-wrapper:hover {
+          transform: translate(-2px, -2px);
+          box-shadow: var(--neo-shadow-lg, 6px 6px 0px #1a1a1a);
+          background: #ffffff;
         }
 
-        .idea-number {
-          font-size: 0.7rem;
+        .suggestion-idea-badge {
+          font-size: 0.75rem;
           font-weight: 800;
-          letter-spacing: 1px;
+          letter-spacing: 1.2px;
           text-transform: uppercase;
-          color: rgba(255, 255, 255, 0.6);
+          background: var(--color-primary, #2d8659);
+          color: white;
+          padding: 4px 12px;
+          border-radius: 20px;
+          display: inline-block;
         }
 
-        .card-text {
-          font-size: 1rem;
-          line-height: 1.5;
-          color: #ffffff; /* Change to #333 if your background is light */
+        .suggestion-card-text {
+          font-size: 1.1rem;
+          line-height: 1.6;
+          color: var(--color-text-primary, #1a1a1a);
           margin: 0;
           font-weight: 500;
+        }
+
+        /* Subtle decorative element */
+        .suggestion-card-wrapper::after {
+          content: '✨';
+          position: absolute;
+          bottom: -10px;
+          right: -10px;
+          font-size: 3rem;
+          opacity: 0.05;
+          transform: rotate(-15deg);
         }
       `}</style>
         </div>

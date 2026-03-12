@@ -301,20 +301,29 @@ export default function MaterialDetailPage({ material: initialMaterial, user, on
 
             {/* --- AI SUGGESTIONS SECTION --- */}
             <section className="ai-suggestions-section" style={{ 
-                marginTop: "3rem", 
-                borderTop: "1px solid rgba(255,255,255,0.1)", 
-                paddingTop: "2rem",
-                paddingBottom: "2rem"
+                marginTop: "4rem", 
+                borderTop: "3px solid var(--color-border, #1a1a1a)", 
+                paddingTop: "3rem",
+                paddingBottom: "4rem",
+                position: "relative"
             }}>
                 <div style={{ 
                     display: "flex", 
                     flexWrap: "wrap",
                     alignItems: "center", 
-                    gap: "20px",
-                    marginBottom: "2rem" 
+                    gap: "24px",
+                    marginBottom: "3rem" 
                 }}>
-                    <h3 style={{ margin: 0, color: "#fff", display: "flex", alignItems: "center", gap: "12px", flex: 1, minWidth: "250px" }}>
-                        <span style={{ fontSize: "1.6rem" }}>✨</span> AI Upcycling Ideas for this item
+                    <h3 style={{ 
+                        margin: 0, 
+                        color: "#000", 
+                        flex: 1, 
+                        minWidth: "250px", 
+                        fontWeight: 500, 
+                        fontSize: "1.8rem",
+                        letterSpacing: "-0.5px"
+                    }}>
+                        AI Upcycling Ideas
                     </h3>
                     
                     {suggestions.length === 0 && !fetchingSuggestions && (
@@ -360,8 +369,23 @@ export default function MaterialDetailPage({ material: initialMaterial, user, on
                         ))}
                     </div>
                 ) : (
-                    <div style={{ textAlign: "center", padding: "2rem", background: "rgba(255,255,255,0.02)", borderRadius: "16px" }}>
-                        <p style={{ color: "#9ca3af", marginBottom: "1rem" }}>Click the button above to get creative AI ideas for upcycling this material.</p>
+                    <div style={{ 
+                        textAlign: "center", 
+                        padding: "3rem", 
+                        background: "var(--color-bg-secondary, rgba(255,255,255,0.05))", 
+                        borderRadius: "20px",
+                        border: "2px dashed var(--color-border, #1a1a1a)",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: "16px"
+                    }}>
+                        <p style={{ color: "var(--color-text-secondary, #4a4a4a)", marginBottom: 0, fontSize: "1.1rem", fontWeight: 500 }}>
+                            Want to give this material a new life?
+                        </p>
+                        <p style={{ color: "var(--color-text-light, #6b6b6b)", margin: 0, maxWidth: "500px" }}>
+                            Our AI can suggest unique upcycling projects based on the material's properties. Click the button above to get inspired!
+                        </p>
                     </div>
                 )}
             </section>

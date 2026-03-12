@@ -8,7 +8,6 @@ import SupplierProfile from "./components/Marketplace/SupplierProfile";
 import UserDashboard from "./components/Marketplace/UserDashboard";
 import CreateListing from "./pages/CreateListing";
 import GardenPage from "./pages/GardenPage";
-import LogisticsDashboardPage from "./pages/LogisticsDashboardPage";
 import LogisticsPickupsPage from "./pages/LogisticsPickupsPage";
 import MaterialDetailPage from "./pages/MaterialDetailPage";
 import MarketplacePage from "./pages/MarketplacePage";
@@ -21,7 +20,6 @@ import DIYDetailPage from "./pages/DIYDetailPage";
 import { queuePendingGardenReward } from "./utils/gardenRewards";
 import { AgenticProvider } from "./contexts/Agentic/ChatContext";
 import GlobalAssistant from "./components/Agentic/GlobalAssistant";
-import LogisticsPickupsPage from "./pages/LogisticsPickupsPage";
 
 const roles = ["seller", "buyer", "volunteer"];
 
