@@ -5,10 +5,10 @@ import AIAssistantPage from "./pages/AIAssistantPage";
 import CheckoutPage from "./pages/CheckoutPage";
 import GardenPage from "./pages/GardenPage";
 import MarketplacePage from "./pages/MarketplacePage";
-import ProductDetailPage from "./pages/ProductDetailPage";
+import AIChatbot from "./pages/AIChatbot";
 
 const roles = ["supplier", "buyer", "volunteer"];
-const sidebarItems = ["Marketplace", "AI Assistant", "Garden"];
+const sidebarItems = ["Marketplace", "AI Assistant", "AI Chatbot", "Garden"];
 
 export default function App() {
   const [mode, setMode] = useState("register");
@@ -148,6 +148,10 @@ export default function App() {
   function renderSectionContent() {
     if (activeSection === "AI Assistant") {
       return <AIAssistantPage />;
+    }
+
+    if (activeSection === "AI Chatbot") {
+      return <AIChatbot />;
     }
 
     if (activeSection === "Garden") {
