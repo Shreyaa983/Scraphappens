@@ -1,9 +1,9 @@
 import { sql } from "../db/client.js";
 
-export async function createOrder({ buyerId, totalAmount, shippingAddress }) {
+export async function createOrder({ buyerId, totalAmount, shippingAddress, couponId, paymentMethod, deliveryOption }) {
   const rows = await sql`
-    INSERT INTO orders (buyer_id, total_amount, shipping_address)
-    VALUES (${buyerId}, ${totalAmount}, ${shippingAddress})
+    INSERT INTO orders (buyer_id, total_amount, shipping_address, coupon_id, payment_method, delivery_option)
+    VALUES (${buyerId}, ${totalAmount}, ${shippingAddress}, ${couponId}, ${paymentMethod}, ${deliveryOption})
     RETURNING *
   `;
   return rows[0];
@@ -48,6 +48,9 @@ export async function getOrdersForBuyer(buyerId) {
       o.order_status,
       o.total_amount,
       o.shipping_address,
+      o.coupon_id,
+      o.payment_method,
+      o.delivery_option,
       o.created_at,
       oi.id AS order_item_id,
       oi.quantity,
@@ -69,6 +72,38 @@ export async function getOrdersForBuyer(buyerId) {
   return rows;
 }
 
+export async function getOrderById(orderId) {
+  const rows = await sql`
+    SELECT
+      o.id AS order_id,
+      o.order_status,
+      o.total_amount,
+      o.shipping_address,
+      o.coupon_id,
+      o.payment_method,
+      o.delivery_option,
+      o.created_at,
+      o.buyer_id,
+      oi.id AS order_item_id,
+      oi.quantity,
+      oi.price,
+      oi.seller_id,
+      m.id AS material_id,
+      m.title AS material_title,
+      m.image_url,
+      u.name AS seller_name,
+      u.email AS seller_email
+    FROM orders o
+    JOIN order_items oi ON oi.order_id = o.id
+    JOIN materials m ON m.id = oi.material_id
+    JOIN users u ON u.id = oi.seller_id
+    WHERE o.id = ${orderId}
+    ORDER BY oi.id
+  `;
+
+  return rows;
+}
+
 export async function getOrdersForSeller(sellerId) {
   const rows = await sql`
     SELECT
@@ -77,6 +112,9 @@ export async function getOrdersForSeller(sellerId) {
       oi.quantity,
       oi.price,
       o.order_status,
+      o.coupon_id,
+      o.payment_method,
+      o.delivery_option,
       o.created_at,
       m.id AS material_id,
       m.title AS material_title,

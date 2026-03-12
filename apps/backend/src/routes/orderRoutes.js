@@ -14,4 +14,3 @@ router.get("/seller-orders", authenticate, requireSeller, getSellerOrders);
 
 export default router;
 
-

@@ -152,6 +152,17 @@ export default function CartPage({ token, user, onOrderPlaced }) {
   const [selectedCourierIndex, setSelectedCourierIndex] = useState(0);
   const [shippingFallbackMessage, setShippingFallbackMessage] = useState("");
   const [orderConfirmation, setOrderConfirmation] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState("upi");
+  const [couponCode, setCouponCode] = useState("");
+  const [couponWallet, setCouponWallet] = useState([]);
+  const [selectedCouponCode, setSelectedCouponCode] = useState("");
+  const [couponProgress, setCouponProgress] = useState({
+    currentPlants: 0,
+    targetPlants: 5,
+    percent: 0,
+    nextLabel: "Next coupon milestone",
+    currentExchanges: 0,
+  });
 
   const receiverAddress = useMemo(() => buildUserAddress(user), [user]);
   const receiverDisplayAddress = useMemo(() => addressToDisplay(receiverAddress), [receiverAddress]);
@@ -162,6 +173,41 @@ export default function CartPage({ token, user, onOrderPlaced }) {
       try {
         const { items: rows } = await getCart(token);
         setItems(rows);
+
+        try {
+          const [achievementRes, couponsRes, scoreRes] = await Promise.all([
+            getAchievementProgressApi(token),
+            getMyCouponsApi(token),
+            getMyCircularScoreApi(token),
+          ]);
+
+          const progress = achievementRes?.progress || {};
+          const treesPlanted = Number(scoreRes?.score?.trees_planted || 0);
+          const exchanges = Number(progress?.current_exchanges || 0);
+
+          let targetPlants = 5;
+          if (treesPlanted >= 25) targetPlants = 50;
+          else if (treesPlanted >= 10) targetPlants = 25;
+          else if (treesPlanted >= 5) targetPlants = 10;
+
+          const percent = Math.max(0, Math.min(100, (treesPlanted / targetPlants) * 100));
+          setCouponProgress({
+            currentPlants: treesPlanted,
+            targetPlants,
+            percent,
+            nextLabel: progress?.next_achievement?.name || "Next coupon milestone",
+            currentExchanges: exchanges,
+          });
+
+          const coupons = couponsRes?.coupons || [];
+          setCouponWallet(coupons);
+          if (coupons.length > 0) {
+            setSelectedCouponCode(coupons[0].code);
+          }
+        } catch {
+          // Keep checkout flow usable even if rewards APIs fail
+          setCouponWallet([]);
+        }
       } catch (err) {
         console.error("Failed to load cart", err);
         setMessage(err.message || "Failed to load cart");
@@ -245,7 +291,14 @@ export default function CartPage({ token, user, onOrderPlaced }) {
       setMessage("");
       setOrderConfirmation(null);
 
-      const result = await placeOrder({ shipping_address: shippingAddress }, token);
+      const result = await placeOrder(
+        {
+          shipping_address: shippingAddress,
+          payment_method: paymentMethod,
+          coupon_code: selectedCouponCode || couponCode || undefined,
+        },
+        token,
+      );
 
       let shipmentResult = result?.shipment || null;
 
@@ -431,6 +484,90 @@ export default function CartPage({ token, user, onOrderPlaced }) {
               ) : (
                 <p className="mini-note">Shipping estimate unavailable. Default courier will be used.</p>
               )}
+            </div>
+
+            <div className="integration-card" style={{ marginTop: 12 }}>
+              <h4>Coupon Redemption Progress</h4>
+              <p className="mini-note">
+                Plants progress: {couponProgress.currentPlants}/{couponProgress.targetPlants} plants
+              </p>
+              <div style={{ width: "100%", height: 10, background: "#1f2937", borderRadius: 999, overflow: "hidden", marginBottom: 8 }}>
+                <div
+                  style={{
+                    width: `${couponProgress.percent}%`,
+                    height: "100%",
+                    background: "linear-gradient(90deg, #22c55e, #86efac)",
+                    transition: "width 0.3s ease",
+                  }}
+                />
+              </div>
+              <p className="mini-note">{couponProgress.nextLabel} · Reuses: {couponProgress.currentExchanges}</p>
+
+              <h4 style={{ marginTop: 12 }}>Coupon Wallet</h4>
+              {couponWallet.length > 0 ? (
+                <div className="logistics-rates-list">
+                  {couponWallet.map((coupon) => (
+                    <label key={coupon.code} className={`logistics-rate-item ${selectedCouponCode === coupon.code ? "logistics-rate-item-selected" : ""}`}>
+                      <input
+                        type="radio"
+                        name="coupon-select"
+                        checked={selectedCouponCode === coupon.code}
+                        onChange={() => setSelectedCouponCode(coupon.code)}
+                      />
+                      <span>
+                        🎟️ {coupon.code} — {(coupon.type || "coupon").replaceAll("_", " ")}
+                        {coupon.value ? ` (${coupon.value}%/₹${coupon.value})` : ""}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              ) : (
+                <p className="mini-note">No unlocked coupons yet.</p>
+              )}
+
+              <div className="logistics-pincode-row" style={{ marginTop: 8 }}>
+                <label style={{ width: "100%" }}>
+                  Or enter coupon code manually
+                  <input
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value)}
+                    placeholder="Enter coupon code"
+                  />
+                </label>
+              </div>
+            </div>
+
+            <div className="integration-card" style={{ marginTop: 12 }}>
+              <h4>Payment Method</h4>
+              <div style={{ display: "grid", gap: 8 }}>
+                <label className="logistics-rate-item" style={{ margin: 0 }}>
+                  <input
+                    type="radio"
+                    name="payment-method"
+                    checked={paymentMethod === "upi"}
+                    onChange={() => setPaymentMethod("upi")}
+                  />
+                  <span>UPI</span>
+                </label>
+                <label className="logistics-rate-item" style={{ margin: 0 }}>
+                  <input
+                    type="radio"
+                    name="payment-method"
+                    checked={paymentMethod === "card"}
+                    onChange={() => setPaymentMethod("card")}
+                  />
+                  <span>Credit/Debit Card</span>
+                </label>
+                <label className="logistics-rate-item" style={{ margin: 0 }}>
+                  <input
+                    type="radio"
+                    name="payment-method"
+                    checked={paymentMethod === "wallet"}
+                    onChange={() => setPaymentMethod("wallet")}
+                  />
+                  <span>Wallet</span>
+                </label>
+              </div>
             </div>
 
             <button

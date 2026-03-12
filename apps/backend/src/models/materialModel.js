@@ -11,14 +11,21 @@ export async function createMaterial(materialData) {
     quantity_unit,
     location,
     image_url,
+    price,
+    is_free,
+    delivery_option,
+    sustainability_impact,
     listed_by,
   } = materialData;
 
   const result = await sql`
     INSERT INTO materials (
-      title, description, material_type, category, condition, quantity, quantity_unit, location, image_url, listed_by
+      title, description, material_type, category, condition, quantity, quantity_unit, 
+      location, image_url, price, is_free, delivery_option, sustainability_impact, listed_by
     ) VALUES (
-      ${title}, ${description}, ${material_type}, ${category}, ${condition}, ${quantity}, ${quantity_unit ?? "kg"}, ${location}, ${image_url}, ${listed_by}
+      ${title}, ${description}, ${material_type}, ${category}, ${condition}, ${quantity}, 
+      ${quantity_unit ?? "kg"}, ${location}, ${image_url}, ${price}, ${is_free ?? false}, 
+      ${delivery_option ?? "pickup_only"}, ${sustainability_impact}, ${listed_by}
     )
     RETURNING *;
   `;
@@ -41,7 +48,10 @@ export async function getMaterialById(id) {
 }
 
 export async function updateMaterial(id, userId, updates) {
-  const { title, description, material_type, category, condition, quantity, quantity_unit, location, image_url } = updates;
+  const { 
+    title, description, material_type, category, condition, quantity, quantity_unit, 
+    location, image_url, price, is_free, delivery_option, sustainability_impact 
+  } = updates;
   const result = await sql`
     UPDATE materials SET
       title = ${title},
@@ -52,7 +62,11 @@ export async function updateMaterial(id, userId, updates) {
       quantity = ${quantity},
       quantity_unit = ${quantity_unit ?? "kg"},
       location = ${location},
-      image_url = ${image_url}
+      image_url = ${image_url},
+      price = ${price},
+      is_free = ${is_free ?? false},
+      delivery_option = ${delivery_option ?? "pickup_only"},
+      sustainability_impact = ${sustainability_impact}
     WHERE id = ${id} AND listed_by = ${userId}
     RETURNING *;
   `;

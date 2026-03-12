@@ -9,7 +9,10 @@ import {
 
 export async function createMaterialListing(req, res) {
   try {
-    const { title, description, material_type, category, condition, quantity, quantity_unit, location, image_url } = req.body;
+    const { 
+      title, description, material_type, category, condition, quantity, quantity_unit, 
+      location, image_url, price, is_free, delivery_option, sustainability_impact 
+    } = req.body;
     if (!title) return res.status(400).json({ message: "title is required" });
 
     console.log("Creating new material listing");
@@ -25,6 +28,10 @@ export async function createMaterialListing(req, res) {
       quantity_unit: quantity_unit || "kg",
       location: location || null,
       image_url: image_url || null,
+      price: price ? Number(price) : null,
+      is_free: is_free || false,
+      delivery_option: delivery_option || "pickup_only",
+      sustainability_impact: sustainability_impact || null,
       listed_by: req.user.sub,
     });
 
@@ -69,7 +76,10 @@ export async function getSingleMaterial(req, res) {
 
 export async function updateMaterialListing(req, res) {
   try {
-    const { title, description, material_type, category, condition, quantity, quantity_unit, location, image_url } = req.body;
+    const { 
+      title, description, material_type, category, condition, quantity, quantity_unit, 
+      location, image_url, price, is_free, delivery_option, sustainability_impact 
+    } = req.body;
     const updated = await updateMaterial(req.params.id, req.user.sub, {
       title,
       description: description || null,
@@ -80,6 +90,10 @@ export async function updateMaterialListing(req, res) {
       quantity_unit: quantity_unit || "kg",
       location: location || null,
       image_url: image_url || null,
+      price: price ? Number(price) : null,
+      is_free: is_free || false,
+      delivery_option: delivery_option || "pickup_only",
+      sustainability_impact: sustainability_impact || null,
     });
     if (!updated) return res.status(404).json({ message: "Not found or not authorized" });
     return res.status(200).json({ material: updated });

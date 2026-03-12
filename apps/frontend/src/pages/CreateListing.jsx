@@ -3,7 +3,7 @@ import { useLocation, useParams, useNavigate, Link } from "react-router-dom";
 import { createMaterial, updateMaterial, getMaterialById } from "../api";
 import { categories, conditions } from "../data/mockData";
 
-export default function CreateListing({ user, token }) {
+export default function CreateListing({ user, token, editItem: propEditItem, onBack }) {
   const navigate = useNavigate();
   const { id } = useParams();
   const location = useLocation();
@@ -14,49 +14,24 @@ export default function CreateListing({ user, token }) {
   const [fetching, setFetching] = useState(!editItem && !!id);
   const [error, setError] = useState("");
   const [form, setForm] = useState({
-    title: "",
-    description: "",
-    material_type: "",
-    category: (categories[1] ?? ""),
-    condition: (conditions[1] ?? ""),
-    quantity: "",
-    quantity_unit: "kg",
-    location: "",
-    image_url: "",
+    title: editItem?.title || "",
+    description: editItem?.description || "",
+    material_type: editItem?.material_type || "",
+    category: editItem?.category || (categories[1] ?? ""),
+    condition: editItem?.condition || (conditions[1] ?? ""),
+    quantity: editItem?.quantity || "",
+    quantity_unit: editItem?.quantity_unit || "kg",
+    location: editItem?.location || "",
+    image_url: editItem?.image_url || "",
+    price: editItem?.price || "",
+    is_free: editItem?.is_free || false,
+    delivery_option: editItem?.delivery_option || "pickup_only",
+    sustainability_impact: editItem?.sustainability_impact || "",
   });
 
-  useEffect(() => {
-    if (editItem) {
-      setForm({
-        title: editItem.title || "",
-        description: editItem.description || "",
-        material_type: editItem.material_type || "",
-        category: editItem.category || (categories[1] ?? ""),
-        condition: editItem.condition || (conditions[1] ?? ""),
-        quantity: editItem.quantity || "",
-        quantity_unit: editItem.quantity_unit || "kg",
-        location: editItem.location || "",
-        image_url: editItem.image_url || "",
-      });
-    } else if (id) {
-      const fetchItem = async () => {
-        try {
-          setFetching(true);
-          const data = await getMaterialById(id);
-          setEditItem(data.material);
-        } catch (err) {
-          setError("Failed to fetch listing details.");
-        } finally {
-          setFetching(false);
-        }
-      };
-      fetchItem();
-    }
-  }, [id, editItem]);
-
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setForm(prev => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
   };
 
   const handleSubmit = async (e) => {
@@ -81,7 +56,7 @@ export default function CreateListing({ user, token }) {
       <header className="marketplace-top-nav">
         <button
           className="nav-button nav-button-secondary"
-          onClick={() => navigate(-1)}
+          onClick={() => { if (onBack) onBack(); else navigate(-1); }}
           style={{ whiteSpace: "nowrap" }}
         >
           ← Back
@@ -161,6 +136,54 @@ export default function CreateListing({ user, token }) {
           <label>
             Location / City
             <input name="location" value={form.location} onChange={handleChange} placeholder="e.g., Mumbai" />
+          </label>
+
+          {/* Price + free toggle */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+            <label>
+              Price (₹)
+              <input
+                type="number"
+                name="price"
+                min="0"
+                value={form.price}
+                onChange={handleChange}
+                placeholder="e.g., 500"
+                disabled={form.is_free}
+                style={{ opacity: form.is_free ? 0.5 : 1 }}
+              />
+            </label>
+            <label style={{ justifyContent: "center" }}>
+              Free / Donate
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
+                <input
+                  type="checkbox"
+                  name="is_free"
+                  checked={form.is_free}
+                  onChange={handleChange}
+                  style={{ width: 18, height: 18, accentColor: "#22c55e", cursor: "pointer" }}
+                />
+                <span style={{ fontSize: "0.88rem", color: "#9ca3af" }}>Mark as free</span>
+              </div>
+            </label>
+          </div>
+
+          <label>
+            Delivery Option
+            <select name="delivery_option" value={form.delivery_option} onChange={handleChange}>
+              <option value="pickup_only">Pickup Only</option>
+              <option value="delivery_available">Delivery Available</option>
+            </select>
+          </label>
+
+          <label>
+            Sustainability Impact
+            <input
+              name="sustainability_impact"
+              value={form.sustainability_impact}
+              onChange={handleChange}
+              placeholder="e.g., Saves 8 kg of waste from landfill"
+            />
           </label>
 
           <label>
