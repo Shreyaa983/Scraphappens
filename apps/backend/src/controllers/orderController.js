@@ -5,6 +5,7 @@ import { createShipment } from "../services/shiprocketService.js";
 import * as couponService from "../modules/coupons/coupon.service.js";
 import * as reputationService from "../modules/reputation/reputation.service.js";
 import * as achievementService from "../modules/achievements/achievement.service.js";
+import { sendOrderNotification } from "../modules/whatsapp/whatsapp.service.js";
 
 function formatImpactDisplay(value, unit) {
   return `${value} ${unit} waste diverted`;
@@ -219,13 +220,20 @@ export async function placeOrder(req, res) {
 
 
       try {
-        const testPhone = "9619200100"; 
-        const materialSummary = cartRows[0]?.title || cartRows[0]?.material_type || "Scrap Materials";  
-        console.log(`Attempting to send WhatsApp for: ${materialSummary}`);
-        await sendOrderNotification(testPhone, materialSummary);
-        
+        console.log(`[WhatsApp] Fetching phone number for buyer ${buyerId}...`);
+        const buyerRows = await sql`SELECT phone_number FROM users WHERE id = ${buyerId} LIMIT 1`;
+        const buyerPhone = buyerRows[0]?.phone_number;
+        console.log(`[WhatsApp] phone_number from DB: "${buyerPhone ?? 'NULL'}"`); 
+        if (buyerPhone) {
+          const materialSummary = cartRows[0]?.title || cartRows[0]?.material_type || "Scrap Materials";
+          console.log(`[WhatsApp] Sending notification to buyer ${buyerId} | phone: ${buyerPhone} | material: ${materialSummary}`);
+          await sendOrderNotification(buyerPhone, materialSummary);
+          console.log(`[WhatsApp] Notification dispatched successfully.`);
+        } else {
+          console.warn(`[WhatsApp] Skipping: no phone_number on file for buyer ${buyerId}`);
+        }
       } catch (wsError) {
-        console.error("WhatsApp notification failed, but order was placed:", wsError);
+        console.error("[WhatsApp] Notification failed (order still placed):", wsError.message, wsError.stack);
       }
 
       const achievement = buildCircularAchievement({

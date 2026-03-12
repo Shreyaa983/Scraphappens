@@ -11,6 +11,9 @@ export const sendOrderNotification = async (phoneNumber, productName) => {
     // Ensure it starts with 91 for India if not already present
     const formattedNumber = cleanNumber.startsWith('91') ? cleanNumber : `91${cleanNumber}`;
 
+    console.log(`[WhatsApp] Preparing message | raw: "${phoneNumber}" → formatted: "${formattedNumber}" | product: "${productName}"`);
+    console.log(`[WhatsApp] POST ${WHAPI_URL}`);
+
     const response = await axios.post(WHAPI_URL, {
       to: formattedNumber,
       body: `🎉 *Order Confirmed!* \n\nHi! Your order for *${productName}* has been placed successfully on Scraphappens. 🌿\n\nThank you for choosing sustainable materials!`,
@@ -22,9 +25,9 @@ export const sendOrderNotification = async (phoneNumber, productName) => {
       }
     });
 
-    console.log("WhatsApp Notification Sent:", response.data.message.id);
+    console.log("[WhatsApp] API response status:", response.status);
     return response.data;
   } catch (error) {
-    console.error("WhatsApp Service Error:", error.response?.data || error.message);
+    console.error("[WhatsApp] HTTP status:", error.response?.status);
   }
 };
