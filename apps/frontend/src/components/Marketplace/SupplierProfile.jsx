@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
-const API_BASE = "http://localhost:4002/api";
+const API_BASE = `${import.meta.env.VITE_API_BASE_URL || "http://localhost:4000"}/api`;
 
 async function apiFetch(path, token) {
   const res = await fetch(`${API_BASE}${path}`, {

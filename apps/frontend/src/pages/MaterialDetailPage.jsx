@@ -17,7 +17,7 @@ function conditionToGrade(condition) {
     return map[condition] ?? condition?.charAt(0) ?? "—";
 }
 
-export default function MaterialDetailPage({ material: initialMaterial, user, onBack, onEdit }) {
+export default function MaterialDetailPage({ material: initialMaterial, user, onBack, onEdit, onViewSupplier }) {
     const { id } = useParams();
     const navigate = useNavigate();
     const [material, setMaterial] = useState(initialMaterial);
