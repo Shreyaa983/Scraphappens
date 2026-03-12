@@ -385,6 +385,7 @@ export default function App() {
                 }
             />
               <Route path="/logistics-dashboard" element={<LogisticsDashboardPage token={token} />} />
+              <Route path="/pickup-scheduling" element={<LogisticsPickupsPage token={token} />} />
                 <Route path="/my-dashboard" element={<UserDashboard token={token} user={user} />} />
             <Route path="/supplier/:supplierId" element={<SupplierProfile token={token} onBack={() => navigate(-1)} />} />
 
