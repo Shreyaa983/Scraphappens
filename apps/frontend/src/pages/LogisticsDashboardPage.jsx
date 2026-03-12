@@ -57,10 +57,10 @@ export default function LogisticsDashboardPage({ token }) {
             <span>Active Deliveries</span>
             <strong>{metrics.active_deliveries}</strong>
           </article>
-          <Link to="/pickup-scheduling" className="stat-card" style={{ textDecoration: 'none' }}>
+          <div className="stat-card" style={{ cursor: "default", opacity: 0.6 }}>
             <span>Scheduled Pickups</span>
             <strong>{metrics.scheduled_pickups}</strong>
-          </Link>
+          </div>
           <article className="stat-card">
             <span>Waste Transported (kg)</span>
             <strong>{metrics.waste_moved_kg}</strong>

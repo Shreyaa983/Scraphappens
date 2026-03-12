@@ -12,8 +12,7 @@ export default function Sidebar({ user, roleTitle, onLogout }) {
       { name: "My Dashboard", path: "/my-dashboard" },
       { name: "AI Assistant", path: "/ai-assistant" },
       { name: "Garden", path: "/garden" },
-      { name: "Logistics Dashboard", path: "/logistics-dashboard" },
-      { name: "Pickup Scheduling", path: "/pickup-scheduling" }
+      { name: "Logistics Dashboard", path: "/logistics-dashboard" }
     ];
 
     if (user && isSellerRole(user.role)) {

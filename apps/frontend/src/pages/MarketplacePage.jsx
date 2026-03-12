@@ -91,16 +91,9 @@ export default function MarketplacePage({ user, filters, onFilterChange, onSelec
 
       {/* ── Top bar ── */}
       <header className="marketplace-top-nav">
-        <div className="nav-brand-area">
-          <div className="nav-logo">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5">
-              <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" />
-            </svg>
-            <span className="nav-logo-text">Circular Market</span>
-          </div>
-        </div>
+      
 
-        <div className="nav-search-area">
+        {/* <div className="nav-search-area"> */}
           <div className="modern-search-box">
             <svg className="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
@@ -108,13 +101,21 @@ export default function MarketplacePage({ user, filters, onFilterChange, onSelec
             <input
               value={filters.search}
               onChange={e => onFilterChange("search", e.target.value)}
-              placeholder="Search materials, location, category…"
+              placeholder="Search material name, category, location..."
+              aria-label="Search marketplace materials"
             />
             {isSearching && (
-              <button className="search-clear-btn" onClick={() => onFilterChange("search", "")}>✕</button>
+              <button
+                type="button"
+                className="search-clear-btn"
+                onClick={() => onFilterChange("search", "")}
+                aria-label="Clear search"
+              >
+                ✕
+              </button>
             )}
           </div>
-        </div>
+        {/* </div> */}
 
         <div className="nav-actions-area">
           {user && (user.role === "seller" || user.role === "supplier") && (

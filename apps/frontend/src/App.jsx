@@ -9,7 +9,6 @@ import UserDashboard from "./components/Marketplace/UserDashboard";
 import CreateListing from "./pages/CreateListing";
 import GardenPage from "./pages/GardenPage";
 import LogisticsDashboardPage from "./pages/LogisticsDashboardPage";
-import LogisticsPickupsPage from "./pages/LogisticsPickupsPage";
 import MaterialDetailPage from "./pages/MaterialDetailPage";
 import MarketplacePage from "./pages/MarketplacePage";
 import MyListingsPage from "./pages/MyListingsPage";
@@ -26,6 +25,7 @@ const roles = ["seller", "buyer", "volunteer"];
 
 const isSellerRole = (role) => role === "seller" || role === "supplier";
 const isBuyerRole = (role) => role === "buyer";
+const isVolunteerRole = (role) => role === "volunteer";
 
 function RoleLockedPanel() {
   return (
@@ -76,10 +76,27 @@ export default function App() {
   const [orderAchievement, setOrderAchievement] = useState(null);
   const [pendingGardenAchievement, setPendingGardenAchievement] = useState(null);
   const [marketplaceFilters, setMarketplaceFilters] = useState({
-    search: "",
-    category: "All",
-    condition: "All",
+    search: "", category: "All", condition: "All",
   });
+
+  const sidebarItems = useMemo(() => {
+    const items = ["Marketplace", "My Dashboard", "AI Assistant", "Garden", "Logistics Dashboard"];
+
+    if (user && isSellerRole(user.role)) {
+      items.push("My Listings", "Seller Orders");
+    }
+
+    if (user && isBuyerRole(user.role)) {
+      items.push("Cart", "My Orders");
+    }
+
+    // Volunteers currently use shared sections (Marketplace, Garden, AI)
+    if (user && isVolunteerRole(user.role)) {
+      // Placeholder for future volunteer-specific UI
+    }
+
+    return items;
+  }, [user]);
 
   useEffect(() => {
     async function restoreUser() {
@@ -146,6 +163,23 @@ export default function App() {
     setMarketplaceFilters((prev) => ({ ...prev, [key]: value }));
   }
 
+  function openMaterialFromDiy(materialId) {
+    if (!materialId) {
+      return;
+    }
+    navigate(`/material/${materialId}`);
+  }
+
+  function searchMaterialFromDiy(materialName) {
+    setMarketplaceFilters((prev) => ({
+      ...prev,
+      search: materialName || "",
+      category: "All",
+      condition: "All",
+    }));
+    navigate("/");
+  }
+
   function handleOrderPlaced(result) {
     const achievement = result?.achievement || null;
     const userId = user?.id || user?.sub;
@@ -168,18 +202,130 @@ export default function App() {
     }, 2200);
   }
 
-  function openMaterialFromDiy(materialId) {
-    if (!materialId) return;
-    navigate(`/material/${materialId}`);
+  // Open full-page detail view
+  function openProductDetail(product) {
+    setSelectedProduct(product);
+    setMarketplaceView("detail");
   }
 
-  function searchMaterialFromDiy(materialName) {
-    setMarketplaceFilters((prev) => ({
-      ...prev,
-      search: materialName || "",
-      category: "All"
-    }));
-    navigate("/");
+  function openSupplierProfile(supplierId) {
+    setSelectedSupplierId(supplierId);
+    navigate(`/supplier/${supplierId}`);
+  }
+
+  // From detail page → edit
+  function openEdit(item) {
+    setEditItem(item);
+    setMarketplaceView("edit");
+    setActiveSection("Marketplace");
+  }
+
+  // From My Listings → edit
+  function openEditFromMyListings(item) {
+    setEditItem(item);
+    setMarketplaceView("edit");
+    setActiveSection("My Listings"); // stays on same section
+  }
+
+  function goBackFromForm() {
+    setMarketplaceView("browse");
+    setEditItem(null);
+    setSelectedProduct(null);
+    setSelectedSupplierId(null);
+  }
+
+  function renderMarketplaceContent() {
+    if (marketplaceView === "detail" && selectedProduct) {
+      return (
+        <MaterialDetailPage
+          material={selectedProduct}
+          user={user}
+          onBack={() => { setMarketplaceView("browse"); setSelectedProduct(null); }}
+          onEdit={openEdit}
+          onViewSupplier={openSupplierProfile}
+        />
+      );
+    }
+    if (marketplaceView === "supplier" && selectedSupplierId) {
+      return (
+        <SupplierProfile
+          supplierId={selectedSupplierId}
+          token={token}
+          onBack={() => {
+            if (selectedProduct) {
+              setMarketplaceView("detail");
+            } else {
+              setMarketplaceView("browse");
+            }
+          }}
+        />
+      );
+    }
+    if (marketplaceView === "create") {
+      if (!user || !isSellerRole(user.role)) {
+        return (
+          <MarketplacePage
+            user={user}
+            filters={marketplaceFilters}
+            onFilterChange={handleFilterChange}
+            onSelectProduct={openProductDetail}
+            onCreateClick={() => {}}
+          />
+        );
+      }
+      return <CreateListing user={user} token={token} onBack={goBackFromForm} />;
+    }
+    if (marketplaceView === "edit" && editItem) {
+      return <CreateListing user={user} token={token} editItem={editItem} onBack={goBackFromForm} />;
+    }
+    return (
+      <MarketplacePage
+        user={user}
+        filters={marketplaceFilters}
+        onFilterChange={handleFilterChange}
+        onSelectProduct={openProductDetail}
+        onCreateClick={() => {
+          if (!user || !isSellerRole(user.role)) {
+            setMessage("Only sellers can create material listings.");
+            return;
+          }
+          setMarketplaceView("create");
+        }}
+      />
+    );
+  }
+
+  function renderSectionContent() {
+    if (activeSection === "AI Assistant") return <AIChatbot />;
+    if (activeSection === "Logistics Dashboard") return <LogisticsDashboardPage token={token} />;
+    if (activeSection === "Cart") {
+      return <CartPage token={token} user={user} onOrderPlaced={handleOrderPlaced} />;
+    }
+    if (activeSection === "My Orders") {
+      return <BuyerOrdersPage token={token} />;
+    }
+    if (activeSection === "Seller Orders") {
+      return <SellerOrdersPage token={token} />;
+    }
+    if (activeSection === "My Dashboard") {
+      return <UserDashboard token={token} user={user} />;
+    }
+    if (activeSection === "Garden") {
+      return (
+        <GardenPage
+          user={user}
+          pendingAchievement={pendingGardenAchievement}
+          onPendingAchievementHandled={() => setPendingGardenAchievement(null)}
+        />
+      );
+    }
+    if (activeSection === "My Listings") {
+      if (marketplaceView === "edit" && editItem) {
+        return <CreateListing user={user} token={token} editItem={editItem} onBack={() => { setMarketplaceView("browse"); setEditItem(null); }} />;
+      }
+      return <MyListingsPage token={token} onEdit={openEditFromMyListings} />;
+    }
+    return renderMarketplaceContent();
   }
 
   if (loadingUser) {
@@ -239,8 +385,7 @@ export default function App() {
                 }
             />
               <Route path="/logistics-dashboard" element={<LogisticsDashboardPage token={token} />} />
-              <Route path="/pickup-scheduling" element={<LogisticsPickupsPage token={token} />} />
-              <Route path="/my-dashboard" element={<UserDashboard token={token} user={user} />} />
+                <Route path="/my-dashboard" element={<UserDashboard token={token} user={user} />} />
             <Route path="/supplier/:supplierId" element={<SupplierProfile token={token} onBack={() => navigate(-1)} />} />
 
               {isSellerRole(user.role) && (

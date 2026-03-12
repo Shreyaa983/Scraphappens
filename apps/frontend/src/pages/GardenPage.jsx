@@ -24,6 +24,7 @@ export default function GardenPage({ user, pendingAchievement, onPendingAchievem
   const [selectedPlantId, setSelectedPlantId] = useState(null);
   const [activeAchievement, setActiveAchievement] = useState(null);
   const [lastUnlockedType, setLastUnlockedType] = useState(() => loadLastUnlockedType(userId));
+  const [viewMode, setViewMode] = useState("garden");
   const [isGlobalView, setIsGlobalView] = useState(false);
   const playPlantSound = useSound(plantSound);
 
@@ -180,55 +181,135 @@ export default function GardenPage({ user, pendingAchievement, onPendingAchievem
     playPlantSound();
   }
 
+  const allAchievementPlants = [...placedTrees, ...unlockedPlants];
+  const uniqueAchievementMap = new Map();
+  allAchievementPlants.forEach((item) => {
+    const key = item.achievementId || item.achievement || item.id;
+    if (!uniqueAchievementMap.has(key)) {
+      uniqueAchievementMap.set(key, {
+        achievement: item.achievement || item.achievementDetails?.name || "Circular Action",
+        icon: item.icon || "🌱",
+        label: item.treeLabel || item.label || "Plant",
+      });
+    }
+  });
+  const achievementItems = Array.from(uniqueAchievementMap.values());
+
   return (
     <div className="garden-page">
       <AchievementPopup achievement={activeAchievement} />
 
-      <div className="garden-layout">
-        <InventoryPanel
-          plants={unlockedPlants}
-          selectedPlantId={selectedPlantId}
-          onSelectPlant={setSelectedPlantId}
-        />
-
-        <section className="garden-scene-shell">
-          <div className="garden-scene-toolbar">
-            <div className={`garden-mode-pill${isGlobalView ? " garden-mode-pill-global" : ""}`}>
-              <span className="garden-mode-pill-icon">{isGlobalView ? "🌍" : "🌱"}</span>
-              <div className="garden-mode-pill-copy">
-                <strong>{isGlobalView ? "Global Forest" : "My Garden"}</strong>
-                <span>
-                  {isGlobalView
-                    ? "Explore platform-wide impact and connected gardens"
-                    : "Place unlocked plants and keep growing your impact"}
-                </span>
-              </div>
-            </div>
-
+      <section className="garden-top-shell">
+        <div className="garden-top-controls">
+          <div className="garden-view-toggle" role="tablist" aria-label="Garden views">
             <button
-              className={`global-impact-btn${isGlobalView ? " global-impact-btn-active" : ""}`}
-              onClick={() => setIsGlobalView((prev) => !prev)}
-              title="Toggle between personal garden and global forest view"
+              type="button"
+              className={`garden-view-toggle-btn${viewMode === "garden" ? " active" : ""}`}
+              onClick={() => setViewMode("garden")}
             >
-              <span className="global-impact-btn-icon">{isGlobalView ? "🌱" : "🌍"}</span>
-              <span className="global-impact-btn-copy">
-                <strong>{isGlobalView ? "Back to Garden" : "Open Global Forest"}</strong>
-                <small>{isGlobalView ? "Return to your personal space" : "See the bigger impact picture"}</small>
-              </span>
+              Garden View
+            </button>
+            <button
+              type="button"
+              className={`garden-view-toggle-btn${viewMode === "achievement" ? " active" : ""}`}
+              onClick={() => setViewMode("achievement")}
+            >
+              Achievement View
             </button>
           </div>
 
+          <button
+            type="button"
+            className={`global-forest-btn${isGlobalView ? " active" : ""}`}
+            onClick={() => {
+              setIsGlobalView((prev) => !prev);
+              setViewMode("garden");
+            }}
+          >
+            {isGlobalView ? "Back to My Garden" : "Global Forest"}
+          </button>
+        </div>
+
+        <section className="garden-scene-shell">
           <GardenScene
             placedTrees={placedTrees}
             selectedPlantId={selectedPlantId}
             onTilePlace={placeTree}
             globalView={isGlobalView}
           />
-        </section>
-      </div>
 
-      {/* ── Stats bar below canvas ── */}
-      <GardenStatsBar globalView={isGlobalView} placedTrees={placedTrees} />
+          {viewMode === "achievement" && !isGlobalView ? (
+            <div className="achievement-view-overlay">
+              <h4>Achievement Plants</h4>
+              {achievementItems.length === 0 ? (
+                <p>No achievements unlocked yet. Complete sustainable marketplace actions to grow your garden.</p>
+              ) : (
+                <div className="achievement-view-grid">
+                  {achievementItems.map((item, idx) => (
+                    <article key={`${item.achievement}-${idx}`} className="achievement-view-item">
+                      <span className="achievement-view-icon">{item.icon}</span>
+                      <div>
+                        <strong>{item.achievement}</strong>
+                        <p>{item.label}</p>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : null}
+        </section>
+      </section>
+
+      <InventoryPanel
+        plants={unlockedPlants}
+        selectedPlantId={selectedPlantId}
+        onSelectPlant={setSelectedPlantId}
+      />
+
+      <section className="garden-scroll-layer">
+        <GardenStatsBar globalView={isGlobalView} placedTrees={placedTrees} />
+
+        <section className="garden-charts-shell">
+          <header>
+            <p className="eyebrow">Impact Charts</p>
+            <h3>Your Sustainability Trends</h3>
+          </header>
+          <div className="garden-chart-grid">
+            <article className="garden-chart-card">
+              <h4>Materials Reused by Category</h4>
+              <div className="mini-bars">
+                <div><span>Wood</span><i style={{ width: `${Math.max(25, placedTrees.length * 8)}%` }} /></div>
+                <div><span>Metal</span><i style={{ width: `${Math.max(20, placedTrees.length * 6)}%` }} /></div>
+                <div><span>Fabric</span><i style={{ width: `${Math.max(18, placedTrees.length * 5)}%` }} /></div>
+                <div><span>Plastic</span><i style={{ width: `${Math.max(14, placedTrees.length * 4)}%` }} /></div>
+              </div>
+            </article>
+
+            <article className="garden-chart-card">
+              <h4>Weekly Activity</h4>
+              <div className="mini-columns">
+                {[2, 4, 3, 5, 6, 4, 7].map((val, idx) => (
+                  <span key={idx} style={{ height: `${14 + val * 10}px` }} />
+                ))}
+              </div>
+            </article>
+
+            <article className="garden-chart-card">
+              <h4>Achievement Timeline</h4>
+              <ul className="timeline-list">
+                {achievementItems.slice(0, 5).map((item, idx) => (
+                  <li key={`${item.achievement}-${idx}`}>
+                    <span>{item.icon}</span>
+                    <p>{item.achievement}</p>
+                  </li>
+                ))}
+                {achievementItems.length === 0 ? <li><p>No milestones yet</p></li> : null}
+              </ul>
+            </article>
+          </div>
+        </section>
+      </section>
     </div>
   );
 }
