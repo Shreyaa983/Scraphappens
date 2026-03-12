@@ -174,16 +174,16 @@
   transform: scale(1.1);
 }
 
-.mic-btn.listening {
-  background: #4f46e5;
+.mic-btn.listening, .mic-btn.thinking {
+  background: #ef4444; /* Red for Stop */
   color: white;
-  animation: pulse-red 1.5s infinite;
+  animation: pulse-stop 1.5s infinite;
 }
 
-@keyframes pulse-red {
-    0% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.4); }
-    70% { box-shadow: 0 0 0 15px rgba(79, 70, 229, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0); }
+@keyframes pulse-stop {
+    0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+    70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
 }
 
 .empty-state {

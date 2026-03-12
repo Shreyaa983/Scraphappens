@@ -1,4 +1,4 @@
-export const speakText = (text) => {
+export const speakText = (text, onEnd) => {
   if (!window.speechSynthesis) {
     console.error("Speech Synthesis not supported in this browser.");
     return;
@@ -9,6 +9,10 @@ export const speakText = (text) => {
 
   const utterance = new SpeechSynthesisUtterance(text);
   
+  if (onEnd) {
+      utterance.onend = onEnd;
+  }
+
   // Optional: customize voice
   const voices = window.speechSynthesis.getVoices();
   const selectedVoice = voices.find(v => v.name.includes("Google") || v.name.includes("Female")) || voices[0];
@@ -18,4 +22,10 @@ export const speakText = (text) => {
   utterance.pitch = 1.0;
 
   window.speechSynthesis.speak(utterance);
+};
+
+export const stopSpeaking = () => {
+  if (window.speechSynthesis) {
+    window.speechSynthesis.cancel();
+  }
 };

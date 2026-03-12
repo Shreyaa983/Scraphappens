@@ -1,6 +1,6 @@
 import React from "react";
 import { useAgentic } from "../../contexts/Agentic/ChatContext";
-import { Mic, X, MessageSquare, Loader2 } from "lucide-react";
+import { Mic, X, MessageSquare, Loader2, Square } from "lucide-react";
 import "./Agentic.css";
 
 const GlobalAssistant = () => {
@@ -11,6 +11,7 @@ const GlobalAssistant = () => {
     transcript, 
     isVisible, 
     startListening, 
+    stopAll,
     toggleVisibility 
   } = useAgentic();
 
@@ -48,11 +49,10 @@ const GlobalAssistant = () => {
           
           <div className="agentic-footer">
             <button 
-              className={`mic-btn ${isListening ? "listening" : ""}`}
-              onClick={startListening}
-              disabled={isThinking}
+              className={`mic-btn ${isListening ? "listening" : ""} ${isThinking ? "thinking" : ""}`}
+              onClick={isListening || isThinking ? stopAll : startListening}
             >
-              <Mic size={24} />
+              {isListening || isThinking ? <Square size={24} fill="currentColor" /> : <Mic size={24} />}
             </button>
           </div>
         </div>
