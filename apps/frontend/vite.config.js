@@ -43,8 +43,14 @@ export default defineConfig({
       },
       workbox: {
         navigateFallback: "/index.html",
+        navigateFallbackDenylist: [/^\/api\//],
         // The rest of your runtimeCaching logic remains the same...
         runtimeCaching: [
+          {
+            // Auth, checkout, mutations — always network only; never cached by SW
+            urlPattern: ({ url }) => url.pathname.startsWith("/api/"),
+            handler: "NetworkOnly"
+          },
           // ... (keep all the runtimeCaching blocks you already have)
         ]
       }
