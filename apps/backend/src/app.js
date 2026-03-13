@@ -18,7 +18,8 @@ import * as achievementService from "./modules/achievements/achievement.service.
 const app = express();
 
 // Best effort initialization so the API still boots even if DB setup lags behind.
-await achievementService.initializeAchievements().catch((err) => {
+// Avoid top-level await in serverless runtimes.
+achievementService.initializeAchievements().catch((err) => {
   console.warn("Warning: Could not initialize achievements:", err.message);
 });
 
