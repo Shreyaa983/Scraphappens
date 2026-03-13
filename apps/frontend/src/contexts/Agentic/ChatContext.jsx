@@ -7,10 +7,24 @@ import { addToCart } from "../../api";
 
 const AgenticContext = createContext();
 
+const STORAGE_KEY = 'scraphappens_chat_history';
+
 export const AgenticProvider = ({ children, user, token }) => {
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState(() => {
+    if (typeof localStorage !== "undefined") {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      return saved ? JSON.parse(saved) : [];
+    }
+    return [];
+  });
   const [isListening, setIsListening] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
+
+  useEffect(() => {
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+    }
+  }, [messages]);
   const [transcript, setTranscript] = useState("");
   const [isVisible, setIsVisible] = useState(false);
 
@@ -181,23 +195,6 @@ export const AgenticProvider = ({ children, user, token }) => {
     if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
   }, []);
 
-  const stopListeningAndSend = (finalText) => {
-    if (recognitionRef.current) {
-      try {
-          recognitionRef.current.stop();
-      } catch (e) {
-          console.log("Stop error:", e.message);
-      }
-    }
-
-    const textToSend = finalText || transcript;
-    if (textToSend.trim()) {
-      addMessage(textToSend, "user");
-      setIsThinking(true);
-      socket.emit("prompt", { text: textToSend, userId });
-      setTranscript("");
-    }
-  };
 
   const sendText = useCallback((textToSend) => {
     const clean = (textToSend || "").trim();

@@ -58,7 +58,7 @@ export default function AuthPanel({ mode, form, onFieldChange, onClose, onSubmit
           </label>
 
           <label>
-            Email
+            {t("Email")}
             <input type="email" value={form.email} onChange={(e) => onFieldChange("email", e.target.value)} required />
           </label>
 
@@ -68,7 +68,7 @@ export default function AuthPanel({ mode, form, onFieldChange, onClose, onSubmit
           </label>
 
           <label>
-            Password
+            {t("Password")}
             <input type="password" value={form.password} onChange={(e) => onFieldChange("password", e.target.value)} required />
           </label>
 
@@ -116,7 +116,7 @@ export default function AuthPanel({ mode, form, onFieldChange, onClose, onSubmit
           </label>
 
           <label>
-            Password
+            {t("Password")}
             <input type="password" value={form.password} onChange={(e) => onFieldChange("password", e.target.value)} required />
           </label>
 

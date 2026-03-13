@@ -563,6 +563,134 @@ button:disabled {
   margin: 0;
 }
 
+/* --- Helpline UI --- */
+.helpline-box {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: 10px 18px;
+  background: white;
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--neo-shadow-sm);
+  font-weight: var(--font-weight-bold);
+  font-size: 0.95rem;
+  color: var(--color-primary-dark);
+  white-space: nowrap;
+  transition: all var(--transition-base);
+  animation: fadeIn 0.5s ease-out;
+}
+
+.helpline-box:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--neo-shadow);
+  background: var(--color-bg-primary);
+}
+
+.helpline-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--color-accent);
+  display: block;
+  line-height: 1;
+}
+
+.helpline-number {
+  display: block;
+  font-family: monospace;
+  font-size: 1.05rem;
+  color: var(--color-primary-dark);
+}
+
+.helpline-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.helpline-icon {
+  font-size: 1.2rem;
+  margin-right: var(--spacing-xs);
+}
+
+.landing-helpline {
+  margin-left: var(--spacing-lg);
+}
+
+.dashboard-top-nav {
+  position: fixed;
+  top: 12px;
+  right: var(--spacing-xl);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  animation: slideInLeft 0.5s ease-out;
+}
+
+/* Ensure the Language Selector matches the neo-brutalist theme of the header */
+.dashboard-top-nav .language-selector-container {
+  min-width: 140px;
+}
+
+.dashboard-top-nav .language-selector-button {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  padding: 6px 12px;
+  height: 38px; /* Match helpline height */
+  border: 1.5px solid var(--color-primary);
+  box-shadow: 2px 2px 0px var(--color-primary);
+  border-radius: var(--radius-lg);
+  font-size: 0.85rem;
+}
+
+.dashboard-top-nav .language-selector-button:hover {
+  box-shadow: 4px 4px 0px var(--color-primary);
+  transform: translateY(-1px);
+}
+
+.dashboard-helpline {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  padding: 6px 15px;
+  border: 1.5px solid var(--color-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: 2px 2px 0px var(--color-primary);
+  height: 38px; /* Unified height */
+}
+
+.dashboard-helpline:hover {
+  box-shadow: 4px 4px 0px var(--color-primary);
+  transform: translateY(-1px);
+}
+
+.dashboard-helpline .helpline-content {
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+}
+
+.dashboard-helpline .helpline-label {
+  font-size: 0.65rem;
+  letter-spacing: 0.5px;
+}
+
+.dashboard-helpline .helpline-label::after {
+  content: " :";
+  font-weight: bold;
+}
+
+.dashboard-helpline .helpline-number {
+  font-size: 0.95rem;
+  letter-spacing: 0;
+}
+
+.dashboard-helpline .helpline-icon {
+  font-size: 0.9rem;
+  margin-right: 2px;
+}
+
 /* --- Dashboard Layout --- */
 .dashboard-page {
   display: grid;

@@ -18,19 +18,7 @@ const AIChatbot = () => {
     stopAll,
   } = useAgentic();
   const { t } = useTranslation();
-  const STORAGE_KEY = 'scraphappens_chat_history';
-  const WELCOME_MSG = { role: 'ai', text: t("Hello! I'm your Circular Loop Assistant. How can I help you with sustainable textile reuse today?") };
-
-  const [input, setInput] = useState('');
-  const [messages, setMessages] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? JSON.parse(saved) : [WELCOME_MSG];
-    } catch {
-      return [WELCOME_MSG];
-    }
-  });
-  const [loading, setLoading] = useState(false);
+  const WELCOME_MSG = { sender: 'assistant', text: t("Hello! I'm your Circular Loop Assistant. How can I help you with sustainable textile reuse today?") };
   const scrollRef = useRef(null);
 
   // Auto-scroll to bottom on new messages
@@ -76,8 +64,8 @@ const AIChatbot = () => {
 
           <div className="agentic-messages" ref={scrollRef}>
             {messages.length === 0 && (
-              <div className="empty-state">
-                How can I help you today?
+              <div className="msg assistant">
+                <div>{WELCOME_MSG.text}</div>
               </div>
             )}
 

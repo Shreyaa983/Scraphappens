@@ -19,6 +19,8 @@ import { LanguageProvider } from "./contexts/LanguageContext";
 import LanguageSelector from "./components/LanguageSelector";
 import InstallAppPrompt from "./components/InstallAppPrompt";
 import OfflineNotice from "./components/OfflineNotice";
+import LandingPage from "./pages/LandingPage";
+import Helpline from "./components/Helpline";
 
 const roles = ["seller", "buyer", "volunteer"];
 
@@ -357,6 +359,11 @@ export default function App() {
           <OfflineNotice />
           <InstallAppPrompt />
           <Sidebar user={user} roleTitle={roleTitle} onLogout={onLogout} />
+          
+          <div className="dashboard-top-nav">
+            <LanguageSelector />
+            <Helpline className="dashboard-helpline" />
+          </div>
 
           <section className="dashboard-main">
             <Routes>
@@ -457,68 +464,16 @@ export default function App() {
   return (
     <LanguageProvider>
       <AgenticProvider>
-      <main className="landing-page">
-        <OfflineNotice />
-        <InstallAppPrompt />
-        <nav className="navbar">
-          <div className="brand-block">
-            <span className="brand-mark">S</span>
-            <div>
-              <h1>ScrapHappens</h1>
-              <p>Smart circular material marketplace</p>
-            </div>
-          </div>
-          <div className="nav-actions">
-            <LanguageSelector />
-            <button className="nav-button nav-button-secondary" onClick={() => openAuth("login")}>Login</button>
-            <button className="nav-button" onClick={() => openAuth("register")}>Register</button>
-          </div>
-        </nav>
-
-        <section className="hero">
-          <div className="hero-copy">
-            <span className="eyebrow">Circular supply chain platform</span>
-            <h2>Turn leftover materials into useful inventory, fast.</h2>
-            <p>
-              A platform for suppliers, buyers, and volunteers with role-based access,
-              JWT authentication, and a live circular materials marketplace.
-            </p>
-
-            <div className="hero-actions">
-              <button className="hero-button" onClick={() => openAuth("register")}>Get Started</button>
-              <button className="hero-button hero-button-muted" onClick={() => openAuth("login")}>I already have an account</button>
-            </div>
-
-            {message ? <p className="message">{message}</p> : null}
-          </div>
-
-          {showAuth ? (
-            <AuthPanel
-              mode={mode}
-              form={form}
-              onFieldChange={updateField}
-              onClose={() => setShowAuth(false)}
-              onSubmit={onSubmit}
-            />
-          ) : (
-            <div className="feature-grid">
-              <article className="feature-card">
-                <h3>Supplier</h3>
-                <p>List extra stock, fabric scraps, and reusable material.</p>
-              </article>
-              <article className="feature-card">
-                <h3>Buyer</h3>
-                <p>Discover available material inventory and place requests quickly.</p>
-              </article>
-              <article className="feature-card">
-                <h3>Volunteer</h3>
-                <p>Coordinate collection, sorting, and community distribution.</p>
-              </article>
-            </div>
-          )}
-        </section>
-        <GlobalAssistant />
-      </main>
+        <LandingPage
+          openAuth={openAuth}
+          showAuth={showAuth}
+          mode={mode}
+          form={form}
+          updateField={updateField}
+          setShowAuth={setShowAuth}
+          onSubmit={onSubmit}
+          message={message}
+        />
       </AgenticProvider>
     </LanguageProvider>
   );

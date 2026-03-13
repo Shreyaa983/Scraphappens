@@ -118,7 +118,6 @@ export default function MarketplacePage({ user, filters, onFilterChange, onSelec
         </div>
         
         <div className="nav-actions-area" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          <LanguageSelector />
           {user && (user.role === "seller" || user.role === "supplier") && (
             <button 
               className="create-listing-btn" 
@@ -138,9 +137,9 @@ export default function MarketplacePage({ user, filters, onFilterChange, onSelec
         <div className="search-results-panel">
           <div className="search-results-header">
             <p className="search-results-label">
-              Results for <strong>"{filters.search}"</strong> — {filteredProducts.length} found
+              {t("Results for")} <strong>"{filters.search}"</strong> — {filteredProducts.length} {t("found")}
             </p>
-            <button className="clear-search-link" onClick={() => onFilterChange("search", "")}>Clear search</button>
+            <button className="clear-search-link" onClick={() => onFilterChange("search", "")}>{t("Clear search")}</button>
           </div>
           {filteredProducts.length === 0 ? (
             <div className="empty-state">
@@ -179,7 +178,7 @@ export default function MarketplacePage({ user, filters, onFilterChange, onSelec
 
           {/* ── Condition filter row ── */}
           <div className="condition-filter-row">
-            <span className="filter-label">Condition:</span>
+            <span className="filter-label">{t("Condition")}:</span>
             {["All", ...conditions.filter(c => c !== "All")].map(cond => (
               <button
                 key={cond}
@@ -193,7 +192,7 @@ export default function MarketplacePage({ user, filters, onFilterChange, onSelec
 
           {/* ── Listings ── */}
           {loading ? (
-            <div className="loading-shell">Loading marketplace...</div>
+            <div className="loading-shell">{t("Loading marketplace...")}</div>
           ) : (
             <section className="listings-section">
               <div className="listings-header">
@@ -205,7 +204,7 @@ export default function MarketplacePage({ user, filters, onFilterChange, onSelec
                 </div>
                 <span className="live-indicator">
                   <span className="live-dot" />
-                  Live
+                  {t("Live")}
                 </span>
               </div>
 
@@ -214,8 +213,8 @@ export default function MarketplacePage({ user, filters, onFilterChange, onSelec
                   <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#4b5563" strokeWidth="1.5">
                     <rect x="2" y="3" width="20" height="14" rx="2" /><path d="M8 21h8M12 17v4" />
                   </svg>
-                  <p>No listings found.</p>
-                  <span>Be the first to list a material in this category.</span>
+                  <p>{t("No listings found.")}</p>
+                  <span>{t("Be the first to list a material in this category.")}</span>
                 </div>
               ) : (
                 <div className="product-grid-v3">

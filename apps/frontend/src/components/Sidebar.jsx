@@ -62,9 +62,6 @@ export default function Sidebar({ user, roleTitle, onLogout }) {
       </div>
 
       <div className="sidebar-footer">
-        <div style={{ marginBottom: '1rem' }}>
-          <LanguageSelector />
-        </div>
         <p className="sidebar-user">{user?.name}</p>
         <p className="sidebar-role">{t(user?.role)}</p>
         <button className="nav-button sidebar-logout" onClick={onLogout}>{t("Logout")}</button>
