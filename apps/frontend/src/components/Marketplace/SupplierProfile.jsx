@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const API_BASE = `${import.meta.env.VITE_API_BASE_URL || "http://localhost:4000"}/api`;
 
@@ -17,6 +18,7 @@ function toNumber(value, fallback = 0) {
 }
 
 export default function SupplierProfile({ supplierId: propSupplierId, token, onBack }) {
+  const { t } = useTranslation();
   const { supplierId: paramSupplierId } = useParams();
   const navigate = useNavigate();
   const supplierId = propSupplierId || paramSupplierId;
@@ -64,23 +66,23 @@ export default function SupplierProfile({ supplierId: propSupplierId, token, onB
         setCircularScore(scoreData.value.score);
       }
     } catch (err) {
-      setError('Failed to load supplier profile');
+      setError(t('Failed to load supplier profile'));
     } finally {
       setLoading(false);
     }
   };
 
   const trustGrade = circularScore
-    ? circularScore.circular_score >= 80 ? { label: 'Platinum', color: '#e2e8f0' }
-      : circularScore.circular_score >= 60 ? { label: 'Gold', color: '#fbbf24' }
-      : circularScore.circular_score >= 40 ? { label: 'Silver', color: '#94a3b8' }
-      : { label: 'Bronze', color: '#b45309' }
+    ? circularScore.circular_score >= 80 ? { label: t('Platinum'), color: '#e2e8f0' }
+      : circularScore.circular_score >= 60 ? { label: t('Gold'), color: '#fbbf24' }
+      : circularScore.circular_score >= 40 ? { label: t('Silver'), color: '#94a3b8' }
+      : { label: t('Bronze'), color: '#b45309' }
     : null;
 
-  if (loading) return <div className="loading-shell">Loading supplier profile…</div>;
+  if (loading) return <div className="loading-shell">{t("Loading supplier profile…")}</div>;
   if (error) return <div style={{ color: '#ef4444', padding: 20 }}>{error}</div>;
 
-  const displayName = supplier?.name || `Seller #${String(supplierId).slice(0, 6)}`;
+  const displayName = supplier?.name || `${t("Seller")} #${String(supplierId).slice(0, 6)}`;
   const circularScoreValue = toNumber(circularScore?.circular_score, 0);
   const avgRating = toNumber(circularScore?.rating, 0);
   const itemsReused = toNumber(circularScore?.items_reused, 0);
@@ -91,7 +93,7 @@ export default function SupplierProfile({ supplierId: propSupplierId, token, onB
       {/* Back + Header */}
       <div className="my-listings-header" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <button className="nav-button nav-button-secondary" onClick={handleBack} style={{ flexShrink: 0 }}>
-          ← Back
+          ← {t("Back")}
         </button>
         <div>
           <h3 style={{ margin: 0 }}>{displayName}</h3>
@@ -114,7 +116,7 @@ export default function SupplierProfile({ supplierId: propSupplierId, token, onB
               fontSize: '0.82rem',
             }}
           >
-            {trustGrade.label} Supplier
+            {trustGrade.label} {t("Supplier")}
           </span>
         )}
       </div>
@@ -122,23 +124,23 @@ export default function SupplierProfile({ supplierId: propSupplierId, token, onB
       {/* Circular Score stats */}
       {circularScore && (
         <div className="dashboard-card" style={{ marginBottom: 20 }}>
-          <p className="detail-card-heading">Circular Reputation Score</p>
+          <p className="detail-card-heading">{t("Circular Reputation Score")}</p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 16 }}>
             <div className="stat-chip">
               <span className="stat-chip-val">{circularScoreValue}</span>
-              <span className="stat-chip-label">Score /100</span>
+              <span className="stat-chip-label">{t("Score")}/100</span>
             </div>
             <div className="stat-chip">
               <span className="stat-chip-val">{avgRating > 0 ? avgRating.toFixed(1) : '—'} ⭐</span>
-              <span className="stat-chip-label">Avg Rating</span>
+              <span className="stat-chip-label">{t("Avg Rating")}</span>
             </div>
             <div className="stat-chip">
               <span className="stat-chip-val">{itemsReused}</span>
-              <span className="stat-chip-label">Exchanges</span>
+              <span className="stat-chip-label">{t("Exchanges")}</span>
             </div>
             <div className="stat-chip">
               <span className="stat-chip-val">{treesPlanted} 🌳</span>
-              <span className="stat-chip-label">Trees Planted</span>
+              <span className="stat-chip-label">{t("Trees Planted")}</span>
             </div>
           </div>
 
@@ -153,7 +155,7 @@ export default function SupplierProfile({ supplierId: propSupplierId, token, onB
                   fontSize: '0.78rem',
                   color: '#22c55e',
                   background: '#22c55e10',
-                }}>✓ {badge}</span>
+                }}>✓ {t(badge)}</span>
               ))}
             </div>
           )}
@@ -162,9 +164,9 @@ export default function SupplierProfile({ supplierId: propSupplierId, token, onB
 
       {/* Reviews */}
       <div className="dashboard-card">
-        <p className="detail-card-heading">Customer Reviews ({reviews.length})</p>
+        <p className="detail-card-heading">{t("Customer Reviews")} ({reviews.length})</p>
         {reviews.length === 0 ? (
-          <p style={{ color: '#9ca3af' }}>No reviews yet for this supplier.</p>
+          <p style={{ color: '#9ca3af' }}>{t("No reviews yet for this supplier.")}</p>
         ) : (
           <div style={{ display: 'grid', gap: 12 }}>
             {reviews.map(review => (
@@ -176,19 +178,19 @@ export default function SupplierProfile({ supplierId: propSupplierId, token, onB
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                   <div>
-                    <span style={{ fontWeight: 600 }}>{review.buyer_name || 'Anonymous'}</span>
+                    <span style={{ fontWeight: 600 }}>{t(review.buyer_name) || t('Anonymous')}</span>
                     <span style={{ fontSize: 12, color: '#9ca3af', marginLeft: 10 }}>
-                      {new Date(review.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      {new Date(review.created_at).toLocaleDateString(t('en-IN') === 'en-IN' ? 'en-IN' : 'en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </span>
                   </div>
                   <span style={{ color: '#fbbf24', fontSize: '1rem' }}>
                     {'★'.repeat(toNumber(review.star_rating, 0))}{'☆'.repeat(Math.max(0, 5 - toNumber(review.star_rating, 0)))}
                   </span>
                 </div>
-                {review.comment && <p style={{ margin: '6px 0', fontSize: 14, color: '#d1d5db' }}>{review.comment}</p>}
+                {review.comment && <p style={{ margin: '6px 0', fontSize: 14, color: '#d1d5db' }}>{t(review.comment)}</p>}
                 <div style={{ display: 'flex', gap: 16 }}>
-                  <small style={{ color: '#6b7280' }}>Quality: {toNumber(review.material_quality_rating, 0)}/5</small>
-                  <small style={{ color: '#6b7280' }}>Delivery: {toNumber(review.delivery_experience_rating, 0)}/5</small>
+                  <small style={{ color: '#6b7280' }}>{t("Quality")}: {toNumber(review.material_quality_rating, 0)}/5</small>
+                  <small style={{ color: '#6b7280' }}>{t("Delivery")}: {toNumber(review.delivery_experience_rating, 0)}/5</small>
                 </div>
               </div>
             ))}

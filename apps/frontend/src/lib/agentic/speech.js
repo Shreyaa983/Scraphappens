@@ -9,13 +9,25 @@ export const speakText = (text, onEnd) => {
 
   const utterance = new SpeechSynthesisUtterance(text);
   
+  // Get language preference
+  const lang = localStorage.getItem('app_language_preference') || 'en';
+  utterance.lang = lang;
+
   if (onEnd) {
       utterance.onend = onEnd;
   }
 
-  // Optional: customize voice
+  // Find a voice that matches the language
   const voices = window.speechSynthesis.getVoices();
-  const selectedVoice = voices.find(v => v.name.includes("Google") || v.name.includes("Female")) || voices[0];
+  let selectedVoice = voices.find(v => v.lang.startsWith(lang));
+  
+  // Specific fallbacks for better experience
+  if (lang === 'hi') {
+    selectedVoice = voices.find(v => v.name.includes("Hindi") || v.lang === "hi-IN") || selectedVoice;
+  } else if (lang === 'en') {
+    selectedVoice = voices.find(v => v.name.includes("Google") || v.name.includes("Female")) || selectedVoice;
+  }
+
   if (selectedVoice) utterance.voice = selectedVoice;
 
   utterance.rate = 1.0;

@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from "react";
 import SuggestionCard from "../components/SuggestionCard";
+import { useTranslation } from "../hooks/useTranslation";
 
 function TrustBadge({ grade }) {
-  return <span className={`trust-badge trust-badge-${grade.toLowerCase()}`}>Grade {grade}</span>;
+  const { t } = useTranslation();
+  return <span className={`trust-badge trust-badge-${grade.toLowerCase()}`}>{t("Grade")} {grade}</span>;
 }
 
 export default function ProductDetailPage({ product, user, onBack, onCheckout }) {
+  const { t } = useTranslation();
   const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading] = useState(false);
   const isSeller = user && (user.role === "seller" || user.role === "supplier");
@@ -35,15 +37,15 @@ export default function ProductDetailPage({ product, user, onBack, onCheckout })
   return (
     <div className="page-stack">
       <div className="page-toolbar">
-        <button type="button" className="nav-button nav-button-secondary" onClick={onBack}>← Back to Marketplace</button>
+        <button type="button" className="nav-button nav-button-secondary" onClick={onBack}>← {t("Back to Marketplace")}</button>
       </div>
 
       <section className="detail-layout">
         <div className="detail-gallery">
-          <img src={product.gallery[0]} alt={product.name} className="detail-hero-image" />
+          <img src={product.gallery[0]} alt={t(product.name)} className="detail-hero-image" />
           <div className="detail-thumbnail-row">
             {product.gallery.map((image, index) => (
-              <img key={image} src={image} alt={`${product.name} ${index + 1}`} className="detail-thumb" />
+              <img key={image} src={image} alt={`${t(product.name)} ${index + 1}`} className="detail-thumb" />
             ))}
           </div>
         </div>
@@ -51,17 +53,17 @@ export default function ProductDetailPage({ product, user, onBack, onCheckout })
         <div className="dashboard-card detail-card">
           <div className="section-heading">
             <div>
-              <span className="eyebrow">Product detail</span>
-              <h3>{product.name}</h3>
+              <span className="eyebrow">{t("Product detail")}</span>
+              <h3>{t(product.name)}</h3>
             </div>
             <TrustBadge grade={product.trustGrade} />
           </div>
 
           {/* ... Existing Product Info ... */}
-          <p className="detail-subtext">{product.category} · {product.condition}</p>
+          <p className="detail-subtext">{t(product.category)} · {t(product.condition)}</p>
 
           <div className="cta-row">
-            <button className="submit-button" onClick={() => onCheckout(product)}>Buy Now</button>
+            <button className="submit-button" onClick={() => onCheckout(product)}>{t("Buy Now")}</button>
           </div>
         </div>
       </section>
@@ -81,11 +83,11 @@ export default function ProductDetailPage({ product, user, onBack, onCheckout })
             fontSize: "1.65rem",
             letterSpacing: "-0.5px" 
         }}>
-          AI Upcycling Ideas
+          {t("AI Upcycling Ideas")}
         </h4>
         {loading ? (
           <div className="loading-shell" style={{ margin: "2rem 0", background: "rgba(255,255,255,0.05)" }}>
-              Generating creative ideas using AI...
+              {t("Generating creative ideas using AI...")}
           </div>
         ) : suggestions.length > 0 ? (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "1.5rem" }}>
@@ -95,7 +97,7 @@ export default function ProductDetailPage({ product, user, onBack, onCheckout })
           </div>
         ) : (
           <div style={{ textAlign: "center", padding: "2rem", background: "var(--color-bg-secondary, rgba(255,255,255,0.02))", borderRadius: "16px", border: "1px dashed var(--color-border)" }}>
-              <p style={{ color: "var(--color-text-secondary)", margin: 0 }}>AI suggestions will appear here once loaded.</p>
+              <p style={{ color: "var(--color-text-secondary)", margin: 0 }}>{t("AI suggestions will appear here once loaded.")}</p>
           </div>
         )}
       </section>

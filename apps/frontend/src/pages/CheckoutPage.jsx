@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from "../hooks/useTranslation";
 
 export default function CheckoutPage({ product, user, onBack }) {
+  const { t } = useTranslation();
   const [pincode, setPincode] = useState("");
   const [gateway, setGateway] = useState("Razorpay");
   const [pickupDate, setPickupDate] = useState("");
@@ -18,30 +20,30 @@ export default function CheckoutPage({ product, user, onBack }) {
   return (
     <div className="page-stack">
       <div className="page-toolbar">
-        <button type="button" className="nav-button nav-button-secondary" onClick={onBack}>← Back to Product</button>
+        <button type="button" className="nav-button nav-button-secondary" onClick={onBack}>← {t("Back to Product")}</button>
       </div>
 
       <section className="checkout-layout">
         <article className="dashboard-card checkout-card">
           <div className="section-heading">
             <div>
-              <span className="eyebrow">Transaction & Logistics</span>
-              <h3>{product.name}</h3>
+              <span className="eyebrow">{t("Transaction & Logistics")}</span>
+              <h3>{t(product.name)}</h3>
             </div>
-            <span className="section-tag">Checkout</span>
+            <span className="section-tag">{t("Checkout")}</span>
           </div>
 
           <div className="checkout-summary-row">
-            <img src={product.image} alt={product.name} className="checkout-image" />
+            <img src={product.image} alt={t(product.name)} className="checkout-image" />
             <div>
-              <p className="detail-subtext">Buyer: {user.name}</p>
-              <p className="detail-subtext">Circular Credits / shipping fee payment enabled next.</p>
+              <p className="detail-subtext">{t("Buyer")}: {user.name}</p>
+              <p className="detail-subtext">{t("Circular Credits / shipping fee payment enabled next.")}</p>
             </div>
           </div>
 
           <div className="form-grid">
             <label>
-              Payment gateway
+              {t("Payment gateway")}
               <select value={gateway} onChange={(event) => setGateway(event.target.value)}>
                 <option value="Razorpay">Razorpay</option>
                 <option value="Stripe">Stripe</option>
@@ -49,7 +51,7 @@ export default function CheckoutPage({ product, user, onBack }) {
             </label>
 
             <label>
-              Buyer pincode
+              {t("Buyer pincode")}
               <input
                 value={pincode}
                 onChange={(event) => setPincode(event.target.value.replace(/\D/g, "").slice(0, 6))}
@@ -58,28 +60,28 @@ export default function CheckoutPage({ product, user, onBack }) {
             </label>
 
             <label>
-              Pickup date
+              {t("Pickup date")}
               <input type="date" value={pickupDate} onChange={(event) => setPickupDate(event.target.value)} />
             </label>
 
             <label>
-              Pickup time
+              {t("Pickup time")}
               <input type="time" value={pickupTime} onChange={(event) => setPickupTime(event.target.value)} />
             </label>
           </div>
 
           <div className="integration-card">
-            <h4>Shiprocket Integration</h4>
+            <h4>{t("Shiprocket Integration")}</h4>
             {deliveryEstimate ? (
-              <p>Estimated Delivery: ₹{deliveryEstimate.fee} via {deliveryEstimate.carrier} · {deliveryEstimate.eta}</p>
+              <p>{t("Estimated Delivery")}: ₹{deliveryEstimate.fee} {t("via")} {deliveryEstimate.carrier} · {t(deliveryEstimate.eta)}</p>
             ) : (
-              <p>Enter a valid pincode to fetch delivery estimate.</p>
+              <p>{t("Enter a valid pincode to fetch delivery estimate.")}</p>
             )}
           </div>
 
           <div className="integration-card">
-            <h4>Payment Gateway</h4>
-            <p>{gateway} is selected for shipping fee / Circular Credits integration scaffold.</p>
+            <h4>{t("Payment Gateway")}</h4>
+            <p>{t(gateway)} {t("is selected for shipping fee / Circular Credits integration scaffold.")}</p>
           </div>
         </article>
       </section>

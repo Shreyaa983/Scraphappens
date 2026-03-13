@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getAchievementProgressApi, getMyCircularScoreApi, getMyMaterials, getMyOrdersApi } from '../../api';
 import { loadStoredPlacedTrees, loadStoredUnlockedPlants, TREE_VARIANTS } from '../../utils/gardenRewards';
+import { useTranslation } from '../../hooks/useTranslation';
 
 function toNumber(value, fallback = 0) {
   const parsed = Number(value);
@@ -9,6 +10,7 @@ function toNumber(value, fallback = 0) {
 }
 
 export default function UserDashboard({ token, user }) {
+  const { t } = useTranslation();
   const [circularScore, setCircularScore] = useState(null);
   const [achievementProgress, setAchievementProgress] = useState(null);
   const [orderCount, setOrderCount] = useState(0);
@@ -56,7 +58,7 @@ export default function UserDashboard({ token, user }) {
       }
     } catch (err) {
       console.error('Dashboard error:', err);
-      setError('Failed to load dashboard');
+      setError(t('Failed to load dashboard'));
     } finally {
       setLoading(false);
     }
@@ -85,15 +87,15 @@ export default function UserDashboard({ token, user }) {
   }, [allPlants]);
 
   const treesEarned = Math.max(treesPlanted, uniqueAchievementPlants.length);
-  const nextMilestone = achievementProgress?.next_achievement?.name || 'Seed Planter';
+  const nextMilestone = t(achievementProgress?.next_achievement?.name) || t('Seed Planter');
   const nextMilestoneTarget = toNumber(achievementProgress?.next_achievement?.required_exchanges, 0);
   const milestoneProgress = nextMilestoneTarget > 0 ? Math.min((currentExchanges / nextMilestoneTarget) * 100, 100) : 100;
 
   const scoreBreakdown = [
-    { label: 'Rating Contribution', value: toNumber(circularScore?.score_breakdown?.rating_score, 0), max: 30 },
-    { label: 'Exchange Contribution', value: toNumber(circularScore?.score_breakdown?.exchange_score, 0), max: 30 },
-    { label: 'Waste Reuse Contribution', value: toNumber(circularScore?.score_breakdown?.waste_score, 0), max: 20 },
-    { label: 'Garden Growth Contribution', value: toNumber(circularScore?.score_breakdown?.tree_score, 0), max: 20 },
+    { label: t('Rating Contribution'), value: toNumber(circularScore?.score_breakdown?.rating_score, 0), max: 30 },
+    { label: t('Exchange Contribution'), value: toNumber(circularScore?.score_breakdown?.exchange_score, 0), max: 30 },
+    { label: t('Waste Reuse Contribution'), value: toNumber(circularScore?.score_breakdown?.waste_score, 0), max: 20 },
+    { label: t('Garden Growth Contribution'), value: toNumber(circularScore?.score_breakdown?.tree_score, 0), max: 20 },
   ];
 
   const plantBadges = useMemo(() => {
@@ -108,8 +110,8 @@ export default function UserDashboard({ token, user }) {
     const placeholders = Array.from({ length: Math.max(0, 5 - unlocked.length) }).map((_, index) => ({
       key: `locked-${index}`,
       icon: '○',
-      name: 'Locked Plant',
-      description: 'Complete exchanges to unlock new plants.',
+      name: t('Locked Plant'),
+      description: t('Complete exchanges to unlock new plants.'),
       locked: true,
     }));
 
@@ -117,55 +119,55 @@ export default function UserDashboard({ token, user }) {
   }, [uniqueAchievementPlants]);
 
   // Early return AFTER all hooks
-  if (loading) return <div className="loading-shell">Loading your dashboard…</div>;
+  if (loading) return <div className="loading-shell">{t("Loading your dashboard…")}</div>;
 
   return (
     <div className="user-dashboard-page">
       {error ? <div className="dashboard-inline-error">{error}</div> : null}
 
       <header className="user-dashboard-header">
-        <h3>My Dashboard</h3>
-        <p>Track your circular impact, achievements, and sustainability progress.</p>
+        <h3>{t("My Dashboard")}</h3>
+        <p>{t("Track your circular impact, achievements, and sustainability progress.")}</p>
       </header>
 
       <section className="impact-summary-grid">
         <article className="impact-summary-card">
           <span className="impact-summary-icon">◻</span>
           <div className="impact-summary-value">{currentExchanges}</div>
-          <div className="impact-summary-label">Materials Exchanged</div>
+          <div className="impact-summary-label">{t("Materials Exchanged")}</div>
         </article>
 
         <article className="impact-summary-card">
           <span className="impact-summary-icon">◈</span>
-          <div className="impact-summary-value">{wasteSavedKg.toFixed(1)} kg</div>
-          <div className="impact-summary-label">Waste Diverted from Landfill</div>
+          <div className="impact-summary-value">{wasteSavedKg.toFixed(1)} {t("kg")}</div>
+          <div className="impact-summary-label">{t("Waste Diverted from Landfill")}</div>
         </article>
 
         <article className="impact-summary-card">
           <span className="impact-summary-icon">◉</span>
           <div className="impact-summary-value">{treesEarned}</div>
-          <div className="impact-summary-label">Trees Earned</div>
+          <div className="impact-summary-label">{t("Trees Earned")}</div>
         </article>
 
         <article className="impact-summary-card">
           <span className="impact-summary-icon">◎</span>
           <div className="impact-summary-value">{circularScoreValue} / 100</div>
-          <div className="impact-summary-label">Circular Score</div>
+          <div className="impact-summary-label">{t("Circular Score")}</div>
         </article>
       </section>
 
       <section className="dashboard-two-col-grid">
         <article className="dashboard-report-card">
-          <h4>Circular Score</h4>
+          <h4>{t("Circular Score")}</h4>
           <p className="dashboard-muted-copy">
-            This score reflects your sustainability impact based on exchanges, reuse, ratings, and achievements.
+            {t("This score reflects your sustainability impact based on exchanges, reuse, ratings, and achievements.")}
           </p>
 
           <div className="dashboard-score-value">{circularScoreValue} / 100</div>
 
           <div className="dashboard-score-milestone">
-            <span>Next milestone: {nextMilestone}</span>
-            <span>{nextMilestoneTarget > 0 ? `${currentExchanges}/${nextMilestoneTarget}` : 'Complete'}</span>
+            <span>{t("Next milestone")}: {nextMilestone}</span>
+            <span>{nextMilestoneTarget > 0 ? `${currentExchanges}/${nextMilestoneTarget}` : t('Complete')}</span>
           </div>
 
           <div className="dashboard-progress-track">
@@ -174,7 +176,7 @@ export default function UserDashboard({ token, user }) {
         </article>
 
         <article className="dashboard-report-card">
-          <h4>Score Breakdown</h4>
+          <h4>{t("Score Breakdown")}</h4>
           <div className="dashboard-breakdown-list">
             {scoreBreakdown.map((item) => (
               <div key={item.label} className="dashboard-breakdown-item">
@@ -193,14 +195,14 @@ export default function UserDashboard({ token, user }) {
 
       <section className="dashboard-two-col-grid">
         <article className="dashboard-report-card">
-          <h4>Garden Achievements</h4>
+          <h4>{t("Garden Achievements")}</h4>
           <div className="dashboard-plant-badge-row">
             {plantBadges.map((badge) => (
               <article key={badge.key} className={`dashboard-plant-badge${badge.locked ? ' dashboard-plant-badge-locked' : ''}`}>
                 <span className="dashboard-plant-icon">{badge.icon}</span>
                 <div>
-                  <strong>{badge.name}</strong>
-                  <p>{badge.description}</p>
+                  <strong>{t(badge.name)}</strong>
+                  <p>{t(badge.description)}</p>
                 </div>
               </article>
             ))}
@@ -208,7 +210,7 @@ export default function UserDashboard({ token, user }) {
         </article>
 
         <article className="dashboard-report-card garden-preview-card">
-          <h4>Garden Preview</h4>
+          <h4>{t("Garden Preview")}</h4>
           <div className="garden-preview-strip">
             {plantBadges.slice(0, 6).map((badge) => (
               <span key={`preview-${badge.key}`} className={`garden-preview-icon${badge.locked ? ' locked' : ''}`}>
@@ -216,25 +218,25 @@ export default function UserDashboard({ token, user }) {
               </span>
             ))}
           </div>
-          <p className="dashboard-muted-copy">See your current garden and place newly unlocked plants.</p>
-          <Link to="/garden" className="dashboard-cta-link">View My Garden</Link>
+          <p className="dashboard-muted-copy">{t("See your current garden and place newly unlocked plants.")}</p>
+          <Link to="/garden" className="dashboard-cta-link">{t("View My Garden")}</Link>
         </article>
       </section>
 
       <section className="dashboard-report-card">
-        <h4>Marketplace Activity</h4>
+        <h4>{t("Marketplace Activity")}</h4>
         <div className="dashboard-activity-grid">
           <article className="dashboard-activity-card">
             <div className="dashboard-activity-value">{orderCount}</div>
-            <div className="dashboard-activity-label">Recent Orders</div>
+            <div className="dashboard-activity-label">{t("Recent Orders")}</div>
           </article>
           <article className="dashboard-activity-card">
             <div className="dashboard-activity-value">{listedCount}</div>
-            <div className="dashboard-activity-label">Materials Listed</div>
+            <div className="dashboard-activity-label">{t("Materials Listed")}</div>
           </article>
           <article className="dashboard-activity-card">
             <div className="dashboard-activity-value">{currentExchanges}</div>
-            <div className="dashboard-activity-label">Recent Exchanges</div>
+            <div className="dashboard-activity-label">{t("Recent Exchanges")}</div>
           </article>
         </div>
       </section>

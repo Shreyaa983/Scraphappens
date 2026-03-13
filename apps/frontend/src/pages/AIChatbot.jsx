@@ -3,10 +3,12 @@ import { Send, PlusCircle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Link } from 'react-router-dom';
+import { useTranslation } from '../hooks/useTranslation';
 
 const AIChatbot = () => {
+  const { t } = useTranslation();
   const STORAGE_KEY = 'scraphappens_chat_history';
-  const WELCOME_MSG = { role: 'ai', text: "Hello! I'm your Circular Loop Assistant. How can I help you with sustainable textile reuse today?" };
+  const WELCOME_MSG = { role: 'ai', text: t("Hello! I'm your Circular Loop Assistant. How can I help you with sustainable textile reuse today?") };
 
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState(() => {
@@ -98,14 +100,14 @@ const AIChatbot = () => {
       <section className="ai-chat-shell">
         <header className="ai-chat-header">
           <div>
-            <span className="eyebrow">Smart Assistant</span>
-            <h3>Circular Loop Chatbot</h3>
+            <span className="eyebrow">{t("Smart Assistant")}</span>
+            <h3>{t("Circular Loop Chatbot")}</h3>
           </div>
           <div className="ai-chat-header-actions">
-            <Link to="/" className="section-tag ai-chat-link">View Marketplace</Link>
-            <button type="button" onClick={handleNewChat} title="Start a new chat" className="ai-new-chat-btn">
+            <Link to="/" className="section-tag ai-chat-link">{t("View Marketplace")}</Link>
+            <button type="button" onClick={handleNewChat} title={t("Start a new chat")} className="ai-new-chat-btn">
               <PlusCircle size={15} />
-              New Chat
+              {t("New Chat")}
             </button>
           </div>
         </header>
@@ -131,7 +133,7 @@ const AIChatbot = () => {
           ))}
           {loading && (
             <div className="chat-row chat-row-assistant">
-              <div className="chat-bubble chat-bubble-assistant mini-note">Assistant is thinking...</div>
+              <div className="chat-bubble chat-bubble-assistant mini-note">{t("Assistant is thinking...")}</div>
             </div>
           )}
         </div>
@@ -142,7 +144,7 @@ const AIChatbot = () => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-              placeholder="Ask about materials, reuse tips, or marketplace features..."
+              placeholder={t("Ask about materials, reuse tips, or marketplace features...")}
             />
             <button
               type="button"

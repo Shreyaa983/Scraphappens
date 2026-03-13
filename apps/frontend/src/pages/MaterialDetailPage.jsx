@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { addToCart, getProductSuggestions, getMaterialById } from "../api";
 import SuggestionCard from "../components/SuggestionCard";
 import ARModelViewer from "../components/ARModelViewer";
+import { useTranslation } from "../hooks/useTranslation";
 
 const FALLBACK_IMAGE =
     "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=900&q=80";
@@ -19,6 +20,7 @@ function conditionToGrade(condition) {
 }
 
 export default function MaterialDetailPage({ material: initialMaterial, user, onBack, onEdit, onViewSupplier }) {
+    const { t } = useTranslation();
     const { id } = useParams();
     const navigate = useNavigate();
     const [material, setMaterial] = useState(initialMaterial);
@@ -39,7 +41,7 @@ export default function MaterialDetailPage({ material: initialMaterial, user, on
                     setMaterial(data.material);
                 } catch (err) {
                     console.error("Failed to fetch material", err);
-                    setMessage("Failed to load material details.");
+                    setMessage(t("Failed to load material details."));
                 } finally {
                     setLoading(false);
                 }
@@ -53,8 +55,8 @@ export default function MaterialDetailPage({ material: initialMaterial, user, on
         else navigate(-1);
     };
 
-    if (loading) return <div className="loading-shell">Loading material details...</div>;
-    if (!material) return <div className="loading-shell">Material not found.</div>;
+    if (loading) return <div className="loading-shell">{t("Loading material details...")}</div>;
+    if (!material) return <div className="loading-shell">{t("Material not found.")}</div>;
     if (!material) return null;
 
     const isOwner = user && String(material.listed_by) === String(user.id);
@@ -63,6 +65,7 @@ export default function MaterialDetailPage({ material: initialMaterial, user, on
 
     const subtitle = [material.category, material.condition, material.location]
         .filter(Boolean)
+        .map(s => t(s))
         .join(" · ");
 
     const formattedDate = material.created_at
@@ -72,9 +75,9 @@ export default function MaterialDetailPage({ material: initialMaterial, user, on
         : null;
 
     const thumbLabels = [
-        material.material_type || material.category || "Material",
-        material.condition || "Grade",
-        "Reuse Ready",
+        t(material.material_type) || t(material.category) || t("Material"),
+        t(material.condition) || t("Grade"),
+        t("Reuse Ready"),
     ];
 
 
@@ -86,7 +89,7 @@ export default function MaterialDetailPage({ material: initialMaterial, user, on
             setSuggestions(data.suggestions || []);
         } catch (err) {
             console.error("Failed to fetch AI suggestions", err);
-            setMessage("Error fetching AI suggestions. Please check if backend is running.");
+            setMessage(t("Error fetching AI suggestions. Please check if backend is running."));
         } finally {
             setFetchingSuggestions(false);
         }
@@ -96,23 +99,23 @@ export default function MaterialDetailPage({ material: initialMaterial, user, on
         setMessage("");
         const token = localStorage.getItem("token") || "";
         if (!token) {
-            setMessage("Please log in to add items to your cart.");
+            setMessage(t("Please log in to add items to your cart."));
             return;
         }
         if (!material.quantity || quantity <= 0) {
-            setMessage("Invalid quantity selected.");
+            setMessage(t("Invalid quantity selected."));
             return;
         }
         if (quantity > material.quantity) {
-            setMessage("Requested quantity exceeds available stock.");
+            setMessage(t("Requested quantity exceeds available stock."));
             return;
         }
         try {
             setAdding(true);
             await addToCart({ material_id: material.id, quantity }, token);
-            setMessage("Added to cart.");
+            setMessage(t("Added to cart."));
         } catch (err) {
-            setMessage(err.message || "Failed to add to cart.");
+            setMessage(err.message || t("Failed to add to cart."));
         } finally {
             setAdding(false);
         }
@@ -125,23 +128,23 @@ export default function MaterialDetailPage({ material: initialMaterial, user, on
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                     <path d="M19 12H5M12 19l-7-7 7-7" />
                 </svg>
-                Back
+                {t("Back")}
             </button>
 
             <div className="detail-split">
                 {/* ── LEFT: gallery ── */}
                 <div className="detail-gallery">
                     <div className="detail-hero">
-                        <img src={heroImg} alt={material.title} />
+                        <img src={heroImg} alt={t(material.title)} />
                         <div className="detail-hero-label">
-                            {material.material_type || material.title}
+                            {t(material.material_type) || t(material.title)}
                         </div>
                     </div>
                     <div className="detail-thumbs">
                         {THUMB_FALLBACKS.map((src, i) => (
                             <div key={i} className="detail-thumb">
-                                <img src={material.image_url || src} alt={thumbLabels[i]} />
-                                <span className="detail-thumb-label">{thumbLabels[i]}</span>
+                                <img src={material.image_url || src} alt={t(thumbLabels[i])} />
+                                <span className="detail-thumb-label">{t(thumbLabels[i])}</span>
                             </div>
                         ))}
                     </div>
@@ -150,68 +153,68 @@ export default function MaterialDetailPage({ material: initialMaterial, user, on
                 {/* ── RIGHT: info panel ── */}
                 <div className="detail-info">
                     <div className="detail-info-top">
-                        <span className="detail-tag">Product detail</span>
+                        <span className="detail-tag">{t("Product detail")}</span>
                         {material.condition && (
-                            <span className="detail-grade-badge">Grade {grade}</span>
+                            <span className="detail-grade-badge">{t("Grade")} {grade}</span>
                         )}
                     </div>
 
-                    <h2 className="detail-title">{material.title}</h2>
+                    <h2 className="detail-title">{t(material.title)}</h2>
                     {subtitle && <p className="detail-subtitle">{subtitle}</p>}
 
                     {/* Price badge */}
                     <div style={{ marginBottom: 16 }}>
                         {material.is_free ? (
-                            <span style={{ fontSize: "1.6rem", fontWeight: 700, color: "#22c55e" }}>Free</span>
+                            <span style={{ fontSize: "1.6rem", fontWeight: 700, color: "#22c55e" }}>{t("Free")}</span>
                         ) : material.price ? (
                             <span style={{ fontSize: "1.6rem", fontWeight: 700, color: "#f0fdf4" }}>
                                 &#8377;{Number(material.price).toLocaleString("en-IN")}
                             </span>
                         ) : (
-                            <span style={{ fontSize: "1rem", color: "#9ca3af" }}>Price not listed</span>
+                            <span style={{ fontSize: "1rem", color: "#9ca3af" }}>{t("Price not listed")}</span>
                         )}
                     </div>
                     <div className="detail-card">
-                        <p className="detail-card-heading">Digital Material Passport</p>
+                        <p className="detail-card-heading">{t("Digital Material Passport")}</p>
                         <div className="detail-passport-grid">
                             <div>
-                                <span className="detail-passport-label">Origin</span>
-                                <span className="detail-passport-value">{material.location || "—"}</span>
+                                <span className="detail-passport-label">{t("Origin")}</span>
+                                <span className="detail-passport-value">{t(material.location) || "—"}</span>
                             </div>
                             <div>
                                 <span className="detail-passport-label">
-                                    {formattedDate ? "Listed" : "Category"}
+                                    {formattedDate ? t("Listed") : t("Category")}
                                 </span>
                                 <span className="detail-passport-value">
-                                    {formattedDate || material.category || "—"}
+                                    {formattedDate || t(material.category) || "—"}
                                 </span>
                             </div>
                             {material.quantity && (
                             <div>
-                                <span className="detail-passport-label">Quantity</span>
+                                <span className="detail-passport-label">{t("Quantity")}</span>
                                 <span className="detail-passport-value">
-                                    {material.quantity} {material.quantity_unit || "kg"}
+                                    {material.quantity} {t(material.quantity_unit) || t("kg")}
                                 </span>
                             </div>
                         )}
                             {material.material_type && (
                                 <div>
-                                    <span className="detail-passport-label">Material</span>
-                                    <span className="detail-passport-value">{material.material_type}</span>
+                                    <span className="detail-passport-label">{t("Material")}</span>
+                                    <span className="detail-passport-value">{t(material.material_type)}</span>
                                 </div>
                             )}
                             {material.delivery_option && (
                                 <div>
-                                    <span className="detail-passport-label">Delivery</span>
+                                    <span className="detail-passport-label">{t("Delivery")}</span>
                                     <span className="detail-passport-value">
-                                        {material.delivery_option === "delivery_available" ? "Delivery Available" : "Pickup Only"}
+                                        {material.delivery_option === "delivery_available" ? t("Delivery Available") : t("Pickup Only")}
                                     </span>
                                 </div>
                             )}
                             {material.sustainability_impact && (
                                 <div style={{ gridColumn: "span 2" }}>
-                                    <span className="detail-passport-label">Sustainability Impact</span>
-                                    <span className="detail-passport-value">{material.sustainability_impact}</span>
+                                    <span className="detail-passport-label">{t("Sustainability Impact")}</span>
+                                    <span className="detail-passport-value">{t(material.sustainability_impact)}</span>
                                 </div>
                             )}
                         </div>
@@ -219,20 +222,20 @@ export default function MaterialDetailPage({ material: initialMaterial, user, on
                         {material.description && (
                             <div className="detail-passport-report">
                                 <span className="detail-passport-label" style={{ display: "block", marginBottom: 6 }}>
-                                    Description
+                                    {t("Description")}
                                 </span>
-                                <p className="detail-passport-desc">{material.description}</p>
+                                <p className="detail-passport-desc">{t(material.description)}</p>
                             </div>
                         )}
                     </div>
 
                     {/* Seller Info */}
                     <div className="detail-card">
-                        <p className="detail-card-heading">Seller Info</p>
+                        <p className="detail-card-heading">{t("Seller Info")}</p>
                         <p className="detail-seller-name">
-                            {isOwner ? `${user.name} (you)` : "Verified Seller"}
+                            {isOwner ? `${user.name} (${t("you")})` : t("Verified Seller")}
                         </p>
-                        <p className="detail-seller-sub">Listed on ScrapHappens · Circular Marketplace</p>
+                        <p className="detail-seller-sub">{t("Listed on ScrapHappens · Circular Marketplace")}</p>
                     </div>
 
                     {/* Actions */}
@@ -243,7 +246,7 @@ export default function MaterialDetailPage({ material: initialMaterial, user, on
                                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                                 </svg>
-                                Edit Listing
+                                {t("Edit Listing")}
                             </button>
                         ) : (
                             <>
@@ -257,7 +260,7 @@ export default function MaterialDetailPage({ material: initialMaterial, user, on
                                         style={{ maxWidth: 110 }}
                                     />
                                     <button className="detail-btn-primary" type="button" onClick={handleAddToCart} disabled={adding}>
-                                        {adding ? "Adding…" : "Add to Cart"}
+                                        {adding ? t("Adding…") : t("Add to Cart")}
                                     </button>
                                 </div>
                                 <button
@@ -270,7 +273,7 @@ export default function MaterialDetailPage({ material: initialMaterial, user, on
                                         <rect x="3" y="3" width="18" height="18" rx="2" />
                                         <path d="M9 11l3 3L22 4" />
                                     </svg>
-                                    View in AR
+                                    {t("View in AR")}
                                 </button>
                                 <button
                                     className="detail-btn-secondary"
@@ -278,7 +281,7 @@ export default function MaterialDetailPage({ material: initialMaterial, user, on
                                     onClick={() => onViewSupplier?.(material.listed_by || material.seller_id)}
                                     disabled={!material.listed_by && !material.seller_id}
                                 >
-                                    View Supplier
+                                    {t("View Supplier")}
                                 </button>
                             </>
                         )}
@@ -323,7 +326,7 @@ export default function MaterialDetailPage({ material: initialMaterial, user, on
                         fontSize: "1.8rem",
                         letterSpacing: "-0.5px"
                     }}>
-                        AI Upcycling Ideas
+                        {t("AI Upcycling Ideas")}
                     </h3>
                     
                     {suggestions.length === 0 && !fetchingSuggestions && (
@@ -339,7 +342,7 @@ export default function MaterialDetailPage({ material: initialMaterial, user, on
                                 flexShrink: 0
                             }}
                         >
-                            Get AI Suggestions
+                            {t("Get AI Suggestions")}
                         </button>
                     )}
                     
@@ -349,14 +352,14 @@ export default function MaterialDetailPage({ material: initialMaterial, user, on
                             onClick={() => setSuggestions([])}
                             style={{ padding: "8px 16px", fontSize: "0.85rem", width: "auto" }}
                         >
-                            Clear Ideas
+                            {t("Clear Ideas")}
                         </button>
                     )}
                 </div>
                 
                 {fetchingSuggestions ? (
                     <div className="loading-shell" style={{ margin: "2rem 0", background: "rgba(255,255,255,0.05)" }}>
-                        Generating creative ideas using AI...
+                        {t("Generating creative ideas using AI...")}
                     </div>
                 ) : suggestions.length > 0 ? (
                     <div style={{ 
@@ -381,10 +384,10 @@ export default function MaterialDetailPage({ material: initialMaterial, user, on
                         gap: "16px"
                     }}>
                         <p style={{ color: "var(--color-text-secondary, #4a4a4a)", marginBottom: 0, fontSize: "1.1rem", fontWeight: 500 }}>
-                            Want to give this material a new life?
+                            {t("Want to give this material a new life?")}
                         </p>
                         <p style={{ color: "var(--color-text-light, #6b6b6b)", margin: 0, maxWidth: "500px" }}>
-                            Our AI can suggest unique upcycling projects based on the material's properties. Click the button above to get inspired!
+                            {t("Our AI can suggest unique upcycling projects based on the material's properties. Click the button above to get inspired!")}
                         </p>
                     </div>
                 )}

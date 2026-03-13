@@ -2,11 +2,14 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { getMaterials } from "../api";
 import { categories, conditions } from "../data/mockData";
+import { useTranslation } from "../hooks/useTranslation";
+import LanguageSelector from "../components/LanguageSelector";
 
 const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=80";
 const POLL_INTERVAL = 10000; // 10 seconds — real-time updates
 
 function ProductCard({ product, onSelect }) {
+  const { t } = useTranslation();
   return (
     <article className="product-card-v3" onClick={() => onSelect(product)}>
       <div className="card-image-content">
@@ -15,10 +18,10 @@ function ProductCard({ product, onSelect }) {
         {product.category && <span className="category-chip">{product.category}</span>}
       </div>
       <div className="card-body-content">
-        <h4>{product.title}</h4>
+        <h4>{t(product.title)}</h4>
         {product.description && (
           <p className="card-desc">
-            {product.description.slice(0, 72)}{product.description.length > 72 ? "…" : ""}
+            {t(product.description.slice(0, 72))}{product.description.length > 72 ? "…" : ""}
           </p>
         )}
         <div className="card-footer-meta">
@@ -46,6 +49,7 @@ function ProductCard({ product, onSelect }) {
 
 export default function MarketplacePage({ user, filters, onFilterChange, onSelectProduct, onCreateClick }) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeCondition, setActiveCondition] = useState("All");
@@ -98,8 +102,8 @@ export default function MarketplacePage({ user, filters, onFilterChange, onSelec
           <input
             value={filters.search}
             onChange={e => onFilterChange("search", e.target.value)}
-            placeholder="Search material name, category, location..."
-            aria-label="Search marketplace materials"
+            placeholder={t("Search material name, category, location...")}
+            aria-label={t("Search marketplace materials")}
           />
           {isSearching && (
             <button
@@ -112,8 +116,9 @@ export default function MarketplacePage({ user, filters, onFilterChange, onSelec
             </button>
           )}
         </div>
-
-        <div className="nav-actions-area">
+        
+        <div className="nav-actions-area" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <LanguageSelector />
           {user && (user.role === "seller" || user.role === "supplier") && (
             <button 
               className="create-listing-btn" 
@@ -122,7 +127,7 @@ export default function MarketplacePage({ user, filters, onFilterChange, onSelec
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: 6 }}>
                 <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
               </svg>
-              List Material
+              {t("List Material")}
             </button>
           )}
         </div>
@@ -142,8 +147,8 @@ export default function MarketplacePage({ user, filters, onFilterChange, onSelec
               <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#4b5563" strokeWidth="1.5">
                 <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
               </svg>
-              <p>No listings match your search.</p>
-              <span>Try a different keyword or browse all listings.</span>
+              <p>{t("No listings match your search.")}</p>
+              <span>{t("Try a different keyword or browse all listings.")}</span>
             </div>
           ) : (
             <div className="product-grid-v3">
@@ -167,7 +172,7 @@ export default function MarketplacePage({ user, filters, onFilterChange, onSelec
                 className={`pill-btn ${filters.category === cat ? "active" : ""}`}
                 onClick={() => onFilterChange("category", cat)}
               >
-                {cat}
+                {t(cat)}
               </button>
             ))}
           </nav>
@@ -181,7 +186,7 @@ export default function MarketplacePage({ user, filters, onFilterChange, onSelec
                 className={`condition-pill ${activeCondition === cond ? "active" : ""}`}
                 onClick={() => setActiveCondition(cond)}
               >
-                {cond}
+                {t(cond)}
               </button>
             ))}
           </div>
@@ -194,7 +199,7 @@ export default function MarketplacePage({ user, filters, onFilterChange, onSelec
               <div className="listings-header">
                 <div className="listings-title">
                   <h3>
-                    {filters.category !== "All" ? filters.category : "All Listings"}
+                    {filters.category !== "All" ? t(filters.category) : t("All Listings")}
                     <span className="count"> ({filteredProducts.length})</span>
                   </h3>
                 </div>

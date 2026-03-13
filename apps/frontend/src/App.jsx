@@ -20,6 +20,8 @@ import DIYDetailPage from "./pages/DIYDetailPage";
 import { queuePendingGardenReward } from "./utils/gardenRewards";
 import { AgenticProvider } from "./contexts/Agentic/ChatContext";
 import GlobalAssistant from "./components/Agentic/GlobalAssistant";
+import { LanguageProvider } from "./contexts/LanguageContext";
+import LanguageSelector from "./components/LanguageSelector";
 
 const roles = ["seller", "buyer", "volunteer"];
 
@@ -338,7 +340,8 @@ export default function App() {
 
   if (token && user) {
     return (
-      <AgenticProvider user={user}>
+      <LanguageProvider>
+        <AgenticProvider user={user}>
         <main className="dashboard-page">
           <Sidebar user={user} roleTitle={roleTitle} onLogout={onLogout} />
 
@@ -430,11 +433,13 @@ export default function App() {
           <GlobalAssistant />
         </main>
       </AgenticProvider>
+    </LanguageProvider>
     );
   }
 
   return (
-    <AgenticProvider>
+    <LanguageProvider>
+      <AgenticProvider>
       <main className="landing-page">
         <nav className="navbar">
           <div className="brand-block">
@@ -445,6 +450,7 @@ export default function App() {
             </div>
           </div>
           <div className="nav-actions">
+            <LanguageSelector />
             <button className="nav-button nav-button-secondary" onClick={() => openAuth("login")}>Login</button>
             <button className="nav-button" onClick={() => openAuth("register")}>Register</button>
           </div>
@@ -494,6 +500,7 @@ export default function App() {
         </section>
         <GlobalAssistant />
       </main>
-    </AgenticProvider>
+      </AgenticProvider>
+    </LanguageProvider>
   );
 }
