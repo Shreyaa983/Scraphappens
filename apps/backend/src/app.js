@@ -29,6 +29,10 @@ const allowedOrigins = [
   "http://localhost:5173",
 ].filter(Boolean);
 
+function isAllowedVercelOrigin(origin) {
+  return /^https:\/\/[a-z0-9-]+\.vercel\.app$/i.test(origin);
+}
+
 app.use(cors({
   credentials: true,
   origin(origin, callback) {
@@ -44,7 +48,7 @@ app.use(cors({
       return normalizedAllowed === normalizedOrigin;
     });
 
-    if (isAllowed) {
+    if (isAllowed || isAllowedVercelOrigin(normalizedOrigin)) {
       callback(null, true);
       return;
     }

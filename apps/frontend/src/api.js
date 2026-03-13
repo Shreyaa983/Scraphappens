@@ -1,4 +1,5 @@
-export const API_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || "http://localhost:4000";
+const rawApiUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || "http://localhost:4000";
+export const API_URL = String(rawApiUrl).trim().replace(/\/+$/, "");
 export const API_BASE_URL = API_URL;
 
 async function apiFetch(url, options = {}, offlineMessage = "Internet connection is required for this action.") {
@@ -10,10 +11,10 @@ async function apiFetch(url, options = {}, offlineMessage = "Internet connection
     return await fetch(url, options);
   } catch (error) {
     if (error instanceof TypeError) {
-      // Provide a more actionable error so misconfigured API URLs are obvious
+      // Provide actionable context for PWA CORS / backend URL issues
       const hint = url.includes("localhost")
-        ? `Could not reach the server (${url}). If you are using the deployed app, make sure VITE_API_URL is set to your backend URL in Vercel environment variables.`
-        : offlineMessage;
+        ? `Could not reach the server (${url}). If you are using the deployed app, set VITE_API_URL to your backend Vercel URL and redeploy the frontend.`
+        : `Request failed for ${url}. This is usually a backend URL or CORS issue, not a device internet issue.`;
       throw new Error(hint);
     }
     throw error;
