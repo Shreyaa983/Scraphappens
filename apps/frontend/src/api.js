@@ -1,5 +1,16 @@
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:4000";
 
+async function apiFetch(url, options = {}, offlineMessage = "Internet connection is required for this action.") {
+  try {
+    return await fetch(url, options);
+  } catch (error) {
+    if (error instanceof TypeError) {
+      throw new Error(offlineMessage);
+    }
+    throw error;
+  }
+}
+
 async function parseResponse(response, fallbackMessage) {
   const data = await response.json();
 
@@ -11,21 +22,21 @@ async function parseResponse(response, fallbackMessage) {
 }
 
 export async function register(payload) {
-  const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+  const response = await apiFetch(`${API_BASE_URL}/api/auth/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)
-  });
+  }, "Internet is required to register.");
 
   return parseResponse(response, "Registration failed");
 }
 
 export async function login(payload) {
-  const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+  const response = await apiFetch(`${API_BASE_URL}/api/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)
-  });
+  }, "Internet is required to log in.");
 
   return parseResponse(response, "Login failed");
 }
@@ -111,14 +122,14 @@ export async function removeCartItem(id, token) {
 }
 
 export async function placeOrder(payload, token) {
-  const response = await fetch(`${API_BASE_URL}/api/orders/place`, {
+  const response = await apiFetch(`${API_BASE_URL}/api/orders/place`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(payload),
-  });
+  }, "Internet is required to place an order.");
   return parseResponse(response, "Failed to place order");
 }
 
@@ -144,14 +155,14 @@ export async function getDiyPosts(token) {
 }
 
 export async function generateDiyPost(token, materialName) {
-  const response = await fetch(`${API_BASE_URL}/api/diy/generate`, {
+  const response = await apiFetch(`${API_BASE_URL}/api/diy/generate`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(materialName ? { material_name: materialName } : {}),
-  });
+  }, "Internet is required to generate DIY inspiration.");
   return parseResponse(response, "Failed to generate DIY inspiration");
 }
 
@@ -202,23 +213,23 @@ export async function getMyCircularScoreApi(token) {
 }
 
 export async function submitReviewApi(payload, token) {
-  const response = await fetch(`${API_BASE_URL}/api/reviews`, {
+  const response = await apiFetch(`${API_BASE_URL}/api/reviews`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(payload),
-  });
+  }, "Internet is required to submit a review.");
   return parseResponse(response, "Failed to submit review");
 }
 
 export async function getProductSuggestions(productName) {
-  const response = await fetch(`${API_BASE_URL}/api/ai/product-ideas`, {
+  const response = await apiFetch(`${API_BASE_URL}/api/ai/product-ideas`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ productName })
-  });
+  }, "Internet is required to fetch AI suggestions.");
   return parseResponse(response, "Failed to fetch AI suggestions");
 }
 
