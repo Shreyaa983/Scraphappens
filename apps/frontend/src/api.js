@@ -2,11 +2,19 @@ export const API_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_
 export const API_BASE_URL = API_URL;
 
 async function apiFetch(url, options = {}, offlineMessage = "Internet connection is required for this action.") {
+  if (!navigator.onLine) {
+    throw new Error(offlineMessage);
+  }
+
   try {
     return await fetch(url, options);
   } catch (error) {
     if (error instanceof TypeError) {
-      throw new Error(offlineMessage);
+      // Provide a more actionable error so misconfigured API URLs are obvious
+      const hint = url.includes("localhost")
+        ? `Could not reach the server (${url}). If you are using the deployed app, make sure VITE_API_URL is set to your backend URL in Vercel environment variables.`
+        : offlineMessage;
+      throw new Error(hint);
     }
     throw error;
   }
