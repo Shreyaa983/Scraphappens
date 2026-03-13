@@ -11,6 +11,20 @@ function formatImpactDisplay(value, unit) {
   return `${value} ${unit} waste diverted`;
 }
 
+function buildUserShippingAddress(userRow) {
+  if (!userRow?.street_address || !userRow?.city || !userRow?.state || !userRow?.country || !userRow?.pincode) {
+    return null;
+  }
+
+  return [
+    userRow.street_address,
+    userRow.city,
+    userRow.state,
+    userRow.country,
+    String(userRow.pincode),
+  ].filter(Boolean).join(", ");
+}
+
 function buildCircularAchievement({ order, cartRows, priorOrderCount }) {
   const safeRows = Array.isArray(cartRows) ? cartRows : [];
   const firstRow = safeRows[0] || {};
@@ -53,15 +67,21 @@ export async function placeOrder(req, res) {
   const buyerId = req.user.sub;
   const { shipping_address, coupon_code, payment_method, delivery_option } = req.body;
 
-  if (!shipping_address) {
-    return res.status(400).json({ message: "shipping_address is required" });
-  }
-
-  if (!payment_method) {
-    return res.status(400).json({ message: "payment_method is required (upi, card, wallet)" });
-  }
-
   try {
+    const buyerRows = await sql`
+      SELECT street_address, city, state, country, pincode
+      FROM users
+      WHERE id = ${buyerId}
+      LIMIT 1
+    `;
+    const savedShippingAddress = buildUserShippingAddress(buyerRows[0]);
+    const resolvedShippingAddress = shipping_address || savedShippingAddress;
+    const resolvedPaymentMethod = payment_method || "shiprocket";
+
+    if (!resolvedShippingAddress) {
+      return res.status(400).json({ message: "Saved buyer address is incomplete. Please update your account address." });
+    }
+
     const cartRows = await loadCartForOrder(buyerId);
     const previousOrders = await sql`
       SELECT COUNT(*)::int AS count
@@ -127,9 +147,9 @@ export async function placeOrder(req, res) {
       const order = await createOrder({
         buyerId,
         totalAmount: finalAmount,
-        shippingAddress: shipping_address,
+        shippingAddress: resolvedShippingAddress,
         couponId,
-        paymentMethod: payment_method,
+        paymentMethod: resolvedPaymentMethod,
         deliveryOption: delivery_option || "standard",
       });
 

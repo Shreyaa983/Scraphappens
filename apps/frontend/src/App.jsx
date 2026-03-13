@@ -338,7 +338,7 @@ export default function App() {
 
   if (token && user) {
     return (
-      <AgenticProvider user={user}>
+      <AgenticProvider user={user} token={token}>
         <main className="dashboard-page">
           <Sidebar user={user} roleTitle={roleTitle} onLogout={onLogout} />
 

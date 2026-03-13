@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 
 const AgenticContext = createContext();
 
-export const AgenticProvider = ({ children, user }) => {
+export const AgenticProvider = ({ children, user, token }) => {
   const [messages, setMessages] = useState([]);
   const [isListening, setIsListening] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
@@ -14,6 +14,7 @@ export const AgenticProvider = ({ children, user }) => {
   const [isVisible, setIsVisible] = useState(false);
 
   const userId = user?.id || user?.sub;
+  const authToken = token || (typeof localStorage !== "undefined" ? localStorage.getItem("token") : "") || "";
 
   const navigate = useNavigate();
   const recognitionRef = useRef(null);
@@ -22,6 +23,14 @@ export const AgenticProvider = ({ children, user }) => {
 
   const addMessage = useCallback((text, sender) => {
     setMessages((prev) => [...prev, { text, sender, timestamp: new Date() }]);
+  }, []);
+
+  const addStructuredMessage = useCallback((msg) => {
+    setMessages((prev) => [...prev, { ...msg, timestamp: new Date() }]);
+  }, []);
+
+  const resetMessages = useCallback(() => {
+    setMessages([]);
   }, []);
 
   const startListening = useCallback(() => {
@@ -87,14 +96,14 @@ export const AgenticProvider = ({ children, user }) => {
 
   const handleResponse = useCallback((response) => {
     setIsThinking(false);
-    const text = response.text;
+    const text = response.text || "";
 
     // Improved Regex to find "open {path}" anywhere in the text
     const navMatch = text.match(/open\s+(\/\S+)/i);
 
     if (navMatch) {
       const path = navMatch[1];
-      addMessage(text, "assistant");
+      addStructuredMessage({ sender: "assistant", text, listings: response.listings, cart_summary: response.cart_summary });
       speakText(`Opening ${path}`, () => {
         if (loopRef.current) {
             startListening();
@@ -106,24 +115,24 @@ export const AgenticProvider = ({ children, user }) => {
         navigate(path);
       }, 500);
     } else {
-      addMessage(text, "assistant");
+      addStructuredMessage({ sender: "assistant", text, listings: response.listings, cart_summary: response.cart_summary });
       speakText(text, () => {
         if (loopRef.current) {
             startListening();
         }
       });
     }
-  }, [addMessage, navigate, startListening]);
+  }, [addStructuredMessage, navigate, startListening]);
 
   useEffect(() => {
-    connectSocket();
+    connectSocket(authToken);
     socket.on("response", handleResponse);
 
     return () => {
       socket.off("response", handleResponse);
       disconnectSocket();
     };
-  }, [handleResponse]);
+  }, [handleResponse, authToken]);
 
   const stopAll = useCallback(() => {
     loopRef.current = false;
@@ -164,6 +173,19 @@ export const AgenticProvider = ({ children, user }) => {
     }
   };
 
+  const sendText = useCallback((textToSend) => {
+    const clean = (textToSend || "").trim();
+    if (!clean) return;
+    addMessage(clean, "user");
+    setIsThinking(true);
+    socket.emit("prompt", { text: clean, userId });
+  }, [addMessage, userId]);
+
+  const sendAction = useCallback((action) => {
+    setIsThinking(true);
+    socket.emit("action", action);
+  }, []);
+
   const toggleVisibility = () => {
     setIsVisible((prev) => {
       const next = !prev;
@@ -185,7 +207,10 @@ export const AgenticProvider = ({ children, user }) => {
       stopListeningAndSend,
       stopAll,
       toggleVisibility,
-      addMessage
+      addMessage,
+      sendText,
+      sendAction,
+      resetMessages
     }}>
       {children}
     </AgenticContext.Provider>

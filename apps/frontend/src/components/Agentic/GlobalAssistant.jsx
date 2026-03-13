@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useAgentic } from "../../contexts/Agentic/ChatContext";
 import { Mic, X, MessageSquare, Loader2, Square } from "lucide-react";
 import "./Agentic.css";
@@ -12,8 +12,12 @@ const GlobalAssistant = () => {
     isVisible, 
     startListening, 
     stopAll,
-    toggleVisibility 
+    toggleVisibility,
+    sendText,
+    sendAction
   } = useAgentic();
+
+  const [input, setInput] = useState("");
 
   return (
     <div className={`agentic-container ${isVisible ? "expanded" : ""}`}>
@@ -32,7 +36,32 @@ const GlobalAssistant = () => {
             )}
             {messages.map((msg, i) => (
               <div key={i} className={`msg ${msg.sender}`}>
-                {msg.text}
+                <div>{msg.text}</div>
+                {Array.isArray(msg.listings) && msg.listings.length > 0 && (
+                  <div className="agentic-cards">
+                    {msg.listings.map((l) => (
+                      <div key={l.id} className="agentic-card">
+                        <div className="agentic-card-main">
+                          <div className="agentic-card-title">
+                            {l.index}. {l.title}
+                          </div>
+                          <div className="agentic-card-meta">
+                            {l.is_free ? "Free" : `₹${l.price ?? 0}`} {l.location ? `• ${l.location}` : ""} {l.condition ? `• ${l.condition}` : ""}
+                          </div>
+                        </div>
+                        <button
+                          className="agentic-card-btn"
+                          onClick={() => sendAction({ type: "add_to_cart", material_id: l.id, quantity: 1 })}
+                        >
+                          Add to cart
+                        </button>
+                      </div>
+                    ))}
+                    <button className="agentic-secondary-btn" onClick={() => sendAction({ type: "show_summary" })}>
+                      Show checkout summary
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
             {isThinking && (
@@ -48,6 +77,27 @@ const GlobalAssistant = () => {
           </div>
           
           <div className="agentic-footer">
+            <form
+              className="agentic-text-form"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (isThinking) return;
+                const value = input;
+                setInput("");
+                sendText(value);
+              }}
+            >
+              <input
+                className="agentic-text-input"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Type a message…"
+                disabled={isListening}
+              />
+              <button className="agentic-send-btn" type="submit" disabled={isListening || isThinking || !input.trim()}>
+                Send
+              </button>
+            </form>
             <button 
               className={`mic-btn ${isListening ? "listening" : ""} ${isThinking ? "thinking" : ""}`}
               onClick={isListening || isThinking ? stopAll : startListening}
