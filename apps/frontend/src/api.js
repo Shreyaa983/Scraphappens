@@ -1,4 +1,5 @@
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:4000";
+export const API_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || "http://localhost:4000";
+export const API_BASE_URL = API_URL;
 
 async function apiFetch(url, options = {}, offlineMessage = "Internet connection is required for this action.") {
   try {

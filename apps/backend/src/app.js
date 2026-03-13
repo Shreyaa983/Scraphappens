@@ -22,7 +22,33 @@ await achievementService.initializeAchievements().catch((err) => {
   console.warn("Warning: Could not initialize achievements:", err.message);
 });
 
-app.use(cors());
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  "https://scraphappens-frontend.vercel.app",
+  "http://localhost:5173",
+].filter(Boolean);
+
+app.use(cors({
+  origin(origin, callback) {
+    if (!origin) {
+      callback(null, true);
+      return;
+    }
+
+    const normalizedOrigin = origin.endsWith("/") ? origin.slice(0, -1) : origin;
+    const isAllowed = allowedOrigins.some((allowedOrigin) => {
+      const normalizedAllowed = allowedOrigin.endsWith("/") ? allowedOrigin.slice(0, -1) : allowedOrigin;
+      return normalizedAllowed === normalizedOrigin;
+    });
+
+    if (isAllowed) {
+      callback(null, true);
+      return;
+    }
+
+    callback(new Error("Not allowed by CORS"));
+  },
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
