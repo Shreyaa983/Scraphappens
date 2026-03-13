@@ -24,7 +24,7 @@ await achievementService.initializeAchievements().catch((err) => {
 
 const allowedOrigins = [
   process.env.FRONTEND_URL,
-  "https://scraphappens-frontend.vercel.app",
+  "https://scraphappens-frontend.vercel.app/",
   "https://scraphappens.vercel.app",
   "http://localhost:5173",
 ].filter(Boolean);
