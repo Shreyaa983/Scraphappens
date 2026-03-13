@@ -7,7 +7,7 @@ import { addToCart } from "../../api";
 
 const AgenticContext = createContext();
 
-export const AgenticProvider = ({ children, user }) => {
+export const AgenticProvider = ({ children, user, token }) => {
   const [messages, setMessages] = useState([]);
   const [isListening, setIsListening] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
@@ -15,6 +15,7 @@ export const AgenticProvider = ({ children, user }) => {
   const [isVisible, setIsVisible] = useState(false);
 
   const userId = user?.id || user?.sub;
+  const authToken = token || (typeof localStorage !== "undefined" ? localStorage.getItem("token") : "") || "";
   const navigate = useNavigate();
 
   const recognitionRef = useRef(null);
@@ -38,6 +39,14 @@ export const AgenticProvider = ({ children, user }) => {
       setTranscript("");
     }
   }, [transcript, userId, addMessage]);
+
+  const addStructuredMessage = useCallback((msg) => {
+    setMessages((prev) => [...prev, { ...msg, timestamp: new Date() }]);
+  }, []);
+
+  const resetMessages = useCallback(() => {
+    setMessages([]);
+  }, []);
 
   const startListening = useCallback(() => {
     if (recognitionRef.current) {
@@ -138,27 +147,27 @@ export const AgenticProvider = ({ children, user }) => {
     const navMatch = text.match(/open\s+(\/\S+)/i);
     if (navMatch) {
       const path = navMatch[1];
-      addMessage(text, "assistant");
+      addStructuredMessage({ sender: "assistant", text, listings: response.listings, cart_summary: response.cart_summary });
       speakText(`Opening ${path}`, () => {
         if (loopRef.current) startListening();
       });
       setTimeout(() => navigate(path), 500);
     } else {
-      addMessage(text, "assistant");
+      addStructuredMessage({ sender: "assistant", text, listings: response.listings, cart_summary: response.cart_summary });
       speakText(text, () => {
         if (loopRef.current) startListening();
       });
     }
-  }, [addMessage, navigate, startListening]);
+  }, [addStructuredMessage, navigate, startListening]);
 
   useEffect(() => {
-    connectSocket();
+    connectSocket(authToken);
     socket.on("response", handleResponse);
     return () => {
       socket.off("response", handleResponse);
       disconnectSocket();
     };
-  }, [handleResponse]);
+  }, [handleResponse, authToken]);
 
   const stopAll = useCallback(() => {
     loopRef.current = false;
@@ -170,6 +179,37 @@ export const AgenticProvider = ({ children, user }) => {
     setIsThinking(false);
     setTranscript("");
     if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+  }, []);
+
+  const stopListeningAndSend = (finalText) => {
+    if (recognitionRef.current) {
+      try {
+          recognitionRef.current.stop();
+      } catch (e) {
+          console.log("Stop error:", e.message);
+      }
+    }
+
+    const textToSend = finalText || transcript;
+    if (textToSend.trim()) {
+      addMessage(textToSend, "user");
+      setIsThinking(true);
+      socket.emit("prompt", { text: textToSend, userId });
+      setTranscript("");
+    }
+  };
+
+  const sendText = useCallback((textToSend) => {
+    const clean = (textToSend || "").trim();
+    if (!clean) return;
+    addMessage(clean, "user");
+    setIsThinking(true);
+    socket.emit("prompt", { text: clean, userId });
+  }, [addMessage, userId]);
+
+  const sendAction = useCallback((action) => {
+    setIsThinking(true);
+    socket.emit("action", action);
   }, []);
 
   const toggleVisibility = () => {
@@ -191,7 +231,10 @@ export const AgenticProvider = ({ children, user }) => {
       stopListeningAndSend,
       stopAll,
       toggleVisibility,
-      addMessage
+      addMessage,
+      sendText,
+      sendAction,
+      resetMessages
     }}>
       {children}
     </AgenticContext.Provider>

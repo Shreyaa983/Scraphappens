@@ -1,11 +1,22 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Send, PlusCircle } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from "react";
+import { Send, PlusCircle, Loader2, Mic, Square } from "lucide-react";
+import { Link } from "react-router-dom";
+import { useAgentic } from "../contexts/Agentic/ChatContext";
+import "../components/Agentic/Agentic.css";
 import { useTranslation } from '../hooks/useTranslation';
 
 const AIChatbot = () => {
+  const [input, setInput] = useState("");
+  const {
+    messages,
+    isThinking,
+    isListening,
+    sendText,
+    resetMessages,
+    sendAction,
+    startListening,
+    stopAll,
+  } = useAgentic();
   const { t } = useTranslation();
   const STORAGE_KEY = 'scraphappens_chat_history';
   const WELCOME_MSG = { role: 'ai', text: t("Hello! I'm your Circular Loop Assistant. How can I help you with sustainable textile reuse today?") };
@@ -22,82 +33,28 @@ const AIChatbot = () => {
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef(null);
 
-  // Persist messages to localStorage whenever they change
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
-    } catch {
-      // storage quota exceeded — silently ignore
-    }
-  }, [messages]);
-
   // Auto-scroll to bottom on new messages
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTo(0, scrollRef.current.scrollHeight);
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
 
   const handleNewChat = () => {
-    localStorage.removeItem(STORAGE_KEY);
-    setMessages([WELCOME_MSG]);
-    setInput('');
+    resetMessages();
+    setInput("");
   };
 
   const handleSend = async () => {
     if (!input.trim()) return;
-
-    const userMsg = { role: 'user', text: input };
-    setMessages(prev => [...prev, userMsg]);
-    setInput('');
-    setLoading(true);
-
-    try {
-      const response = await fetch('/api/ai/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: input }),
-      });
-
-      // Read raw text first (mirrors original working Chatbox.jsx pattern)
-      const raw = await response.text();
-      const data = (() => {
-        try {
-          return JSON.parse(raw);
-        } catch {
-          return null;
-        }
-      })();
-
-      if (!response.ok) {
-        const errorMessage =
-          data?.error ||
-          raw ||
-          "Sorry, I couldn't get a valid response from the server.";
-        setMessages(prev => [...prev, { role: 'ai', text: errorMessage }]);
-        return;
-      }
-
-      const replyText =
-        data?.reply ||
-        raw ||
-        "I didn't receive a proper reply from the AI, but I'm here!";
-
-      setMessages(prev => [...prev, { role: 'ai', text: replyText }]);
-    } catch (err) {
-      setMessages(prev => [
-        ...prev,
-        { role: 'ai', text: "Sorry, I'm having trouble connecting to my brain!" }
-      ]);
-      console.error("Chat Error:", err);
-    } finally {
-      setLoading(false);
-    }
+    const value = input;
+    setInput("");
+    sendText(value);
   };
 
   return (
     <div className="page-stack">
-      <section className="ai-chat-shell">
+      <section className="agentic-page-shell">
         <header className="ai-chat-header">
           <div>
             <span className="eyebrow">{t("Smart Assistant")}</span>
@@ -112,48 +69,79 @@ const AIChatbot = () => {
           </div>
         </header>
 
-        <div className="chat-thread" ref={scrollRef}>
-          {messages.map((msg, i) => (
-            <div key={i} className={`chat-row ${msg.role === 'user' ? 'chat-row-user' : 'chat-row-assistant'}`}>
-              <div className={`chat-bubble ${msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-assistant'}`}>
-                <ReactMarkdown
-                  remarkPlugins={[remarkGfm]}
-                  components={{
-                    p: ({ node, ...props }) => <p style={{ margin: 0, marginBottom: '8px', whiteSpace: 'pre-wrap' }} {...props} />,
-                    ul: ({ node, ...props }) => <ul style={{ margin: '0 0 8px 20px', padding: 0 }} {...props} />,
-                    ol: ({ node, ...props }) => <ol style={{ margin: '0 0 8px 20px', padding: 0 }} {...props} />,
-                    li: ({ node, ...props }) => <li style={{ marginBottom: '4px' }} {...props} />,
-                    strong: ({ node, ...props }) => <strong style={{ fontWeight: 800 }} {...props} />,
-                  }}
-                >
-                  {msg.text}
-                </ReactMarkdown>
-              </div>
-            </div>
-          ))}
-          {loading && (
-            <div className="chat-row chat-row-assistant">
-              <div className="chat-bubble chat-bubble-assistant mini-note">{t("Assistant is thinking...")}</div>
-            </div>
-          )}
-        </div>
+        <div className="agentic-page-chat">
+          <div className="agentic-header">
+            <h3>Scraphappens Assistant</h3>
+          </div>
 
-        <div className="ai-composer-wrap">
-          <div className="chat-input-row">
-            <input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-              placeholder={t("Ask about materials, reuse tips, or marketplace features...")}
-            />
-            <button
-              type="button"
-              className="submit-button"
-              onClick={handleSend}
-              disabled={loading}
-              aria-label="Send message"
+          <div className="agentic-messages" ref={scrollRef}>
+            {messages.length === 0 && (
+              <div className="empty-state">
+                How can I help you today?
+              </div>
+            )}
+
+            {messages.map((msg, i) => (
+              <div key={i} className={`msg ${msg.sender}`}>
+                <div>{msg.text}</div>
+                {Array.isArray(msg.listings) && msg.listings.length > 0 && (
+                  <div className="agentic-cards">
+                    {msg.listings.map((l) => (
+                      <div key={l.id} className="agentic-card">
+                        <div className="agentic-card-main">
+                          <div className="agentic-card-title">
+                            {l.index}. {l.title}
+                          </div>
+                          <div className="agentic-card-meta">
+                            {l.is_free ? "Free" : `₹${l.price ?? 0}`} {l.location ? `• ${l.location}` : ""} {l.condition ? `• ${l.condition}` : ""}
+                          </div>
+                        </div>
+                        <button
+                          className="agentic-card-btn"
+                          onClick={() => sendAction({ type: "add_to_cart", material_id: l.id, quantity: 1 })}
+                        >
+                          Add to cart
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+
+            {isThinking && (
+              <div className="msg assistant thinking">
+                <Loader2 className="animate-spin" size={16} />
+              </div>
+            )}
+          </div>
+
+          <div className="agentic-footer agentic-footer-inline">
+            <form
+              className="agentic-text-form"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (isThinking) return;
+                handleSend();
+              }}
             >
-              <Send size={18} />
+              <input
+                className="agentic-text-input"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Ask about materials, reuse tips, or marketplace features..."
+                disabled={isListening}
+              />
+              <button className="agentic-send-btn" type="submit" disabled={isThinking || !input.trim() || isListening}>
+                <Send size={16} />
+              </button>
+            </form>
+            <button
+              className={`mic-btn ${isListening ? "listening" : ""} ${isThinking ? "thinking" : ""}`}
+              type="button"
+              onClick={isListening || isThinking ? stopAll : startListening}
+            >
+              {isListening || isThinking ? <Square size={22} fill="currentColor" /> : <Mic size={22} />}
             </button>
           </div>
         </div>

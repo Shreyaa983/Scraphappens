@@ -175,7 +175,6 @@ export default function CartPage({ token, user, onOrderPlaced }) {
   const [selectedCourierIndex, setSelectedCourierIndex] = useState(0);
   const [shippingFallbackMessage, setShippingFallbackMessage] = useState("");
   const [orderConfirmation, setOrderConfirmation] = useState(null);
-  const [paymentMethod, setPaymentMethod] = useState("upi");
   const [couponCode, setCouponCode] = useState("");
   const [couponWallet, setCouponWallet] = useState([]);
   const [selectedCouponCode, setSelectedCouponCode] = useState("");
@@ -316,8 +315,8 @@ export default function CartPage({ token, user, onOrderPlaced }) {
 
       const result = await placeOrder(
         {
+          // Do not send payment_method – backend uses Shiprocket + saved account address
           shipping_address: shippingAddress,
-          payment_method: paymentMethod,
           coupon_code: selectedCouponCode || couponCode || undefined,
         },
         token,
@@ -591,31 +590,15 @@ export default function CartPage({ token, user, onOrderPlaced }) {
                 </div>
               </div>
 
-              {/* Payment Section */}
+              {/* Payment Section (handled externally by Shiprocket) */}
               <div className="summary-section">
                 <div className="section-label">
                   <CreditCard size={16} /> {t("Payment Method")}
                 </div>
-                <div className="payment-grid">
-                  <label className={`payment-option ${paymentMethod === "upi" ? "selected" : ""}`}>
-                    <input
-                      type="radio"
-                      name="payment-method"
-                      checked={paymentMethod === "upi"}
-                      onChange={() => setPaymentMethod("upi")}
-                    />
-                    <span className="rate-name">UPI (PhonePe, GPay)</span>
-                  </label>
-                  <label className={`payment-option ${paymentMethod === "card" ? "selected" : ""}`}>
-                    <input
-                      type="radio"
-                      name="payment-method"
-                      checked={paymentMethod === "card"}
-                      onChange={() => setPaymentMethod("card")}
-                    />
-                    <span className="rate-name">Credit / Debit Card</span>
-                  </label>
-                </div>
+                <p className="mini-note">
+                  Payment processing is handled via Shiprocket after we place your order using your saved account address.
+                  We don&apos;t collect payment method details here.
+                </p>
               </div>
 
               {message && (

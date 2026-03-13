@@ -1,33 +1,40 @@
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import { Routes, Route, Navigate, useNavigate, useParams } from "react-router-dom";
 import { getCurrentUser, login, register } from "./api";
 import AuthPanel from "./components/AuthPanel";
 import Sidebar from "./components/Sidebar";
 import OrderAchievementOverlay from "./components/Garden/OrderAchievementOverlay";
 import SupplierProfile from "./components/Marketplace/SupplierProfile";
-import UserDashboard from "./components/Marketplace/UserDashboard";
 import CreateListing from "./pages/CreateListing";
-import GardenPage from "./pages/GardenPage";
 import LogisticsPickupsPage from "./pages/LogisticsPickupsPage";
 import MaterialDetailPage from "./pages/MaterialDetailPage";
 import MarketplacePage from "./pages/MarketplacePage";
 import MyListingsPage from "./pages/MyListingsPage";
 import CartPage from "./pages/CartPage";
-import AIChatbot from "./pages/AIChatbot";
 import { BuyerOrdersPage, SellerOrdersPage } from "./pages/OrdersPage";
-import DIYFeedPage from "./pages/DIYFeedPage";
-import DIYDetailPage from "./pages/DIYDetailPage";
 import { queuePendingGardenReward } from "./utils/gardenRewards";
 import { AgenticProvider } from "./contexts/Agentic/ChatContext";
 import GlobalAssistant from "./components/Agentic/GlobalAssistant";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import LanguageSelector from "./components/LanguageSelector";
+import InstallAppPrompt from "./components/InstallAppPrompt";
+import OfflineNotice from "./components/OfflineNotice";
 
 const roles = ["seller", "buyer", "volunteer"];
 
 const isSellerRole = (role) => role === "seller" || role === "supplier";
 const isBuyerRole = (role) => role === "buyer";
 const isVolunteerRole = (role) => role === "volunteer";
+
+const UserDashboard = lazy(() => import("./components/Marketplace/UserDashboard"));
+const GardenPage = lazy(() => import("./pages/GardenPage"));
+const AIChatbot = lazy(() => import("./pages/AIChatbot"));
+const DIYFeedPage = lazy(() => import("./pages/DIYFeedPage"));
+const DIYDetailPage = lazy(() => import("./pages/DIYDetailPage"));
+
+function LazyShell({ children }) {
+  return <Suspense fallback={<div className="loading-shell">Loading…</div>}>{children}</Suspense>;
+}
 
 function RoleLockedPanel() {
   return (
@@ -46,13 +53,15 @@ function DIYDetailRoute({ token, onOpenMaterial, onSearchMaterial }) {
   const { id } = useParams();
 
   return (
-    <DIYDetailPage
-      diyId={id}
-      token={token}
-      onBack={() => navigate("/diy")}
-      onOpenMaterial={onOpenMaterial}
-      onSearchMaterial={onSearchMaterial}
-    />
+    <LazyShell>
+      <DIYDetailPage
+        diyId={id}
+        token={token}
+        onBack={() => navigate("/diy")}
+        onOpenMaterial={onOpenMaterial}
+        onSearchMaterial={onSearchMaterial}
+      />
+    </LazyShell>
   );
 }
 
@@ -298,7 +307,7 @@ export default function App() {
   }
 
   function renderSectionContent() {
-    if (activeSection === "AI Assistant") return <AIChatbot />;
+    if (activeSection === "AI Assistant") return <LazyShell><AIChatbot /></LazyShell>;
 
     if (activeSection === "Cart") {
       return <CartPage token={token} user={user} onOrderPlaced={handleOrderPlaced} />;
@@ -310,15 +319,17 @@ export default function App() {
       return <SellerOrdersPage token={token} />;
     }
     if (activeSection === "My Dashboard") {
-      return <UserDashboard token={token} user={user} />;
+      return <LazyShell><UserDashboard token={token} user={user} /></LazyShell>;
     }
     if (activeSection === "Garden") {
       return (
-        <GardenPage
-          user={user}
-          pendingAchievement={pendingGardenAchievement}
-          onPendingAchievementHandled={() => setPendingGardenAchievement(null)}
-        />
+        <LazyShell>
+          <GardenPage
+            user={user}
+            pendingAchievement={pendingGardenAchievement}
+            onPendingAchievementHandled={() => setPendingGardenAchievement(null)}
+          />
+        </LazyShell>
       );
     }
     if (activeSection === "My Listings") {
@@ -341,8 +352,10 @@ export default function App() {
   if (token && user) {
     return (
       <LanguageProvider>
-        <AgenticProvider user={user}>
+        <AgenticProvider user={user} token={token}>
         <main className="dashboard-page">
+          <OfflineNotice />
+          <InstallAppPrompt />
           <Sidebar user={user} roleTitle={roleTitle} onLogout={onLogout} />
 
           <section className="dashboard-main">
@@ -376,20 +389,22 @@ export default function App() {
                 path="/edit-listing/:id"
                 element={isSellerRole(user.role) ? <CreateListing user={user} token={token} /> : <Navigate to="/" replace />}
               />
-              <Route path="/ai-assistant" element={<AIChatbot />} />
+              <Route path="/ai-assistant" element={<LazyShell><AIChatbot /></LazyShell>} />
               <Route
                 path="/garden"
                 element={
-                  <GardenPage
-                    user={user}
-                    pendingAchievement={pendingGardenAchievement}
-                    onPendingAchievementHandled={() => setPendingGardenAchievement(null)}
-                  />
+                  <LazyShell>
+                    <GardenPage
+                      user={user}
+                      pendingAchievement={pendingGardenAchievement}
+                      onPendingAchievementHandled={() => setPendingGardenAchievement(null)}
+                    />
+                  </LazyShell>
                 }
               />
 
               <Route path="/pickup-scheduling" element={<LogisticsPickupsPage token={token} />} />
-              <Route path="/my-dashboard" element={<UserDashboard token={token} user={user} />} />
+              <Route path="/my-dashboard" element={<LazyShell><UserDashboard token={token} user={user} /></LazyShell>} />
               <Route path="/supplier/:supplierId" element={<SupplierProfile token={token} onBack={() => navigate(-1)} />} />
 
               {isSellerRole(user.role) && (
@@ -406,10 +421,12 @@ export default function App() {
                   <Route
                     path="/diy"
                     element={
-                      <DIYFeedPage
-                        token={token}
-                        onOpenProject={(post) => navigate(`/diy/${post.id}`)}
-                      />
+                      <LazyShell>
+                        <DIYFeedPage
+                          token={token}
+                          onOpenProject={(post) => navigate(`/diy/${post.id}`)}
+                        />
+                      </LazyShell>
                     }
                   />
                   <Route
@@ -441,6 +458,8 @@ export default function App() {
     <LanguageProvider>
       <AgenticProvider>
       <main className="landing-page">
+        <OfflineNotice />
+        <InstallAppPrompt />
         <nav className="navbar">
           <div className="brand-block">
             <span className="brand-mark">S</span>

@@ -37,6 +37,8 @@ export async function getCartItemsForUser(userId) {
       c.created_at,
       m.title,
       m.image_url,
+      m.price,
+      m.is_free,
       m.quantity AS available_quantity,
       m.quantity_unit,
       m.location,
