@@ -1,4 +1,4 @@
-# scarfhappens
+# ScrapHappens
 
 Basic monorepo starter for **ScarfHappens** with:
 
