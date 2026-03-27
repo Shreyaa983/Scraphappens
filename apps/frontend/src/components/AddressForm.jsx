@@ -1,53 +1,55 @@
+import { useTranslation } from "../hooks/useTranslation";
 export default function AddressForm({ form, onFieldChange }) {
+  const { t } = useTranslation();
   return (
     <div className="address-form">
       <label>
-        Street Address
+        {t("Street Address")}
         <input
           required
           value={form.street_address}
           onChange={(e) => onFieldChange("street_address", e.target.value)}
-          placeholder="123 Main Street, Apt 4B"
+          placeholder={t("123 Main Street, Apt 4B")}
         />
       </label>
 
       <label>
-        City
+        {t("City")}
         <input
           required
           value={form.city}
           onChange={(e) => onFieldChange("city", e.target.value)}
-          placeholder="Mumbai"
+          placeholder={t("Mumbai")}
         />
       </label>
 
       <label>
-        State / Province
+        {t("State / Province")}
         <input
           required
           value={form.state}
           onChange={(e) => onFieldChange("state", e.target.value)}
-          placeholder="Maharashtra"
+          placeholder={t("Maharashtra")}
         />
       </label>
 
       <label>
-        Country
+        {t("Country")}
         <input
           required
           value={form.country}
           onChange={(e) => onFieldChange("country", e.target.value)}
-          placeholder="India"
+          placeholder={t("India")}
         />
       </label>
 
       <label>
-        Pincode
+        {t("Pincode")}
         <input
           required
           value={form.pincode}
           onChange={(e) => onFieldChange("pincode", e.target.value)}
-          placeholder="400001"
+          placeholder={t("400001")}
         />
       </label>
     </div>

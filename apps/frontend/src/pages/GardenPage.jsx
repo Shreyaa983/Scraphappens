@@ -16,8 +16,10 @@ import {
   persistPlacedTrees,
   persistUnlockedPlants,
 } from "../utils/gardenRewards";
+import { useTranslation } from "../hooks/useTranslation";
 
 export default function GardenPage({ user, pendingAchievement, onPendingAchievementHandled }) {
+  const { t } = useTranslation();
   const userId = user?.id || user?.sub || "guest";
   const [unlockedPlants, setUnlockedPlants] = useState(() => loadStoredUnlockedPlants(userId));
   const [placedTrees, setPlacedTrees] = useState(() => loadStoredPlacedTrees(userId));
@@ -207,14 +209,14 @@ export default function GardenPage({ user, pendingAchievement, onPendingAchievem
               className={`garden-view-toggle-btn${viewMode === "garden" ? " active" : ""}`}
               onClick={() => setViewMode("garden")}
             >
-              Garden View
+              {t("Garden View")}
             </button>
             <button
               type="button"
               className={`garden-view-toggle-btn${viewMode === "achievement" ? " active" : ""}`}
               onClick={() => setViewMode("achievement")}
             >
-              Achievement View
+              {t("Achievement View")}
             </button>
           </div>
 
@@ -226,7 +228,7 @@ export default function GardenPage({ user, pendingAchievement, onPendingAchievem
               setViewMode("garden");
             }}
           >
-            {isGlobalView ? "Back to My Garden" : "Global Forest"}
+            {isGlobalView ? t("Back to My Garden") : t("Global Forest")}
           </button>
         </div>
 
@@ -240,17 +242,17 @@ export default function GardenPage({ user, pendingAchievement, onPendingAchievem
 
           {viewMode === "achievement" && !isGlobalView ? (
             <div className="achievement-view-overlay">
-              <h4>Achievement Plants</h4>
+              <h4>{t("Achievement Plants")}</h4>
               {achievementItems.length === 0 ? (
-                <p>No achievements unlocked yet. Complete sustainable marketplace actions to grow your garden.</p>
+                <p>{t("No achievements unlocked yet. Complete sustainable marketplace actions to grow your garden.")}</p>
               ) : (
                 <div className="achievement-view-grid">
                   {achievementItems.map((item, idx) => (
                     <article key={`${item.achievement}-${idx}`} className="achievement-view-item">
                       <span className="achievement-view-icon">{item.icon}</span>
                       <div>
-                        <strong>{item.achievement}</strong>
-                        <p>{item.label}</p>
+                        <strong>{t(item.achievement)}</strong>
+                        <p>{t(item.label)}</p>
                       </div>
                     </article>
                   ))}
@@ -272,22 +274,22 @@ export default function GardenPage({ user, pendingAchievement, onPendingAchievem
 
         <section className="garden-charts-shell">
           <header>
-            <p className="eyebrow">Impact Charts</p>
-            <h3>Your Sustainability Trends</h3>
+            <p className="eyebrow">{t("Impact Charts")}</p>
+            <h3>{t("Your Sustainability Trends")}</h3>
           </header>
           <div className="garden-chart-grid">
             <article className="garden-chart-card">
-              <h4>Materials Reused by Category</h4>
+              <h4>{t("Materials Reused by Category")}</h4>
               <div className="mini-bars">
-                <div><span>Wood</span><i style={{ width: `${Math.max(25, placedTrees.length * 8)}%` }} /></div>
-                <div><span>Metal</span><i style={{ width: `${Math.max(20, placedTrees.length * 6)}%` }} /></div>
-                <div><span>Fabric</span><i style={{ width: `${Math.max(18, placedTrees.length * 5)}%` }} /></div>
-                <div><span>Plastic</span><i style={{ width: `${Math.max(14, placedTrees.length * 4)}%` }} /></div>
+                <div><span>{t("Wood")}</span><i style={{ width: `${Math.max(25, placedTrees.length * 8)}%` }} /></div>
+                <div><span>{t("Metal")}</span><i style={{ width: `${Math.max(20, placedTrees.length * 6)}%` }} /></div>
+                <div><span>{t("Fabric")}</span><i style={{ width: `${Math.max(18, placedTrees.length * 5)}%` }} /></div>
+                <div><span>{t("Plastic")}</span><i style={{ width: `${Math.max(14, placedTrees.length * 4)}%` }} /></div>
               </div>
             </article>
 
             <article className="garden-chart-card">
-              <h4>Weekly Activity</h4>
+              <h4>{t("Weekly Activity")}</h4>
               <div className="mini-columns">
                 {[2, 4, 3, 5, 6, 4, 7].map((val, idx) => (
                   <span key={idx} style={{ height: `${14 + val * 10}px` }} />
@@ -296,15 +298,15 @@ export default function GardenPage({ user, pendingAchievement, onPendingAchievem
             </article>
 
             <article className="garden-chart-card">
-              <h4>Achievement Timeline</h4>
+              <h4>{t("Achievement Timeline")}</h4>
               <ul className="timeline-list">
                 {achievementItems.slice(0, 5).map((item, idx) => (
                   <li key={`${item.achievement}-${idx}`}>
                     <span>{item.icon}</span>
-                    <p>{item.achievement}</p>
+                    <p>{t(item.achievement)}</p>
                   </li>
                 ))}
-                {achievementItems.length === 0 ? <li><p>No milestones yet</p></li> : null}
+                {achievementItems.length === 0 ? <li><p>{t("No milestones yet")}</p></li> : null}
               </ul>
             </article>
           </div>

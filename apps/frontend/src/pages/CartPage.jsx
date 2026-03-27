@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { getCart, placeOrder, removeCartItem } from "../api";
 import { createShipment, getShippingRates } from "../services/logisticsApi";
+import { useTranslation } from "../hooks/useTranslation";
 import "../styles/cart.css";
 
 const FALLBACK_IMAGE =
@@ -164,6 +165,7 @@ const getMyCouponsApi = () => Promise.resolve({ coupons: [] });
 const getMyCircularScoreApi = () => Promise.resolve({ score: {} });
 
 export default function CartPage({ token, user, onOrderPlaced }) {
+  const { t } = useTranslation();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [placing, setPlacing] = useState(false);
@@ -399,7 +401,7 @@ export default function CartPage({ token, user, onOrderPlaced }) {
     return (
       <div className="loading-shell">
         <Clock className="spin" style={{ marginBottom: "1rem" }} />
-        <p>Loading your cart…</p>
+        <p>{t("Loading your cart…")}</p>
       </div>
     );
   }
@@ -411,10 +413,10 @@ export default function CartPage({ token, user, onOrderPlaced }) {
           <div className="empty-icon">
             <ShoppingBag size={80} strokeWidth={1} />
           </div>
-          <h2 className="empty-title">Your cart is empty</h2>
-          <p className="empty-text">Looks like you haven't added any materials to your cart yet.</p>
+          <h2 className="empty-title">{t("Your cart is empty")}</h2>
+          <p className="empty-text">{t("Looks like you haven't added any materials to your cart yet.")}</p>
           <Link to="/" className="btn-primary">
-            Explore Marketplace <ArrowRight size={18} style={{ marginLeft: 8 }} />
+            {t("Explore Marketplace")} <ArrowRight size={18} style={{ marginLeft: 8 }} />
           </Link>
         </div>
       ) : (
@@ -422,9 +424,9 @@ export default function CartPage({ token, user, onOrderPlaced }) {
           <div className="cart-items-section">
             <div className="section-header" style={{ marginBottom: "1.5rem" }}>
               <h2 style={{ display: "flex", alignItems: "center", gap: "12px", margin: 0 }}>
-                <ShoppingCart size={28} /> Cart <span className="count">({items.length})</span>
+                <ShoppingCart size={28} /> {t("Cart")} <span className="count">({items.length})</span>
               </h2>
-              <p style={{ color: "var(--color-text-secondary)", marginTop: "4px" }}>Items you are preparing to order.</p>
+              <p style={{ color: "var(--color-text-secondary)", marginTop: "4px" }}>{t("Items you are preparing to order.")}</p>
             </div>
 
             {items.map((item) => (
@@ -434,21 +436,21 @@ export default function CartPage({ token, user, onOrderPlaced }) {
                 </div>
                 <div className="cart-item-details">
                   <div className="cart-item-header">
-                    <h4 className="cart-item-title">{item.title}</h4>
+                    <h4 className="cart-item-title">{t(item.title)}</h4>
                   </div>
                   <div className="cart-item-meta">
                     <div className="cart-meta-chip">
                       <Package size={14} /> 
-                      <span>Requested: {item.quantity}</span>
+                      <span>{t("Requested")}: {item.quantity}</span>
                     </div>
                     <div className="cart-meta-chip">
                       <Info size={14} />
-                      <span>Available: {item.available_quantity ?? "—"} {item.quantity_unit || ""}</span>
+                      <span>{t("Available")}: {item.available_quantity ?? "—"} {t(item.quantity_unit || "")}</span>
                     </div>
                     {item.location && (
                       <div className="cart-meta-chip">
                         <MapPin size={14} />
-                        <span>{item.location}</span>
+                        <span>{t(item.location)}</span>
                       </div>
                     )}
                   </div>
@@ -457,7 +459,7 @@ export default function CartPage({ token, user, onOrderPlaced }) {
                       className="remove-item-btn"
                       onClick={() => handleRemove(item.id)}
                     >
-                      <Trash2 size={16} /> Remove
+                      <Trash2 size={16} /> {t("Remove")}
                     </button>
                   </div>
                 </div>
@@ -468,13 +470,13 @@ export default function CartPage({ token, user, onOrderPlaced }) {
           <div className="checkout-sidebar">
             <div className="summary-card">
               <h3 className="summary-title">
-                <ShoppingCart size={20} /> Order Summary
+                <ShoppingCart size={20} /> {t("Order Summary")}
               </h3>
 
               {/* Delivery Address Section */}
               <div className="summary-section">
                 <div className="section-label">
-                  <MapPin size={16} /> Delivery Address
+                  <MapPin size={16} /> {t("Delivery Address")}
                 </div>
                 {receiverDisplayAddress ? (
                   <div className="address-preview">
@@ -490,7 +492,7 @@ export default function CartPage({ token, user, onOrderPlaced }) {
               {/* Shipping Section */}
               <div className="summary-section">
                 <div className="section-label">
-                  <Truck size={16} /> Shipping Method
+                  <Truck size={16} /> {t("Shipping Method")}
                 </div>
                 
                 <button
@@ -500,9 +502,9 @@ export default function CartPage({ token, user, onOrderPlaced }) {
                   disabled={shippingRatesLoading || !receiverDisplayAddress}
                 >
                   {shippingRatesLoading ? (
-                    <><Clock size={16} className="spin" /> Updating...</>
+                    <><Clock size={16} className="spin" /> {t("Updating...")}</>
                   ) : (
-                    <>Calculate Shipping</>
+                    <>{t("Calculate Shipping")}</>
                   )}
                 </button>
 
@@ -536,19 +538,19 @@ export default function CartPage({ token, user, onOrderPlaced }) {
               {/* Coupons & Rewards Section */}
               <div className="summary-section">
                 <div className="section-label">
-                  <Ticket size={16} /> Rewards & Coupons
+                  <Ticket size={16} /> {t("Rewards & Coupons")}
                 </div>
                 
                 <div className="coupon-progress-wrapper">
                   <div className="progress-info">
-                    <span>{couponProgress.nextLabel}</span>
+                    <span>{t(couponProgress.nextLabel)}</span>
                     <span>{couponProgress.percent.toFixed(0)}%</span>
                   </div>
                   <div className="progress-bar">
                     <div className="progress-fill" style={{ width: `${couponProgress.percent}%` }} />
                   </div>
                   <p className="mini-note">
-                    {couponProgress.currentPlants}/{couponProgress.targetPlants} plants planted
+                    {couponProgress.currentPlants}/{couponProgress.targetPlants} {t("plants planted")}
                   </p>
                 </div>
 
@@ -582,7 +584,7 @@ export default function CartPage({ token, user, onOrderPlaced }) {
                     type="text"
                     value={couponCode}
                     onChange={(e) => setCouponCode(e.target.value)}
-                    placeholder="Enter manual coupon"
+                    placeholder={t("Enter manual coupon")}
                     style={{ fontSize: "0.85rem", padding: "8px 12px" }}
                   />
                 </div>
@@ -591,7 +593,7 @@ export default function CartPage({ token, user, onOrderPlaced }) {
               {/* Payment Section (handled externally by Shiprocket) */}
               <div className="summary-section">
                 <div className="section-label">
-                  <CreditCard size={16} /> Payment
+                  <CreditCard size={16} /> {t("Payment Method")}
                 </div>
                 <p className="mini-note">
                   Payment processing is handled via Shiprocket after we place your order using your saved account address.
@@ -612,16 +614,16 @@ export default function CartPage({ token, user, onOrderPlaced }) {
                 disabled={placing || !receiverDisplayAddress}
               >
                 {placing ? (
-                  <><Clock size={18} className="spin" /> Processing...</>
+                  <><Clock size={18} className="spin" /> {t("Processing...")}</>
                 ) : (
-                  <>Place Order <ChevronRight size={18} /></>
+                  <>{t("Place Order")} <ChevronRight size={18} /></>
                 )}
               </button>
 
               {orderConfirmation && (
                 <div className="confirmation-card">
                   <h4 style={{ color: "#166534", marginBottom: "8px", display: "flex", alignItems: "center", gap: "8px" }}>
-                    <CheckCircle size={18} /> Order Confirmed!
+                    <CheckCircle size={18} /> {t("Order Confirmed!")}
                   </h4>
                   <div className="conf-row">
                     <span className="conf-label">Shipment ID:</span>

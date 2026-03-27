@@ -1,11 +1,14 @@
 import { NavLink } from "react-router-dom";
 import { useMemo } from "react";
+import LanguageSelector from "./LanguageSelector";
+import { useTranslation } from "../hooks/useTranslation";
 
 const isSellerRole = (role) => role === "seller" || role === "supplier";
 const isBuyerRole = (role) => role === "buyer";
 const isVolunteerRole = (role) => role === "volunteer";
 
 export default function Sidebar({ user, roleTitle, onLogout }) {
+  const { t } = useTranslation();
   const sidebarItems = useMemo(() => {
     const items = [
       { name: "Marketplace", path: "/" },
@@ -39,7 +42,7 @@ export default function Sidebar({ user, roleTitle, onLogout }) {
           <span className="brand-mark">S</span>
           <div>
             <h1>ScrapHappens</h1>
-            <p>{roleTitle}</p>
+            <p>{t(roleTitle)}</p>
           </div>
         </div>
 
@@ -52,7 +55,7 @@ export default function Sidebar({ user, roleTitle, onLogout }) {
                 `sidebar-link ${isActive ? "sidebar-link-active" : ""}`
               }
             >
-              {item.name}
+              {t(item.name)}
             </NavLink>
           ))}
         </nav>
@@ -60,8 +63,8 @@ export default function Sidebar({ user, roleTitle, onLogout }) {
 
       <div className="sidebar-footer">
         <p className="sidebar-user">{user?.name}</p>
-        <p className="sidebar-role">{user?.role}</p>
-        <button className="nav-button sidebar-logout" onClick={onLogout}>Logout</button>
+        <p className="sidebar-role">{t(user?.role)}</p>
+        <button className="nav-button sidebar-logout" onClick={onLogout}>{t("Logout")}</button>
       </div>
     </aside>
   );

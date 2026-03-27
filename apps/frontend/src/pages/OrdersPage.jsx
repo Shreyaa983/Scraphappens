@@ -18,6 +18,7 @@ import ReviewForm from "../components/Marketplace/ReviewForm";
 import TrackingMap from "../components/Logistics/TrackingMap";
 import { buildTrackingRoute, getDefaultFallbackRoute } from "../services/geocodeService";
 import { trackShipment } from "../services/logisticsApi";
+import { useTranslation } from "../hooks/useTranslation";
 import truckIconUrl from "../asessts/images/truck.png";
 import "../styles/my-listings.css";
 
@@ -35,14 +36,14 @@ function loadShipmentMap() {
   }
 }
 
-function buildTimelineSteps(statusText) {
+function buildTimelineSteps(statusText, t) {
   const status = String(statusText || "").toLowerCase();
   const base = [
-    { key: "order_placed", label: "Order Placed", done: true, current: false },
-    { key: "pickup_scheduled", label: "Pickup Scheduled", done: false, current: false },
-    { key: "in_transit", label: "In Transit", done: false, current: false },
-    { key: "out_for_delivery", label: "Out for Delivery", done: false, current: false },
-    { key: "delivered", label: "Delivered", done: false, current: false },
+    { key: "order_placed", label: t("Order Placed"), done: true, current: false },
+    { key: "pickup_scheduled", label: t("Pickup Scheduled"), done: false, current: false },
+    { key: "in_transit", label: t("In Transit"), done: false, current: false },
+    { key: "out_for_delivery", label: t("Out for Delivery"), done: false, current: false },
+    { key: "delivered", label: t("Delivered"), done: false, current: false },
   ];
 
   if (status.includes("pickup")) {
@@ -96,6 +97,7 @@ function normalizeTrackingStops(tracking) {
 }
 
 export function BuyerOrdersPage({ token }) {
+  const { t } = useTranslation();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [trackingByOrder, setTrackingByOrder] = useState({});
@@ -121,7 +123,7 @@ export function BuyerOrdersPage({ token }) {
     load();
   }, [token]);
 
-  if (loading) return <div className="loading-shell">Loading your orders…</div>;
+  if (loading) return <div className="loading-shell">{t("Loading your orders…")}</div>;
 
   async function handleTrack(orderId) {
     const shipment = shipmentMap[orderId];
@@ -172,25 +174,25 @@ export function BuyerOrdersPage({ token }) {
 
   function getStatusMeta(statusText) {
     const status = String(statusText || "").toLowerCase();
-    if (status.includes("cancel")) return { label: "Cancelled", className: "status-cancelled" };
-    if (status.includes("deliver") || status.includes("complete")) return { label: "Delivered", className: "status-delivered" };
-    if (status.includes("ship") || status.includes("transit") || status.includes("out")) return { label: "Shipped", className: "status-shipped" };
-    return { label: "Pending", className: "status-pending" };
+    if (status.includes("cancel")) return { label: t("Cancelled"), className: "status-cancelled" };
+    if (status.includes("deliver") || status.includes("complete")) return { label: t("Delivered"), className: "status-delivered" };
+    if (status.includes("ship") || status.includes("transit") || status.includes("out")) return { label: t("Shipped"), className: "status-shipped" };
+    return { label: t("Pending"), className: "status-pending" };
   }
 
   return (
     <div className="my-orders-page">
       <div className="my-orders-header">
         <h3>
-          My Orders <span className="my-orders-count">({orders.length})</span>
+          {t("My Orders")} <span className="my-orders-count">({orders.length})</span>
         </h3>
-        <p>Track your purchases and leave reviews after delivery.</p>
+        <p>{t("Track your purchases and leave reviews after delivery.")}</p>
       </div>
 
       {orders.length === 0 ? (
         <div className="my-orders-empty">
-          <p>You haven't placed any orders yet.</p>
-          <Link to="/" className="inline-link-button">Browse Marketplace</Link>
+          <p>{t("You haven't placed any orders yet.")}</p>
+          <Link to="/" className="inline-link-button">{t("Browse Marketplace")}</Link>
         </div>
       ) : (
         <div className="my-orders-list">
@@ -205,7 +207,7 @@ export function BuyerOrdersPage({ token }) {
                   <>
                     <header className="order-card-header">
                       <div>
-                        <p className="order-label">Order #{order.id.slice(0, 8)}</p>
+                        <p className="order-label">{t("Order")} #{order.id.slice(0, 8)}</p>
                         <p className="order-date">
                           {new Date(order.created_at).toLocaleDateString("en-IN", {
                             day: "numeric",
@@ -214,17 +216,17 @@ export function BuyerOrdersPage({ token }) {
                           })}
                         </p>
                       </div>
-                      <span className={`order-status-badge ${statusMeta.className}`}>Status: {statusMeta.label}</span>
+                      <span className={`order-status-badge ${statusMeta.className}`}>{t("Status")}: {statusMeta.label}</span>
                     </header>
 
                     <section className="order-card-shipping">
                       <div>
-                        <p className="order-section-label">Shipping Address</p>
-                        <p className="order-section-value">{order.shipping_address || "—"}</p>
+                        <p className="order-section-label">{t("Shipping Address")}</p>
+                        <p className="order-section-value">{t(order.shipping_address) || "—"}</p>
                       </div>
                       <div>
-                        <p className="order-section-label">Shipment ID</p>
-                        <p className="order-shipment-id">{shipmentMap[order.id]?.shipment_id || "Not attached yet"}</p>
+                        <p className="order-section-label">{t("Shipment ID")}</p>
+                        <p className="order-shipment-id">{shipmentMap[order.id]?.shipment_id || t("Not attached yet")}</p>
                       </div>
                     </section>
 
@@ -234,10 +236,10 @@ export function BuyerOrdersPage({ token }) {
                           <img src={it.image_url || FALLBACK_IMAGE} alt={it.material_title} />
                           <div className="order-product-copy">
                             <Link to={`/material/${it.material_id}`} className="order-product-title-link">
-                              <h4>{it.material_title}</h4>
+                              <h4>{t(it.material_title)}</h4>
                             </Link>
-                            <p>Quantity: {it.quantity}</p>
-                            <p>Seller: {it.seller.name}</p>
+                            <p>{t("Quantity")}: {it.quantity}</p>
+                            <p>{t("Seller")}: {it.seller.name}</p>
                           </div>
                         </article>
                       ))}
@@ -250,11 +252,11 @@ export function BuyerOrdersPage({ token }) {
                           disabled={!shipmentMap[order.id]?.shipment_id || trackingLoadingByOrder[order.id]}
                           onClick={() => handleTrack(order.id)}
                         >
-                          {trackingLoadingByOrder[order.id] ? "Tracking…" : "Track Shipment"}
+                          {trackingLoadingByOrder[order.id] ? t("Tracking…") : t("Track Shipment")}
                         </button>
                       ) : (
                         <div className="order-review-eligible">
-                          <p>This order has been delivered. Leave a review to help other buyers.</p>
+                          <p>{t("This order has been delivered. Leave a review to help other buyers.")}</p>
                           <button
                             type="button"
                             className="order-action-review"
@@ -262,7 +264,7 @@ export function BuyerOrdersPage({ token }) {
                               setReviewOpenByOrder((prev) => ({ ...prev, [order.id]: !prev[order.id] }))
                             }
                           >
-                            {isReviewOpen ? "Hide Review Form" : "Leave Review"}
+                            {isReviewOpen ? t("Hide Review Form") : t("Leave Review")}
                           </button>
                         </div>
                       )}
@@ -276,29 +278,29 @@ export function BuyerOrdersPage({ token }) {
                             className={`tracking-toggle-btn ${!viewByOrder[order.id] || viewByOrder[order.id] === "timeline" ? "active" : ""}`}
                             onClick={() => setViewByOrder((prev) => ({ ...prev, [order.id]: "timeline" }))}
                           >
-                            Timeline View
+                            {t("Timeline View")}
                           </button>
                           <button
                             type="button"
                             className={`tracking-toggle-btn ${viewByOrder[order.id] === "map" ? "active" : ""}`}
                             onClick={() => setViewByOrder((prev) => ({ ...prev, [order.id]: "map" }))}
                           >
-                            Map View
+                            {t("Map View")}
                           </button>
                         </div>
 
                         {!viewByOrder[order.id] || viewByOrder[order.id] === "timeline" ? (
                           <>
-                            <p>Current Status: {trackingByOrder[order.id].shipment_status || "Unknown"}</p>
-                            <p>Courier: {trackingByOrder[order.id].courier || "Default Courier"}</p>
-                            <p>Current Location: {trackingByOrder[order.id].current_location || "Unknown"}</p>
-                            <p>Estimated Delivery: {trackingByOrder[order.id].expected_delivery || "Unknown"}</p>
+                            <p>{t("Current Status")}: {t(trackingByOrder[order.id].shipment_status) || t("Unknown")}</p>
+                            <p>{t("Courier")}: {t(trackingByOrder[order.id].courier) || t("Default Courier")}</p>
+                            <p>{t("Current Location")}: {t(trackingByOrder[order.id].current_location) || t("Unknown")}</p>
+                            <p>{t("Estimated Delivery")}: {t(trackingByOrder[order.id].expected_delivery) || t("Unknown")}</p>
 
                             <div className="logistics-timeline">
-                              {buildTimelineSteps(trackingByOrder[order.id].shipment_status).map((step) => (
+                              {buildTimelineSteps(trackingByOrder[order.id].shipment_status, t).map((step) => (
                                 <div key={`${order.id}-${step.key}`} className={`logistics-timeline-step ${step.done ? "done" : ""} ${step.current ? "current" : ""}`}>
                                   <span className="dot" />
-                                  <span>{step.label}</span>
+                                  <span>{t(step.label)}</span>
                                 </div>
                               ))}
                             </div>
@@ -306,7 +308,7 @@ export function BuyerOrdersPage({ token }) {
                         ) : (
                           <>
                             {trackingByOrder[order.id].routeFallbackUsed ? (
-                              <p className="mini-note">Map route is using fallback coordinates.</p>
+                              <p className="mini-note">{t("Map route is using fallback coordinates.")}</p>
                             ) : null}
                             <TrackingMap
                               stops={trackingByOrder[order.id].routeStops || []}
@@ -322,7 +324,7 @@ export function BuyerOrdersPage({ token }) {
 
                     {showReviewForm && isReviewOpen ? (
                       <section className="order-review-panel">
-                        <h4>Leave Review</h4>
+                        <h4>{t("Leave Review")}</h4>
                         <ReviewForm
                           orderId={order.id}
                           sellerId={firstSellerId}
@@ -346,6 +348,7 @@ export function BuyerOrdersPage({ token }) {
 }
 
 export function SellerOrdersPage({ token }) {
+  const { t } = useTranslation();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -366,7 +369,7 @@ export function SellerOrdersPage({ token }) {
   if (loading) return (
     <div className="loading-shell">
       <div className="spin">📦</div>
-      <p>Loading incoming orders...</p>
+      <p>{t("Loading incoming orders...")}</p>
     </div>
   );
 
@@ -375,17 +378,17 @@ export function SellerOrdersPage({ token }) {
       <header className="my-listings-header">
         <h2 className="my-listings-title">
           <ShieldCheck size={28} color="hsl(var(--primary))" />
-          Seller Orders
+          {t("Seller Orders")}
           <span className="count">{items.length}</span>
         </h2>
-        <p className="my-listings-sub">Incoming orders for your listed materials. Manage fulfillment and tracking here.</p>
+        <p className="my-listings-sub">{t("Incoming orders for your listed materials. Manage fulfillment and tracking here.")}</p>
       </header>
 
       {items.length === 0 ? (
         <div className="empty-state">
           <ShoppingBag size={48} color="#94a3b8" style={{ marginBottom: '1.5rem' }} />
-          <p>No sales orders yet.</p>
-          <span>Items you sell in the <Link to="/marketplace" className="inline-link-button">Marketplace</Link> will appear here once purchased.</span>
+          <p>{t("No sales orders yet.")}</p>
+          <span>{t("Items you sell in the")} <Link to="/marketplace" className="inline-link-button">{t("Marketplace")}</Link> {t("will appear here once purchased.")}</span>
         </div>
       ) : (
         <div className="my-listings-grid">
@@ -398,7 +401,7 @@ export function SellerOrdersPage({ token }) {
                   color: item.status?.toLowerCase().includes('complete') ? '#059669' : '#e65100',
                   borderColor: item.status?.toLowerCase().includes('complete') ? '#6ee7b7' : '#ffb74d'
                 }}>
-                  {item.status}
+                  {t(item.status)}
                 </span>
               </div>
               
@@ -406,7 +409,7 @@ export function SellerOrdersPage({ token }) {
                 <div className="my-listing-meta-row">
                   <span className="my-listing-category">
                     <Hash size={12} style={{ marginRight: 2 }} />
-                    Order #{item.order_id.slice(0, 8)}
+                    {t("Order")} #{item.order_id.slice(0, 8)}
                   </span>
                   <span className="my-listing-date">
                     <Calendar size={12} style={{ marginRight: 4 }} />
@@ -418,7 +421,7 @@ export function SellerOrdersPage({ token }) {
                 </div>
 
                 <Link to={`/material/${item.material.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                  <h3 className="my-listing-title">{item.material.title}</h3>
+                  <h3 className="my-listing-title">{t(item.material.title)}</h3>
                 </Link>
                 
                 <div className="my-listing-chips">
@@ -426,10 +429,10 @@ export function SellerOrdersPage({ token }) {
                     <User size={14} /> {item.buyer.name}
                   </span>
                   <span className="my-listing-chip">
-                    <Package size={14} /> Qty: {item.quantity}
+                    <Package size={14} /> {t("Qty")}: {item.quantity}
                   </span>
                   <span className="my-listing-chip" style={{ color: 'hsl(var(--primary))' }}>
-                    Total: ₹{item.price * item.quantity}
+                    {t("Total")}: ₹{item.price * item.quantity}
                   </span>
                 </div>
 
@@ -439,7 +442,7 @@ export function SellerOrdersPage({ token }) {
                     className="action-btn edit-btn"
                     style={{ textDecoration: 'none' }}
                   >
-                    <ChevronRight size={16} /> Fulfillment Details
+                    <ChevronRight size={16} /> {t("Fulfillment Details")}
                   </Link>
                 </div>
               </div>

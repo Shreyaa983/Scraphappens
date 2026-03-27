@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
 import { createCommunityPostWithFile, getCommunityPosts } from "../api";
+import { useTranslation } from "../hooks/useTranslation";
 
 export default function CommunityPage({ token, user }) {
+  const { t } = useTranslation();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -16,7 +17,7 @@ export default function CommunityPage({ token, user }) {
         const resp = await getCommunityPosts(token);
         if (!cancelled) setPosts(resp.results || []);
       } catch (err) {
-        if (!cancelled) setError(err.message || "Failed to load community feed");
+        if (!cancelled) setError(err.message || t("Failed to load community feed"));
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -36,7 +37,7 @@ export default function CommunityPage({ token, user }) {
     setError("");
     try {
       if (!form.imageFile) {
-        setError("Please choose an image to upload.");
+        setError(t("Please choose an image to upload."));
         return;
       }
       const formData = new FormData();
@@ -47,7 +48,7 @@ export default function CommunityPage({ token, user }) {
       setPosts((prev) => [resp.result, ...prev]);
       setForm({ imageFile: null, caption: "" });
     } catch (err) {
-      setError(err.message || "Failed to share post");
+      setError(err.message || t("Failed to share post"));
     }
   }
 
@@ -59,14 +60,14 @@ export default function CommunityPage({ token, user }) {
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5">
               <path d="M4 4h16v4H4zM4 10h10v4H4zM4 16h7v4H4z" />
             </svg>
-            <span className="nav-logo-text">Best Out of Waste</span>
+            <span className="nav-logo-text">{t("Best Out of Waste")}</span>
           </div>
         </div>
       </header>
 
       <section className="listings-section">
         <div className="dashboard-card" style={{ marginBottom: 24 }}>
-          <h4>Share Your Build</h4>
+          <h4>{t("Share Your Build")}</h4>
           {error && (
             <div className="message" style={{ marginBottom: 12 }}>
               {error}
@@ -74,7 +75,7 @@ export default function CommunityPage({ token, user }) {
           )}
           <form onSubmit={handleSubmit} className="diy-result-form">
             <label>
-              Image
+              {t("Image")}
               <input
                 required
                 type="file"
@@ -84,26 +85,26 @@ export default function CommunityPage({ token, user }) {
               />
             </label>
             <label>
-              Caption
+              {t("Caption")}
               <textarea
                 rows={3}
                 value={form.caption}
                 onChange={(e) => handleChange("caption", e.target.value)}
-                placeholder="Describe how you transformed waste into something useful…"
+                placeholder={t("Describe how you transformed waste into something useful…")}
               />
             </label>
             <button type="submit" className="submit-button">
-              Share to Community
+              {t("Share to Community")}
             </button>
           </form>
         </div>
 
         <div className="dashboard-card">
-          <h4>Community Feed</h4>
+          <h4>{t("Community Feed")}</h4>
           {loading ? (
-            <div className="loading-shell">Loading community posts...</div>
+            <div className="loading-shell">{t("Loading community posts...")}</div>
           ) : posts.length === 0 ? (
-            <p>No community posts yet. Be the first to share your build!</p>
+            <p>{t("No community posts yet. Be the first to share your build!")}</p>
           ) : (
             <div className="community-results-grid">
               {posts.map((post) => (
@@ -112,11 +113,11 @@ export default function CommunityPage({ token, user }) {
                     <img src={post.image_url} alt={post.caption || "Community result"} />
                   )}
                   <div className="community-result-body">
-                    <p className="community-result-caption">{post.caption}</p>
+                    <p className="community-result-caption">{t(post.caption)}</p>
                     <p className="community-result-meta">
-                      Posted by {post.user_name || "Buyer"} on{" "}
+                      {t("Posted by")} {post.user_name || t("Buyer")} {t("on")}{" "}
                       {new Date(post.created_at).toLocaleDateString()}
-                      {post.diy_title ? ` · Inspired by ${post.diy_title}` : null}
+                      {post.diy_title ? ` · ${t("Inspired by")} ${t(post.diy_title)}` : null}
                     </p>
                   </div>
                 </article>

@@ -1,12 +1,14 @@
 import React from 'react';
+import { useTranslation } from '../hooks/useTranslation';
 
 export default function SuggestionCard({ text, index }) {
+  const { t } = useTranslation();
     return (
         <div className="suggestion-card-wrapper">
             <div className="suggestion-card-header">
-                <span className="suggestion-idea-badge">Idea {index + 1}</span>
+                <span className="suggestion-idea-badge">{t("Idea")} {index + 1}</span>
             </div>
-            <p className="suggestion-card-text">{text}</p>
+            <p className="suggestion-card-text">{t(text)}</p>
 
             <style jsx>{`
         .suggestion-card-wrapper {

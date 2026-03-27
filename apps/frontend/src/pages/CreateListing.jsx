@@ -17,9 +17,11 @@ import {
 } from "lucide-react";
 import { createMaterial, updateMaterial, getMaterialById } from "../api";
 import { categories, conditions } from "../data/mockData";
+import { useTranslation } from "../hooks/useTranslation";
 import "../styles/listing-form.css";
 
 export default function CreateListing({ user, token, editItem: propEditItem, onBack }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { id } = useParams();
   const location = useLocation();
@@ -62,7 +64,7 @@ export default function CreateListing({ user, token, editItem: propEditItem, onB
       }
       if (onBack) onBack(); else navigate(-1);
     } catch (err) {
-      setError(err.message || "Something went wrong");
+      setError(err.message || t("Something went wrong"));
       setLoading(false);
     }
   };
@@ -74,11 +76,11 @@ export default function CreateListing({ user, token, editItem: propEditItem, onB
           className="nav-button nav-button-secondary"
           onClick={() => { if (onBack) onBack(); else navigate(-1); }}
         >
-          <ArrowLeft size={16} /> Back
+          <ArrowLeft size={16} /> {t("Back")}
         </button>
         <div style={{ display: 'flex', gap: '12px' }}>
           <Link to="/marketplace" className="nav-button nav-button-secondary" style={{ textDecoration: 'none' }}>
-             Marketplace
+             {t("Marketplace")}
           </Link>
         </div>
       </div>
@@ -87,15 +89,15 @@ export default function CreateListing({ user, token, editItem: propEditItem, onB
         <header className="listing-form-header">
           <h2 className="listing-form-title">
             <Layout size={24} color="hsl(var(--primary))" />
-            {isEdit ? "Edit Your Listing" : "List New Material"}
+            {isEdit ? t("Edit Your Listing") : t("List New Material")}
           </h2>
-          {isEdit && <span className="gsbar-status-chip">Editing ID: #{editItem?.id || id}</span>}
+          {isEdit && <span className="gsbar-status-chip">{t("Editing ID")}: #{editItem?.id || id}</span>}
         </header>
 
         {fetching && (
           <div className="loading-shell">
             <Clock className="spin" style={{ marginBottom: '1rem' }} />
-            <p>Loading listing details...</p>
+            <p>{t("Loading listing details...")}</p>
           </div>
         )}
 
@@ -108,64 +110,64 @@ export default function CreateListing({ user, token, editItem: propEditItem, onB
         <form onSubmit={handleSubmit} className="listing-form-grid">
           {/* Title */}
           <div className="field-group full-width">
-            <label className="field-label"><Tag size={16} /> Material Title *</label>
+            <label className="field-label"><Tag size={16} /> {t("Material Title")} *</label>
             <input 
               required 
               name="title" 
               className="listing-input"
               value={form.title} 
               onChange={handleChange} 
-              placeholder="e.g., Reclaimed Oak Planks, Industrial Steel Pipes" 
+              placeholder={t("e.g., Reclaimed Oak Planks, Industrial Steel Pipes")} 
             />
           </div>
 
           {/* Material Type */}
           <div className="field-group">
-            <label className="field-label"><Layers size={16} /> Material Type</label>
+            <label className="field-label"><Layers size={16} /> {t("Material Type")}</label>
             <input 
               name="material_type" 
               className="listing-input"
               value={form.material_type} 
               onChange={handleChange} 
-              placeholder="e.g., Wood, Fabric, Metal" 
+              placeholder={t("e.g., Wood, Fabric, Metal")} 
             />
           </div>
 
           {/* Location */}
           <div className="field-group">
-            <label className="field-label"><MapPin size={16} /> Location / City</label>
+            <label className="field-label"><MapPin size={16} /> {t("Location / City")}</label>
             <input 
               name="location" 
               className="listing-input"
               value={form.location} 
               onChange={handleChange} 
-              placeholder="e.g., Mumbai, Maharashtra" 
+              placeholder={t("e.g., Mumbai, Maharashtra")} 
             />
           </div>
 
           {/* Category */}
           <div className="field-group">
-            <label className="field-label"><Package size={16} /> Category</label>
+            <label className="field-label"><Package size={16} /> {t("Category")}</label>
             <select name="category" className="listing-select" value={form.category} onChange={handleChange}>
               {categories.filter(c => c !== "All").map(c => (
-                <option key={c} value={c}>{c}</option>
+                <option key={c} value={c}>{t(c)}</option>
               ))}
             </select>
           </div>
 
           {/* Condition */}
           <div className="field-group">
-            <label className="field-label"><CheckCircle size={16} /> Condition</label>
+            <label className="field-label"><CheckCircle size={16} /> {t("Condition")}</label>
             <select name="condition" className="listing-select" value={form.condition} onChange={handleChange}>
               {conditions.filter(c => c !== "All").map(c => (
-                <option key={c} value={c}>{c}</option>
+                <option key={c} value={c}>{t(c)}</option>
               ))}
             </select>
           </div>
 
           {/* Quantity */}
           <div className="field-group">
-            <label className="field-label"><Layers size={16} /> Available Quantity</label>
+            <label className="field-label"><Layers size={16} /> {t("Available Quantity")}</label>
             <div className="unit-input-group">
               <input
                 type="number"
@@ -182,27 +184,27 @@ export default function CreateListing({ user, token, editItem: propEditItem, onB
                 value={form.quantity_unit}
                 onChange={handleChange}
               >
-                <option value="kg">kg</option>
-                <option value="units">units</option>
-                <option value="litres">litres</option>
-                <option value="meters">meters</option>
-                <option value="tons">tons</option>
+                <option value="kg">{t("kg")}</option>
+                <option value="units">{t("units")}</option>
+                <option value="litres">{t("litres")}</option>
+                <option value="meters">{t("meters")}</option>
+                <option value="tons">{t("tons")}</option>
               </select>
             </div>
           </div>
 
           {/* Delivery Option */}
           <div className="field-group">
-            <label className="field-label"><Truck size={16} /> Delivery Option</label>
+            <label className="field-label"><Truck size={16} /> {t("Delivery Option")}</label>
             <select name="delivery_option" className="listing-select" value={form.delivery_option} onChange={handleChange}>
-              <option value="pickup_only">Pickup Only</option>
-              <option value="delivery_available">Delivery Available</option>
+              <option value="pickup_only">{t("Pickup Only")}</option>
+              <option value="delivery_available">{t("Delivery Available")}</option>
             </select>
           </div>
 
           {/* Price */}
           <div className="field-group">
-            <label className="field-label"><IndianRupee size={16} /> Expected Price (₹)</label>
+            <label className="field-label"><IndianRupee size={16} /> {t("Expected Price")} (₹)</label>
             <div className="field-input-wrapper">
               <input
                 type="number"
@@ -219,7 +221,7 @@ export default function CreateListing({ user, token, editItem: propEditItem, onB
 
           {/* Free Toggle */}
           <div className="field-group">
-            <label className="field-label">Pricing Type</label>
+            <label className="field-label">{t("Pricing Type")}</label>
             <label className="checkbox-field">
               <input
                 type="checkbox"
@@ -227,45 +229,45 @@ export default function CreateListing({ user, token, editItem: propEditItem, onB
                 checked={form.is_free}
                 onChange={handleChange}
               />
-              <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>Mark as Free / Donation</span>
+              <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>{t("Mark as Free / Donation")}</span>
             </label>
           </div>
 
           {/* Sustainability Impact */}
           <div className="field-group full-width">
-            <label className="field-label"><Leaf size={16} /> Sustainability Impact</label>
+            <label className="field-label"><Leaf size={16} /> {t("Sustainability Impact")}</label>
             <input
               name="sustainability_impact"
               className="listing-input"
               value={form.sustainability_impact}
               onChange={handleChange}
-              placeholder="e.g., Saves 8 kg of waste from landfill"
+              placeholder={t("e.g., Saves 8 kg of waste from landfill")}
             />
           </div>
 
           {/* Image URL */}
           <div className="field-group full-width">
-            <label className="field-label"><ImageIcon size={16} /> Material Image URL</label>
+            <label className="field-label"><ImageIcon size={16} /> {t("Material Image URL")}</label>
             <input 
               type="url" 
               name="image_url" 
               className="listing-input"
               value={form.image_url} 
               onChange={handleChange} 
-              placeholder="https://images.unsplash.com/your-image-url" 
+              placeholder={t("https://images.unsplash.com/your-image-url")} 
             />
           </div>
 
           {/* Description */}
           <div className="field-group full-width">
-            <label className="field-label"><FileText size={16} /> Detailed Description</label>
+            <label className="field-label"><FileText size={16} /> {t("Detailed Description")}</label>
             <textarea 
               name="description" 
               className="listing-textarea"
               value={form.description} 
               onChange={handleChange} 
               rows="5" 
-              placeholder="Describe the material source, exact dimensions, quality, and possible reuse ideas..." 
+              placeholder={t("Describe the material source, exact dimensions, quality, and possible reuse ideas...")} 
             />
           </div>
 
@@ -277,9 +279,9 @@ export default function CreateListing({ user, token, editItem: propEditItem, onB
               disabled={loading}
             >
               {loading ? (
-                <><Clock size={18} className="spin" /> {isEdit ? "Saving..." : "Publishing..."}</>
+                <><Clock size={18} className="spin" /> {isEdit ? t("Saving...") : t("Publishing...")}</>
               ) : (
-                <>{isEdit ? "Update Listing" : "Publish Material"}</>
+                <>{isEdit ? t("Update Listing") : t("Publish Material")}</>
               )}
             </button>
           </div>

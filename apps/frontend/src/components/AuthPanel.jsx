@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import AddressForm from "./AddressForm";
+import { useTranslation } from "../hooks/useTranslation";
 
 const roles = ["seller", "buyer", "volunteer"];
 
 export default function AuthPanel({ mode, form, onFieldChange, onClose, onSubmit }) {
+  const { t } = useTranslation();
   const [step, setStep] = useState(1); // 1 = basic details, 2 = address
 
   useEffect(() => {
@@ -38,10 +40,10 @@ export default function AuthPanel({ mode, form, onFieldChange, onClose, onSubmit
     <form onSubmit={handleSubmit} className="auth-panel">
       <div className="auth-header">
         <div>
-          <h3>{isRegister ? "Create account" : "Welcome back"}</h3>
+          <h3>{isRegister ? t("Create account") : t("Welcome back")}</h3>
           {isRegister && (
             <p className="auth-subtitle">
-              Step {step} of 2 — {step === 1 ? "Basic details" : "Address details"}
+              {t("Step")} {step} {t("of")} 2 — {step === 1 ? t("Basic details") : t("Address details")}
             </p>
           )}
         </div>
@@ -51,38 +53,38 @@ export default function AuthPanel({ mode, form, onFieldChange, onClose, onSubmit
       {isRegister && step === 1 && (
         <>
           <label>
-            Name
+            {t("Name")}
             <input value={form.name} onChange={(e) => onFieldChange("name", e.target.value)} required />
           </label>
 
           <label>
-            Email
+            {t("Email")}
             <input type="email" value={form.email} onChange={(e) => onFieldChange("email", e.target.value)} required />
           </label>
 
           <label>
-            Phone Number
+            {t("Phone Number")}
             <input type="tel" value={form.phone_number || ''} onChange={(e) => onFieldChange("phone_number", e.target.value)} placeholder="+91 98765 43210" required />
           </label>
 
           <label>
-            Password
+            {t("Password")}
             <input type="password" value={form.password} onChange={(e) => onFieldChange("password", e.target.value)} required />
           </label>
 
           <label>
-            Role
+            {t("Role")}
             <select value={form.role} onChange={(e) => onFieldChange("role", e.target.value)}>
               {roles.map((role) => (
                 <option key={role} value={role}>
-                  {role}
+                  {t(role)}
                 </option>
               ))}
             </select>
           </label>
 
           <button type="submit" className="submit-button">
-            Next: Address
+            {t("Next: Address")}
           </button>
         </>
       )}
@@ -97,10 +99,10 @@ export default function AuthPanel({ mode, form, onFieldChange, onClose, onSubmit
               className="nav-button nav-button-secondary"
               onClick={() => setStep(1)}
             >
-              ← Back
+              ← {t("Back")}
             </button>
             <button type="submit" className="submit-button">
-              Create Account
+              {t("Create Account")}
             </button>
           </div>
         </>
@@ -109,17 +111,17 @@ export default function AuthPanel({ mode, form, onFieldChange, onClose, onSubmit
       {!isRegister && (
         <>
           <label>
-            Email
+            {t("Email")}
             <input type="email" value={form.email} onChange={(e) => onFieldChange("email", e.target.value)} required />
           </label>
 
           <label>
-            Password
+            {t("Password")}
             <input type="password" value={form.password} onChange={(e) => onFieldChange("password", e.target.value)} required />
           </label>
 
           <button type="submit" className="submit-button">
-            Sign In
+            {t("Sign In")}
           </button>
         </>
       )}

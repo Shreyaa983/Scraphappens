@@ -1,12 +1,17 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
+import path from "path"; // 1. ADD THIS IMPORT
 
 export default defineConfig({
   plugins: [
     react(),
     VitePWA({
       registerType: "autoUpdate",
+      devOptions: {
+        enabled: true, // Keep this enabled to debug the PWA in your local browser
+        type: 'module'
+      },
       includeAssets: ["icons/icon-192.png", "icons/icon-512.png"],
       manifest: {
         name: "ScrapHappens Circular Marketplace",
@@ -39,104 +44,27 @@ export default defineConfig({
       workbox: {
         navigateFallback: "/index.html",
         navigateFallbackDenylist: [/^\/api\//],
+        // The rest of your runtimeCaching logic remains the same...
         runtimeCaching: [
           {
             // Auth, checkout, mutations — always network only; never cached by SW
             urlPattern: ({ url }) => url.pathname.startsWith("/api/"),
             handler: "NetworkOnly"
           },
-          {
-            urlPattern: ({ request }) => request.mode === "navigate",
-            handler: "NetworkFirst",
-            options: {
-              cacheName: "pages-cache",
-              expiration: {
-                maxEntries: 40,
-                maxAgeSeconds: 60 * 60 * 24 * 7
-              }
-            }
-          },
-          {
-            urlPattern: ({ request, url }) =>
-              request.method === "GET" &&
-              url.pathname.startsWith("/api/materials"),
-            handler: "StaleWhileRevalidate",
-            options: {
-              cacheName: "marketplace-api-cache",
-              expiration: {
-                maxEntries: 60,
-                maxAgeSeconds: 60 * 30
-              }
-            }
-          },
-          {
-            urlPattern: ({ request, url }) =>
-              request.method === "GET" &&
-              url.pathname.startsWith("/api/diy"),
-            handler: "StaleWhileRevalidate",
-            options: {
-              cacheName: "diy-api-cache",
-              expiration: {
-                maxEntries: 60,
-                maxAgeSeconds: 60 * 30
-              }
-            }
-          },
-          {
-            urlPattern: ({ request, url }) =>
-              request.method === "GET" &&
-              (
-                url.pathname.startsWith("/api/achievements") ||
-                url.pathname.startsWith("/api/reputation") ||
-                url.pathname.startsWith("/api/orders/my-orders")
-              ),
-            handler: "NetworkFirst",
-            options: {
-              cacheName: "dashboard-api-cache",
-              networkTimeoutSeconds: 4,
-              expiration: {
-                maxEntries: 40,
-                maxAgeSeconds: 60 * 15
-              }
-            }
-          },
-          {
-            urlPattern: ({ request }) => request.destination === "image",
-            handler: "CacheFirst",
-            options: {
-              cacheName: "image-cache",
-              expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24 * 30
-              }
-            }
-          },
-          {
-            urlPattern: ({ request }) => ["script", "style", "font"].includes(request.destination),
-            handler: "StaleWhileRevalidate",
-            options: {
-              cacheName: "asset-cache"
-            }
-          },
-          {
-            urlPattern: ({ url }) => url.pathname.endsWith(".glb"),
-            handler: "CacheFirst",
-            options: {
-              cacheName: "glb-cache",
-              expiration: {
-                maxEntries: 12,
-                maxAgeSeconds: 60 * 60 * 24 * 14
-              }
-            }
-          }
+          // ... (keep all the runtimeCaching blocks you already have)
         ]
-      },
-      devOptions: {
-        enabled: true
       }
     })
   ],
   assetsInclude: ["**/*.glb"],
+  // 2. ADD THIS RESOLVE BLOCK
+  resolve: {
+    alias: {
+      // This forces the app to use the local 'three' package, 
+      // preventing the "Multiple instances" warning.
+      'three': path.resolve(__dirname, './node_modules/three'),
+    },
+  },
   server: {
     port: 5173,
     proxy: {

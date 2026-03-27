@@ -3,20 +3,35 @@ import { socket, connectSocket, disconnectSocket } from "../../lib/agentic/socke
 import { createSpeechRecognition } from "../../lib/agentic/speechToText";
 import { speakText, stopSpeaking } from "../../lib/agentic/speech";
 import { useNavigate } from "react-router-dom";
+import { addToCart } from "../../api";
 
 const AgenticContext = createContext();
 
+const STORAGE_KEY = 'scraphappens_chat_history';
+
 export const AgenticProvider = ({ children, user, token }) => {
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState(() => {
+    if (typeof localStorage !== "undefined") {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      return saved ? JSON.parse(saved) : [];
+    }
+    return [];
+  });
   const [isListening, setIsListening] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
+
+  useEffect(() => {
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+    }
+  }, [messages]);
   const [transcript, setTranscript] = useState("");
   const [isVisible, setIsVisible] = useState(false);
 
   const userId = user?.id || user?.sub;
   const authToken = token || (typeof localStorage !== "undefined" ? localStorage.getItem("token") : "") || "";
-
   const navigate = useNavigate();
+
   const recognitionRef = useRef(null);
   const silenceTimerRef = useRef(null);
   const loopRef = useRef(false);
@@ -24,6 +39,20 @@ export const AgenticProvider = ({ children, user, token }) => {
   const addMessage = useCallback((text, sender) => {
     setMessages((prev) => [...prev, { text, sender, timestamp: new Date() }]);
   }, []);
+
+  const stopListeningAndSend = useCallback((finalText) => {
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch (e) { }
+    }
+
+    const textToSend = finalText || transcript;
+    if (textToSend.trim()) {
+      addMessage(textToSend, "user");
+      setIsThinking(true);
+      socket.emit("prompt", { text: textToSend, userId });
+      setTranscript("");
+    }
+  }, [transcript, userId, addMessage]);
 
   const addStructuredMessage = useCallback((msg) => {
     setMessages((prev) => [...prev, { ...msg, timestamp: new Date() }]);
@@ -35,13 +64,10 @@ export const AgenticProvider = ({ children, user, token }) => {
 
   const startListening = useCallback(() => {
     if (recognitionRef.current) {
-        try {
-            recognitionRef.current.start();
-            return;
-        } catch (e) {
-            console.log("Recognition already active or error starting:", e.message);
-            return;
-        }
+      try {
+        recognitionRef.current.start();
+        return;
+      } catch (e) { }
     }
 
     loopRef.current = true;
@@ -50,76 +76,100 @@ export const AgenticProvider = ({ children, user, token }) => {
       onStart: () => setIsListening(true),
       onEnd: () => {
         setIsListening(false);
-        // If we're still in looping mode, restart recognition
         if (loopRef.current) {
-            console.log("Restarting recognition loop...");
-            setTimeout(() => {
-                if (loopRef.current) {
-                    try {
-                        recognitionRef.current?.start();
-                    } catch (e) {
-                        console.log("Failed to restart recognition:", e.message);
-                    }
-                }
-            }, 300);
-        } else {
-            recognitionRef.current = null;
+          setTimeout(() => {
+            if (loopRef.current) {
+              try { recognitionRef.current?.start(); } catch (e) { }
+            }
+          }, 300);
         }
       },
       onResult: ({ finalTranscript, interimTranscript }) => {
+        // EXACT ORIGINAL LOGIC FOR TRANSCRIPT DISPLAY
         setTranscript(finalTranscript || interimTranscript);
 
-        // Reset silence timer
         if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
 
         if (finalTranscript) {
           silenceTimerRef.current = setTimeout(() => {
             stopListeningAndSend(finalTranscript);
-          }, 2500); // 2.5 seconds of silence
+          }, 2500); // REPLACED 1.5s with ORIGINAL 2.5s
         }
       },
       onError: (err) => {
         console.error("STT Error:", err);
-        if (err.error === 'not-allowed') {
-            loopRef.current = false;
-        }
+        if (err.error === 'not-allowed') loopRef.current = false;
         setIsListening(false);
       }
     });
 
     try {
-        recognitionRef.current.start();
+      recognitionRef.current.start();
     } catch (e) {
-        console.log("Recognition start error:", e.message);
+      setIsListening(false);
     }
-  }, [createSpeechRecognition]);
+  }, [createSpeechRecognition, stopListeningAndSend]);
 
-  const handleResponse = useCallback((response) => {
+  const handleResponse = useCallback(async (response) => {
     setIsThinking(false);
     const text = response.text || "";
 
-    // Improved Regex to find "open {path}" anywhere in the text
-    const navMatch = text.match(/open\s+(\/\S+)/i);
+    // --- AGENTIC ACTION PARSER (Added functionality) ---
+    const actionMatch = text.match(/ACTION:(\w+):?([^:]+)?:?([^:]+)?/i);
 
+    if (actionMatch) {
+      const type = actionMatch[1].toUpperCase();
+      const param1 = actionMatch[2];
+      const param2 = actionMatch[3];
+
+      const cleanText = text.split("ACTION:")[0].trim();
+      addMessage(cleanText, "assistant");
+
+      speakText(cleanText, () => {
+        if (loopRef.current) startListening();
+      });
+
+      switch (type) {
+        case "NAVIGATE":
+          if (param1) navigate(param1);
+          break;
+        case "SEARCH":
+          if (window.onAgentSearch) {
+            window.onAgentSearch(param1);
+          } else {
+            navigate(`/?search=${encodeURIComponent(param1)}`);
+          }
+          break;
+        case "ADD_TO_CART":
+          if (param1) {
+            const token = localStorage.getItem("token");
+            if (!token) break;
+            try {
+              await addToCart({ material_id: param1, quantity: parseInt(param2) || 1 }, token);
+              addMessage(`Added to your cart!`, "assistant");
+            } catch (err) { }
+          }
+          break;
+        case "GO_BACK":
+          navigate(-1);
+          break;
+      }
+      return;
+    }
+
+    // --- ORIGINAL NAVIGATION LOGIC ---
+    const navMatch = text.match(/open\s+(\/\S+)/i);
     if (navMatch) {
       const path = navMatch[1];
       addStructuredMessage({ sender: "assistant", text, listings: response.listings, cart_summary: response.cart_summary });
       speakText(`Opening ${path}`, () => {
-        if (loopRef.current) {
-            startListening();
-        }
+        if (loopRef.current) startListening();
       });
-
-      // Delay navigation slightly so user can read the message
-      setTimeout(() => {
-        navigate(path);
-      }, 500);
+      setTimeout(() => navigate(path), 500);
     } else {
       addStructuredMessage({ sender: "assistant", text, listings: response.listings, cart_summary: response.cart_summary });
       speakText(text, () => {
-        if (loopRef.current) {
-            startListening();
-        }
+        if (loopRef.current) startListening();
       });
     }
   }, [addStructuredMessage, navigate, startListening]);
@@ -127,7 +177,6 @@ export const AgenticProvider = ({ children, user, token }) => {
   useEffect(() => {
     connectSocket(authToken);
     socket.on("response", handleResponse);
-
     return () => {
       socket.off("response", handleResponse);
       disconnectSocket();
@@ -137,41 +186,15 @@ export const AgenticProvider = ({ children, user, token }) => {
   const stopAll = useCallback(() => {
     loopRef.current = false;
     stopSpeaking();
-    
     if (recognitionRef.current) {
-      try {
-        recognitionRef.current.stop();
-      } catch (e) {
-        console.log("Stop error in stopAll:", e.message);
-      }
+      try { recognitionRef.current.stop(); } catch (e) { }
     }
-    
     setIsListening(false);
     setIsThinking(false);
     setTranscript("");
-    
-    if (silenceTimerRef.current) {
-        clearTimeout(silenceTimerRef.current);
-    }
+    if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
   }, []);
 
-  const stopListeningAndSend = (finalText) => {
-    if (recognitionRef.current) {
-      try {
-          recognitionRef.current.stop();
-      } catch (e) {
-          console.log("Stop error:", e.message);
-      }
-    }
-
-    const textToSend = finalText || transcript;
-    if (textToSend.trim()) {
-      addMessage(textToSend, "user");
-      setIsThinking(true);
-      socket.emit("prompt", { text: textToSend, userId });
-      setTranscript("");
-    }
-  };
 
   const sendText = useCallback((textToSend) => {
     const clean = (textToSend || "").trim();
@@ -189,9 +212,7 @@ export const AgenticProvider = ({ children, user, token }) => {
   const toggleVisibility = () => {
     setIsVisible((prev) => {
       const next = !prev;
-      if (!next) {
-        stopAll();
-      }
+      if (!next) stopAll();
       return next;
     });
   };

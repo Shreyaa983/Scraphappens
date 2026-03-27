@@ -3,6 +3,7 @@ import { Send, PlusCircle, Loader2, Mic, Square } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAgentic } from "../contexts/Agentic/ChatContext";
 import "../components/Agentic/Agentic.css";
+import { useTranslation } from '../hooks/useTranslation';
 
 const AIChatbot = () => {
   const [input, setInput] = useState("");
@@ -16,6 +17,8 @@ const AIChatbot = () => {
     startListening,
     stopAll,
   } = useAgentic();
+  const { t } = useTranslation();
+  const WELCOME_MSG = { sender: 'assistant', text: t("Hello! I'm your Circular Loop Assistant. How can I help you with sustainable textile reuse today?") };
   const scrollRef = useRef(null);
 
   // Auto-scroll to bottom on new messages
@@ -42,14 +45,14 @@ const AIChatbot = () => {
       <section className="agentic-page-shell">
         <header className="ai-chat-header">
           <div>
-            <span className="eyebrow">Smart Assistant</span>
-            <h3>Circular Loop Chatbot</h3>
+            <span className="eyebrow">{t("Smart Assistant")}</span>
+            <h3>{t("Circular Loop Chatbot")}</h3>
           </div>
           <div className="ai-chat-header-actions">
-            <Link to="/" className="section-tag ai-chat-link">View Marketplace</Link>
-            <button type="button" onClick={handleNewChat} title="Start a new chat" className="ai-new-chat-btn">
+            <Link to="/" className="section-tag ai-chat-link">{t("View Marketplace")}</Link>
+            <button type="button" onClick={handleNewChat} title={t("Start a new chat")} className="ai-new-chat-btn">
               <PlusCircle size={15} />
-              New Chat
+              {t("New Chat")}
             </button>
           </div>
         </header>
@@ -61,8 +64,8 @@ const AIChatbot = () => {
 
           <div className="agentic-messages" ref={scrollRef}>
             {messages.length === 0 && (
-              <div className="empty-state">
-                How can I help you today?
+              <div className="msg assistant">
+                <div>{WELCOME_MSG.text}</div>
               </div>
             )}
 

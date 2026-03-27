@@ -67,7 +67,7 @@ if (!self.define) {
     });
   };
 }
-define(['./workbox-a4b5d8d7'], (function (workbox) { 'use strict';
+define(['./workbox-6d1fb45c'], (function (workbox) { 'use strict';
 
   self.skipWaiting();
   workbox.clientsClaim();
@@ -79,75 +79,11 @@ define(['./workbox-a4b5d8d7'], (function (workbox) { 'use strict';
    */
   workbox.precacheAndRoute([{
     "url": "/index.html",
-    "revision": "0.m23hsvaqrpg"
+    "revision": "0.g7hsp33bopo"
   }], {});
   workbox.cleanupOutdatedCaches();
   workbox.registerRoute(new workbox.NavigationRoute(workbox.createHandlerBoundToURL("/index.html"), {
     allowlist: [/^\/$/]
   }));
-  workbox.registerRoute(({
-    request
-  }) => request.mode === "navigate", new workbox.NetworkFirst({
-    "cacheName": "pages-cache",
-    plugins: [new workbox.ExpirationPlugin({
-      maxEntries: 40,
-      maxAgeSeconds: 604800
-    })]
-  }), 'GET');
-  workbox.registerRoute(({
-    request,
-    url
-  }) => request.method === "GET" && url.pathname.startsWith("/api/materials"), new workbox.StaleWhileRevalidate({
-    "cacheName": "marketplace-api-cache",
-    plugins: [new workbox.ExpirationPlugin({
-      maxEntries: 60,
-      maxAgeSeconds: 1800
-    })]
-  }), 'GET');
-  workbox.registerRoute(({
-    request,
-    url
-  }) => request.method === "GET" && url.pathname.startsWith("/api/diy"), new workbox.StaleWhileRevalidate({
-    "cacheName": "diy-api-cache",
-    plugins: [new workbox.ExpirationPlugin({
-      maxEntries: 60,
-      maxAgeSeconds: 1800
-    })]
-  }), 'GET');
-  workbox.registerRoute(({
-    request,
-    url
-  }) => request.method === "GET" && (url.pathname.startsWith("/api/achievements") || url.pathname.startsWith("/api/reputation") || url.pathname.startsWith("/api/orders/my-orders")), new workbox.NetworkFirst({
-    "cacheName": "dashboard-api-cache",
-    "networkTimeoutSeconds": 4,
-    plugins: [new workbox.ExpirationPlugin({
-      maxEntries: 40,
-      maxAgeSeconds: 900
-    })]
-  }), 'GET');
-  workbox.registerRoute(({
-    request
-  }) => request.destination === "image", new workbox.CacheFirst({
-    "cacheName": "image-cache",
-    plugins: [new workbox.ExpirationPlugin({
-      maxEntries: 100,
-      maxAgeSeconds: 2592000
-    })]
-  }), 'GET');
-  workbox.registerRoute(({
-    request
-  }) => ["script", "style", "font"].includes(request.destination), new workbox.StaleWhileRevalidate({
-    "cacheName": "asset-cache",
-    plugins: []
-  }), 'GET');
-  workbox.registerRoute(({
-    url
-  }) => url.pathname.endsWith(".glb"), new workbox.CacheFirst({
-    "cacheName": "glb-cache",
-    plugins: [new workbox.ExpirationPlugin({
-      maxEntries: 12,
-      maxAgeSeconds: 1209600
-    })]
-  }), 'GET');
 
 }));

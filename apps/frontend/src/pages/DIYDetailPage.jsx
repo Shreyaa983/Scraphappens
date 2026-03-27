@@ -18,6 +18,7 @@ import {
   Users, 
   Activity
 } from "lucide-react";
+import { useTranslation } from "../hooks/useTranslation";
 import "../styles/diy.css";
 
 const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1509099836639-18ba1795216d?auto=format&fit=crop&w=1200&q=80";
@@ -32,6 +33,7 @@ function resolveAssetUrl(url) {
 }
 
 export default function DIYDetailPage({ diyId, token, onBack, onOpenMaterial, onSearchMaterial }) {
+  const { t } = useTranslation();
   const [post, setPost] = useState(null);
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -57,7 +59,7 @@ export default function DIYDetailPage({ diyId, token, onBack, onOpenMaterial, on
         }
       } catch (err) {
         if (!cancelled) {
-          setError(err.message || "Failed to load DIY project");
+          setError(err.message || t("Failed to load DIY project"));
         }
       } finally {
         if (!cancelled) {
@@ -92,7 +94,7 @@ export default function DIYDetailPage({ diyId, token, onBack, onOpenMaterial, on
   async function handlePostResult(event) {
     event.preventDefault();
     if (!form.imageFile) {
-      setError("Please choose an image to upload.");
+      setError(t("Please choose an image to upload."));
       return;
     }
 
@@ -110,7 +112,7 @@ export default function DIYDetailPage({ diyId, token, onBack, onOpenMaterial, on
       setResults((prev) => [response.result, ...prev]);
       setForm({ imageFile: null, caption: "" });
     } catch (err) {
-      setError(err.message || "Failed to post result");
+      setError(err.message || t("Failed to post result"));
     } finally {
       setSharing(false);
     }
@@ -119,7 +121,7 @@ export default function DIYDetailPage({ diyId, token, onBack, onOpenMaterial, on
   if (loading) {
     return (
       <div className="diy-detail-shell">
-        <div className="loading-shell">Loading DIY project...</div>
+        <div className="loading-shell">{t("Loading DIY project...")}</div>
       </div>
     );
   }
@@ -128,10 +130,10 @@ export default function DIYDetailPage({ diyId, token, onBack, onOpenMaterial, on
     return (
       <div className="diy-detail-shell">
         <div className="diy-empty-state">
-          <h3>DIY project not found</h3>
-          <p>The inspiration card may have been removed or failed to load.</p>
+          <h3>{t("DIY project not found")}</h3>
+          <p>{t("The inspiration card may have been removed or failed to load.")}</p>
           <button className="nav-button nav-button-secondary" type="button" onClick={onBack}>
-            <ArrowLeft size={16} /> Back to DIY feed
+            <ArrowLeft size={16} /> {t("Back to DIY feed")}
           </button>
         </div>
       </div>
@@ -146,7 +148,7 @@ export default function DIYDetailPage({ diyId, token, onBack, onOpenMaterial, on
         style={{ marginBottom: '2rem' }} 
         onClick={onBack}
       >
-        <ArrowLeft size={16} /> Back to Inspiration
+        <ArrowLeft size={16} /> {t("Back to Inspiration")}
       </button>
 
       {error ? <div className="message diy-message-box">{error}</div> : null}
@@ -155,35 +157,35 @@ export default function DIYDetailPage({ diyId, token, onBack, onOpenMaterial, on
         {/* Visual Header */}
         <section className="diy-detail-hero">
           <div className="diy-card-image-wrap" style={{ aspectRatio: '21/9' }}>
-            <img src={resolveAssetUrl(post.main_image_url)} alt={post.title} className="diy-detail-image" />
+            <img src={resolveAssetUrl(post.main_image_url)} alt={t(post.title)} className="diy-detail-image" />
           </div>
           
           <div className="diy-detail-intro">
-            <h1>{post.title}</h1>
-            <p>{post.description}</p>
+            <h1>{t(post.title)}</h1>
+            <p>{t(post.description)}</p>
           </div>
 
           <div className="diy-detail-summary-grid">
             <div className="diy-summary-box">
               <span className="diy-meta-label">
                 <Coins size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} /> 
-                Estimated Cost
+                {t("Estimated Cost")}
               </span>
-              <span className="diy-meta-value">{post.estimated_cost || "Rs. 0"}</span>
+              <span className="diy-meta-value">{t(post.estimated_cost) || t("Rs. 0")}</span>
             </div>
             <div className="diy-summary-box">
               <span className="diy-meta-label">
                 <Trash2 size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} /> 
-                Waste Saved
+                {t("Waste Saved")}
               </span>
-              <span className="diy-meta-value">{post.waste_saved || "Eco Impact"}</span>
+              <span className="diy-meta-value">{t(post.waste_saved) || t("Eco Impact")}</span>
             </div>
             <div className="diy-summary-box">
               <span className="diy-meta-label">
                 <Activity size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} /> 
-                Difficulty
+                {t("Difficulty")}
               </span>
-              <span className="diy-meta-value">{post.difficulty || "Medium"}</span>
+              <span className="diy-meta-value">{t(post.difficulty) || t("Medium")}</span>
             </div>
           </div>
         </section>
@@ -192,13 +194,13 @@ export default function DIYDetailPage({ diyId, token, onBack, onOpenMaterial, on
         <section>
           <h2 className="diy-section-title">
             <Info size={24} color="hsl(var(--primary))" /> 
-            Step-by-Step Instructions
+            {t("Step-by-Step Instructions")}
           </h2>
           <div className="diy-numbered-list">
             {steps.map((step, index) => (
               <div key={`${post.id}-${index}`} className="diy-step-item">
                 <div className="diy-step-number">{index + 1}</div>
-                <div className="diy-step-content">{step}</div>
+                <div className="diy-step-content">{t(step)}</div>
               </div>
             ))}
           </div>
@@ -208,15 +210,15 @@ export default function DIYDetailPage({ diyId, token, onBack, onOpenMaterial, on
         <section>
           <h2 className="diy-section-title">
             <Package size={24} color="hsl(var(--primary))" /> 
-            Materials Required
+            {t("Materials Required")}
           </h2>
           <div className="diy-materials-grid">
             {(post.materials || []).map((material) => (
               <div key={material.id} className="diy-material-card">
                 <div className="diy-mat-info">
-                  <span className="diy-mat-name">{material.material_name}</span>
-                  <span className="diy-mat-qty">{material.quantity_required || "1 unit"}</span>
-                  <span className="diy-mat-cat">{material.material_category || "Uncategorized"}</span>
+                  <span className="diy-mat-name">{t(material.material_name)}</span>
+                  <span className="diy-mat-qty">{t(material.quantity_required) || t("1 unit")}</span>
+                  <span className="diy-mat-cat">{t(material.material_category) || t("Uncategorized")}</span>
                 </div>
                 <button
                   type="button"
@@ -230,15 +232,15 @@ export default function DIYDetailPage({ diyId, token, onBack, onOpenMaterial, on
                   }}
                 >
                   {material.marketplace_material_id ? (
-                    <><Package size={14} style={{ marginRight: 6 }} /> Open Listing</>
+                    <><Package size={14} style={{ marginRight: 6 }} /> {t("Open Listing")}</>
                   ) : (
-                    <><Search size={14} style={{ marginRight: 6 }} /> Search Marketplace</>
+                    <><Search size={14} style={{ marginRight: 6 }} /> {t("Search Marketplace")}</>
                   )}
                 </button>
               </div>
             ))}
             {(!post.materials || post.materials.length === 0) && (
-              <div className="diy-empty-gallery">No specific materials listed.</div>
+              <div className="diy-empty-gallery">{t("No specific materials listed.")}</div>
             )}
           </div>
         </section>
@@ -247,14 +249,14 @@ export default function DIYDetailPage({ diyId, token, onBack, onOpenMaterial, on
         <section className="diy-post-result-card">
           <h2 className="diy-section-title">
             <CheckCircle size={24} color="hsl(var(--primary))" /> 
-            Post Your Result
+            {t("Post Your Result")}
           </h2>
           <p style={{ marginBottom: '1.5rem', color: 'hsl(var(--muted-foreground))' }}>
-            Tell others what worked well, what you changed, and how you reused the materials.
+            {t("Tell others what worked well, what you changed, and how you reused the materials.")}
           </p>
           <form onSubmit={handlePostResult} className="diy-result-form">
             <div className="diy-form-group">
-              <label className="diy-form-label">Upload Result Image</label>
+              <label className="diy-form-label">{t("Upload Result Image")}</label>
               <input
                 required
                 type="file"
@@ -264,20 +266,20 @@ export default function DIYDetailPage({ diyId, token, onBack, onOpenMaterial, on
               />
             </div>
             <div className="diy-form-group">
-              <label className="diy-form-label">Caption</label>
+              <label className="diy-form-label">{t("Caption")}</label>
               <textarea
                 rows={4}
                 className="diy-caption-area"
                 value={form.caption}
                 onChange={(event) => handleFormChange("caption", event.target.value)}
-                placeholder="Share your build experience..."
+                placeholder={t("Share your build experience...")}
               />
             </div>
             <button type="submit" className="submit-button" style={{ width: '100%' }} disabled={sharing}>
               {sharing ? (
-                <><Clock size={18} className="spin" style={{ marginRight: 8 }} /> Posting...</>
+                <><Clock size={18} className="spin" style={{ marginRight: 8 }} /> {t("Posting...")}</>
               ) : (
-                <><Upload size={18} style={{ marginRight: 8 }} /> Post Your Result</>
+                <><Upload size={18} style={{ marginRight: 8 }} /> {t("Post Your Result")}</>
               )}
             </button>
           </form>
@@ -287,28 +289,28 @@ export default function DIYDetailPage({ diyId, token, onBack, onOpenMaterial, on
         <section>
           <h2 className="diy-section-title">
             <Users size={24} color="hsl(var(--primary))" /> 
-            Community Builds
+            {t("Community Builds")}
           </h2>
           <div className="diy-community-grid">
             {results.length === 0 ? (
               <div className="diy-empty-gallery">
-                <p>No builds have been shared yet. Your project could be the first!</p>
+                <p>{t("No builds have been shared yet. Your project could be the first!")}</p>
               </div>
             ) : (
               results.map((result) => (
                 <article key={result.id} className="diy-build-card">
                   <img 
                     src={resolveAssetUrl(result.image_url)} 
-                    alt={result.caption || "DIY build result"} 
+                    alt={t(result.caption) || t("DIY build result")} 
                     className="diy-build-img" 
                   />
                   <div className="diy-build-body">
-                    <p className="diy-build-caption">{result.caption || "Shared a finished build."}</p>
+                    <p className="diy-build-caption">{t(result.caption) || t("Shared a finished build.")}</p>
                     <div className="diy-build-author">
                       <Users size={12} />
-                      <span>{result.user_name || "Buyer"}</span>
+                      <span>{result.user_name || t("Buyer")}</span>
                       <span>•</span>
-                      <span>{new Date(result.created_at).toLocaleDateString("en-IN")}</span>
+                      <span>{new Date(result.created_at).toLocaleDateString(t("en-IN") === "en-IN" ? "en-IN" : "en-IN")}</span>
                     </div>
                   </div>
                 </article>
